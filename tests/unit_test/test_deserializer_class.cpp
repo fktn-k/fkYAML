@@ -1076,6 +1076,39 @@ TEST_CASE("Deserializer_BlockMapping") {
         REQUIRE(pi_node.get_value<double>() == 3.14);
     }
 
+    SUBCASE("white spaces in front of the mapping value indicator") {
+        // The white spaces which separate a key from the ":" indicator belong to neither of them, no
+        // matter whether the value follows on the same line or on the next one.
+        std::string input = "foo :\n"
+                            "  bar\n"
+                            "baz : qux\n";
+
+        REQUIRE_NOTHROW(root = deserializer.deserialize(fkyaml::detail::input_adapter(input)));
+        REQUIRE(root.is_mapping());
+        REQUIRE(root.size() == 2);
+        REQUIRE(root.contains("foo"));
+        REQUIRE(root["foo"].as_str() == "bar");
+        REQUIRE(root.contains("baz"));
+        REQUIRE(root["baz"].as_str() == "qux");
+    }
+
+    SUBCASE("white spaces in front of the mapping value indicator followed by a tab or the end of input") {
+        auto input = GENERATE(std::string("foo :\tbar\n"), std::string("foo :"));
+
+        REQUIRE_NOTHROW(root = deserializer.deserialize(fkyaml::detail::input_adapter(input)));
+        REQUIRE(root.is_mapping());
+        REQUIRE(root.size() == 1);
+        REQUIRE(root.contains("foo"));
+    }
+
+    SUBCASE("a colon followed by a flow indicator outside flow collections") {
+        // Flow indicators have no special meaning outside flow collections, so the ":" is not a mapping
+        // value indicator here.
+        REQUIRE_NOTHROW(root = deserializer.deserialize(fkyaml::detail::input_adapter("foo :,bar")));
+        REQUIRE(root.is_string());
+        REQUIRE(root.as_str() == "foo :,bar");
+    }
+
     // regression test for https://github.com/fktn-k/fkYAML/pull/437
     SUBCASE("indented block mapping beginning with a newline") {
         std::string input = R"(
@@ -2439,6 +2472,16 @@ TEST_CASE("Deserializer_SinglePairMappingInFlowSequence") {
 TEST_CASE("Deserializer_FlowMapping") {
     fkyaml::detail::basic_deserializer<fkyaml::node> deserializer;
     fkyaml::node root;
+
+    SUBCASE("white spaces in front of the mapping value indicator followed by a flow indicator") {
+        std::string input = "{foo :, bar :}";
+
+        REQUIRE_NOTHROW(root = deserializer.deserialize(fkyaml::detail::input_adapter(input)));
+        REQUIRE(root.is_mapping());
+        REQUIRE(root.size() == 2);
+        REQUIRE(root.contains("foo"));
+        REQUIRE(root.contains("bar"));
+    }
 
     SUBCASE("simple flow mapping") {
         std::string input = "test: { bool: true, foo: bar, pi: 3.14 }";

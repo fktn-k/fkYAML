@@ -1245,10 +1245,33 @@ private:
                 case '#':
                     ends_loop = true;
                     break;
-                case ':':
-                    // " :" is permitted in a plain style string token, but not when followed by a space.
-                    ends_loop = (next_pos + 1 < sv.size()) && (sv[next_pos + 1] == ' ');
+                case ':': {
+                    // " :" is permitted in a plain style string token, but not when the ":" is a mapping
+                    // value indicator, that is, when it is followed by a white space, a line break or the
+                    // end of the input. In a flow context, a flow indicator is not safe to follow it either.
+                    if (next_pos + 1 == sv.size()) {
+                        ends_loop = true;
+                        break;
+                    }
+
+                    switch (sv[next_pos + 1]) {
+                    case ' ':
+                    case '\t':
+                    case '\n':
+                        ends_loop = true;
+                        break;
+                    case ',':
+                    case '[':
+                    case ']':
+                    case '{':
+                    case '}':
+                        ends_loop = ((m_state & flow_context_bit) != 0);
+                        break;
+                    default:
+                        break;
+                    }
                     break;
+                }
                 case '{':
                 case '}':
                 case '[':
