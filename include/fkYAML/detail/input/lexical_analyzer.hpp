@@ -204,7 +204,7 @@ private:
 
             // Any separation white space may follow the explicit key indicator, just like the block
             // sequence entry indicator. https://yaml.org/spec/1.2.2/#rule-c-l-block-map-explicit-key
-            if (*m_cur_itr == ' ' || *m_cur_itr == '\t') {
+            if (*m_cur_itr == ' ' || *m_cur_itr == '\t' || *m_cur_itr == '\n') {
                 info.token.type = lexical_token_t::EXPLICIT_KEY_PREFIX;
                 return info;
             }

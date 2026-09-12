@@ -313,6 +313,41 @@ TEST_CASE("LexicalAnalyzer_Comment") {
     }
 }
 
+TEST_CASE("LexicalAnalyzer_ExplicitKey") {
+    fkyaml::detail::lexical_token token;
+
+    SUBCASE("explicit mapping key followed by a whitespace") {
+        fkyaml::detail::str_view input =
+            GENERATE(fkyaml::detail::str_view("? foo"), fkyaml::detail::str_view("?\tfoo"));
+        fkyaml::detail::lexical_analyzer lexer(input);
+
+        REQUIRE_NOTHROW(token = lexer.get_next_token());
+        REQUIRE(token.type == fkyaml::detail::lexical_token_t::EXPLICIT_KEY_PREFIX);
+
+        REQUIRE_NOTHROW(token = lexer.get_next_token());
+        REQUIRE(token.type == fkyaml::detail::lexical_token_t::PLAIN_SCALAR);
+        REQUIRE(token.str.begin() == input.begin() + 2);
+        REQUIRE(token.str.end() == input.end());
+    }
+
+    SUBCASE("explicit mapping key followed by a newline") {
+        fkyaml::detail::str_view input = "?\n"
+                                         "- foo";
+        fkyaml::detail::lexical_analyzer lexer(input);
+
+        REQUIRE_NOTHROW(token = lexer.get_next_token());
+        REQUIRE(token.type == fkyaml::detail::lexical_token_t::EXPLICIT_KEY_PREFIX);
+
+        REQUIRE_NOTHROW(token = lexer.get_next_token());
+        REQUIRE(token.type == fkyaml::detail::lexical_token_t::SEQUENCE_BLOCK_PREFIX);
+
+        REQUIRE_NOTHROW(token = lexer.get_next_token());
+        REQUIRE(token.type == fkyaml::detail::lexical_token_t::PLAIN_SCALAR);
+        REQUIRE(token.str.begin() == input.begin() + 4);
+        REQUIRE(token.str.end() == input.end());
+    }
+}
+
 TEST_CASE("LexicalAnalyzer_Colon") {
     fkyaml::detail::lexical_token token;
 
