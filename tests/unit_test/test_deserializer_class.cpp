@@ -3546,6 +3546,25 @@ TEST_CASE("Deserializer_Anchor") {
         REQUIRE(root_0_foo_node.as_str() == "bar");
     }
 
+    SUBCASE("anchors for the root mapping and its flow collection key") {
+        auto input =
+            GENERATE(std::string("&mapping\n&key [a, b, c]: value"), std::string("&mapping\n&key {a: b}: value"));
+        REQUIRE_NOTHROW(root = deserializer.deserialize(fkyaml::detail::input_adapter(input)));
+
+        REQUIRE(root.is_mapping());
+        REQUIRE(root.size() == 1);
+        REQUIRE(root.is_anchor());
+        REQUIRE(root.get_anchor_name() == "mapping");
+        REQUIRE(root.begin().key().is_anchor());
+        REQUIRE(root.begin().key().get_anchor_name() == "key");
+        REQUIRE(root.begin().value().as_str() == "value");
+    }
+
+    SUBCASE("multiple anchors on separate lines before a root flow collection") {
+        auto input = GENERATE(std::string("&anchor\n&anchor2 [foo]"), std::string("&anchor\n&anchor2 {foo: bar}"));
+        REQUIRE_THROWS_AS(root = deserializer.deserialize(fkyaml::detail::input_adapter(input)), fkyaml::parse_error);
+    }
+
     SUBCASE("multiple anchors specified") {
         auto input =
             GENERATE(std::string("foo: &anchor &anchor2\n  bar: baz"), std::string("&anchor &anchor2 foo: bar"));
@@ -3844,6 +3863,32 @@ TEST_CASE("Deserializer_Tag") {
 TEST_CASE("Deserializer_NodeProperties") {
     fkyaml::detail::basic_deserializer<fkyaml::node> deserializer;
     fkyaml::node root;
+
+    SUBCASE("anchor and tag split across lines on a root scalar") {
+        auto input = GENERATE(std::string("&anchor\n!!str value"), std::string("!!str\n&anchor\nvalue"));
+        REQUIRE_NOTHROW(root = deserializer.deserialize(fkyaml::detail::input_adapter(input)));
+
+        REQUIRE(root.is_string());
+        REQUIRE(root.as_str() == "value");
+        REQUIRE(root.is_anchor());
+        REQUIRE(root.get_anchor_name() == "anchor");
+        REQUIRE(root.has_tag_name());
+        REQUIRE(root.get_tag_name() == "!!str");
+    }
+
+    SUBCASE("duplicate anchors split across lines on a scalar value") {
+        std::string input = "top1: &node1\n"
+                            "  &key1 key1: value1\n"
+                            "top2: &node2\n"
+                            "  &value2 value2\n";
+        REQUIRE_THROWS_AS(deserializer.deserialize(fkyaml::detail::input_adapter(input)), fkyaml::parse_error);
+    }
+
+    SUBCASE("duplicate tags split across lines on a scalar value") {
+        std::string input = "!!str\n"
+                            "!!str value\n";
+        REQUIRE_THROWS_AS(deserializer.deserialize(fkyaml::detail::input_adapter(input)), fkyaml::parse_error);
+    }
 
     SUBCASE("both tag and anchor specified") {
         auto input = GENERATE(

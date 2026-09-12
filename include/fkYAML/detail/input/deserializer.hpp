@@ -197,6 +197,7 @@ private:
         lexical_token token {};
 
         m_has_document = false;
+        m_expects_root_flow_key_separator = false;
 
         basic_node_type root;
         mp_current_node = &root;
@@ -307,6 +308,8 @@ private:
         case lexical_token_t::SINGLE_QUOTED_SCALAR:
         case lexical_token_t::DOUBLE_QUOTED_SCALAR:
         case lexical_token_t::ALIAS_PREFIX:
+        case lexical_token_t::ANCHOR_PREFIX:
+        case lexical_token_t::TAG_PREFIX:
             // Defer handling the above token events until the next call on the deserialize_scalar() function since the
             // meaning depends on subsequent events.
             if (found_props && line < lexer.get_lines_processed()) {
@@ -943,7 +946,14 @@ private:
                     lexer.set_context_state(true);
 
                     if FK_YAML_UNLIKELY (m_context_stack.empty()) {
-                        throw parse_error("invalid flow sequence beginning is found.", line, indent);
+                        if (!defers_props()) {
+                            throw parse_error("invalid flow sequence beginning is found.", line, indent);
+                        }
+                        *mp_current_node = basic_node_type::mapping();
+                        apply_directive_set(*mp_current_node);
+                        apply_deferred_properties(*mp_current_node);
+                        m_context_stack.emplace_back(line, indent, context_state_t::BLOCK_MAPPING, mp_current_node);
+                        m_expects_root_flow_key_separator = true;
                     }
 
                     if (indent <= m_context_stack.back().indent) {
@@ -1031,6 +1041,14 @@ private:
                 // while that node is a key which has not been added to its parent mapping yet.
 
                 if (!m_context_stack.empty() && owned_node != nullptr) {
+                    if (m_expects_root_flow_key_separator) {
+                        const lexical_token_t next_type = lexer.peek_next_token().type;
+                        if FK_YAML_UNLIKELY (next_type != lexical_token_t::KEY_SEPARATOR) {
+                            throw parse_error(
+                                "A flow collection key must be followed by a key separator.", line, indent);
+                        }
+                        m_expects_root_flow_key_separator = false;
+                    }
                     basic_node_type key_node = std::move(*owned_node);
                     owned_node.reset();
                     mp_current_node = m_context_stack.back().p_node;
@@ -1069,7 +1087,14 @@ private:
                     lexer.set_context_state(true);
 
                     if FK_YAML_UNLIKELY (m_context_stack.empty()) {
-                        throw parse_error("invalid flow mapping beginning is found.", line, indent);
+                        if (!defers_props()) {
+                            throw parse_error("invalid flow mapping beginning is found.", line, indent);
+                        }
+                        *mp_current_node = basic_node_type::mapping();
+                        apply_directive_set(*mp_current_node);
+                        apply_deferred_properties(*mp_current_node);
+                        m_context_stack.emplace_back(line, indent, context_state_t::BLOCK_MAPPING, mp_current_node);
+                        m_expects_root_flow_key_separator = true;
                     }
 
                     if (indent <= m_context_stack.back().indent) {
@@ -1159,6 +1184,14 @@ private:
                 // while that node is a key which has not been added to its parent mapping yet.
 
                 if (!m_context_stack.empty() && owned_node != nullptr) {
+                    if (m_expects_root_flow_key_separator) {
+                        const lexical_token_t next_type = lexer.peek_next_token().type;
+                        if FK_YAML_UNLIKELY (next_type != lexical_token_t::KEY_SEPARATOR) {
+                            throw parse_error(
+                                "A flow collection key must be followed by a key separator.", line, indent);
+                        }
+                        m_expects_root_flow_key_separator = false;
+                    }
                     basic_node_type key_node = std::move(*owned_node);
                     owned_node.reset();
                     mp_current_node = m_context_stack.back().p_node;
@@ -1251,7 +1284,6 @@ private:
 
                 basic_node_type node = scalar_parser_type(line, indent).parse_flow(token.type, tag_type, token.str);
                 apply_directive_set(node);
-                apply_node_properties(node);
 
                 deserialize_scalar(lexer, std::move(node), indent, line, token);
                 continue;
@@ -1264,7 +1296,6 @@ private:
                     scalar_parser_type(line, indent)
                         .parse_block(token.type, tag_type, token.str, lexer.get_block_scalar_header());
                 apply_directive_set(node);
-                apply_node_properties(node);
 
                 deserialize_scalar(lexer, std::move(node), indent, line, token);
                 continue;
@@ -1480,6 +1511,21 @@ private:
     void deserialize_scalar(
         lexer_type& lexer, basic_node_type&& node, uint32_t& indent, uint32_t& line, lexical_token& token) {
         token = lexer.get_next_token();
+        const bool is_mapping_key = mp_current_node->is_mapping() || token.type == lexical_token_t::KEY_SEPARATOR;
+        if (is_mapping_key) {
+            apply_node_properties(node);
+        }
+        else if (!node.is_alias()) {
+            if FK_YAML_UNLIKELY (m_defers_anchor && m_needs_anchor_impl) {
+                throw parse_error("anchor name cannot be specified more than once to the same node.", line, indent);
+            }
+            if FK_YAML_UNLIKELY (m_defers_tag && m_needs_tag_impl) {
+                throw parse_error("tag name cannot be specified more than once to the same node.", line, indent);
+            }
+            apply_deferred_properties(node);
+            apply_node_properties(node);
+        }
+
         if (mp_current_node->is_mapping()) {
             // An implicit key in the block context must be followed by the ":" indicator on the same line, while in
             // the flow context the two can be separated by line breaks.
@@ -1637,14 +1683,10 @@ private:
         }
         else {
             if (defers_props()) {
-                // No key separator follows, so the node is a value and owns the deferred properties.
-                // An alias node must not carry any, which is only known once it turns out not to be a
-                // key of the mapping the properties belong to.
+                // Non-alias values consume deferred properties before reaching this point. An alias
+                // cannot carry properties, which is only known once it turns out not to be a key.
                 // https://yaml.org/spec/1.2.2/#71-alias-nodes
-                if FK_YAML_UNLIKELY (node.is_alias()) {
-                    throw parse_error("Node properties cannot be specified to an alias node.", line, indent);
-                }
-                apply_deferred_properties(node);
+                throw parse_error("Node properties cannot be specified to an alias node.", line, indent);
             }
             assign_node_value(std::move(node), line, indent);
         }
@@ -2056,6 +2098,8 @@ private:
     std::shared_ptr<doc_metainfo_type> mp_meta {};
     /// Whether the document being parsed exists at all: it has contents or an explicit "---".
     bool m_has_document {false};
+    /// Whether a provisional root mapping still requires a separator after its flow collection key.
+    bool m_expects_root_flow_key_separator {false};
     /// Whether the pending node properties precede their node and are not bound yet.
     bool m_defers_anchor {false};
     /// Whether a tag which precedes its node is waiting to be bound.
