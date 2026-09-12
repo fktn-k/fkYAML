@@ -2935,6 +2935,48 @@ TEST_CASE("Node_GetAnchorName") {
     }
 }
 
+TEST_CASE("Node_AddAnchorNameKeepsTagName") {
+    SUBCASE("a tag set before the anchor name") {
+        // Anchoring moves the value of the node into the anchor table, so a tag which is already set
+        // has to travel with the anchor rather than with the value it refers to.
+        fkyaml::node node(std::string("foo"));
+        node.add_tag_name("!!str");
+        node.add_anchor_name("anchor");
+
+        REQUIRE(node.has_anchor_name());
+        REQUIRE(node.get_anchor_name() == "anchor");
+        REQUIRE(node.has_tag_name());
+        REQUIRE(node.get_tag_name() == "!!str");
+        REQUIRE(node.as_str() == "foo");
+    }
+
+    SUBCASE("a tag set after the anchor name") {
+        fkyaml::node node(std::string("foo"));
+        node.add_anchor_name("anchor");
+        node.add_tag_name("!!str");
+
+        REQUIRE(node.has_anchor_name());
+        REQUIRE(node.get_anchor_name() == "anchor");
+        REQUIRE(node.has_tag_name());
+        REQUIRE(node.get_tag_name() == "!!str");
+        REQUIRE(node.as_str() == "foo");
+    }
+
+    SUBCASE("a tag of a node which is given another anchor name") {
+        // The tag travels with the anchor, so a node which is anchored again keeps it.
+        fkyaml::node node(std::string("foo"));
+        node.add_tag_name("!!str");
+        node.add_anchor_name("first");
+        node.add_anchor_name("second");
+
+        REQUIRE(node.has_anchor_name());
+        REQUIRE(node.get_anchor_name() == "second");
+        REQUIRE(node.has_tag_name());
+        REQUIRE(node.get_tag_name() == "!!str");
+        REQUIRE(node.as_str() == "foo");
+    }
+}
+
 TEST_CASE("Node_AddAnchorName") {
     fkyaml::node node;
     std::string anchor_name = "anchor_name";
