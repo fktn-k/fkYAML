@@ -480,6 +480,8 @@ private:
             // A separator beginning a line ends the preceding entry of a flow collection, while in a
             // block context it is just an ordinary plain scalar character.
             return (m_state & flow_context_bit) != 0;
+        case '#':
+            return true;
         default:
             break;
         }
@@ -1176,7 +1178,7 @@ private:
                     indent = get_current_indent_level(&sv[pos]);
                     // The scalar begins a line of its own if its column is the indentation of that line.
                     // Only meaningful in a block context: in a flow context the surrounding collection
-                    // owns the following lines, so a scalar must not extend into them.
+                    // determines the required indentation of continuation lines.
                     begins_own_line =
                         ((m_state & flow_context_bit) == 0) && (m_pos_tracker.get_cur_pos_in_line() == indent);
                 }
@@ -1195,7 +1197,13 @@ private:
                 // ```
                 // One which follows a key on the same line must be continued by more indented lines,
                 // because a line at the key's indentation belongs to the parent mapping instead.
-                const uint32_t min_continuation_indent = begins_own_line ? indent : indent + 1;
+                uint32_t min_continuation_indent = 0;
+                if (m_state & flow_context_bit) {
+                    min_continuation_indent = m_flow_required_indent;
+                }
+                else {
+                    min_continuation_indent = begins_own_line ? indent : indent + 1;
+                }
 
                 if (non_space_pos == str_view::npos) {
                     if (trailing_white_space_pos != str_view::npos) {

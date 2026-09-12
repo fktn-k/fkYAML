@@ -2093,6 +2093,24 @@ TEST_CASE("Deserializer_ExplicitBlockMapping") {
         REQUIRE(root[key].is_null());
     }
 
+    SUBCASE("explicit mapping key containing a compact mapping with a flow collection key") {
+        REQUIRE_NOTHROW(root = deserializer.deserialize(fkyaml::detail::input_adapter("? []: x")));
+
+        REQUIRE(root.is_mapping());
+        REQUIRE(root.size() == 1);
+        REQUIRE(root.begin().key().is_mapping());
+        REQUIRE(root.begin().key().size() == 1);
+        REQUIRE(root.begin().key().begin().key().is_sequence());
+        REQUIRE(root.begin().key().begin().key().empty());
+        REQUIRE(root.begin().key().begin().value().as_str() == "x");
+        REQUIRE(root.begin().value().is_null());
+    }
+
+    SUBCASE("explicit mapping key containing a multiline implicit collection key") {
+        auto input = GENERATE(std::string("? [foo,\n    bar]: baz"), std::string("? {foo: bar,\n    baz: qux}: value"));
+        REQUIRE_THROWS_AS(root = deserializer.deserialize(fkyaml::detail::input_adapter(input)), fkyaml::parse_error);
+    }
+
     SUBCASE("explicit mapping key with an empty key and its own value") {
         std::string input = "? :\n"
                             ": baz\n";
@@ -2390,6 +2408,17 @@ TEST_CASE("Deserializer_FlowSequence") {
         REQUIRE(root_1_b_node.as_str() == "bar");
     }
 
+    SUBCASE("comment between a plain scalar and a value separator") {
+        std::string input = "[ word1\n"
+                            "# comment\n"
+                            ", word2]";
+        REQUIRE_NOTHROW(root = deserializer.deserialize(fkyaml::detail::input_adapter(input)));
+        REQUIRE(root.is_sequence());
+        REQUIRE(root.size() == 2);
+        REQUIRE(root[0].as_str() == "word1");
+        REQUIRE(root[1].as_str() == "word2");
+    }
+
     SUBCASE("missing value separators") {
         // White space alone does not separate entries, since it may appear within a plain scalar. A
         // missing separator is only detectable where the next entry cannot continue the current one.
@@ -2510,6 +2539,24 @@ TEST_CASE("Deserializer_FlowMapping") {
         fkyaml::node& test_pi_node = test_node["pi"];
         REQUIRE(test_pi_node.is_float_number());
         REQUIRE(test_pi_node.get_value<double>() == 3.14);
+    }
+
+    SUBCASE("plain scalar key continued by a percent sign in a flow mapping") {
+        const std::string input = "---\n"
+                                  "{ matches\n"
+                                  "% : 20 }\n"
+                                  "...\n"
+                                  "---\n"
+                                  "# Empty\n"
+                                  "...\n";
+        std::vector<fkyaml::node> docs;
+
+        REQUIRE_NOTHROW(docs = fkyaml::node::deserialize_docs(input));
+        REQUIRE(docs.size() == 2);
+        REQUIRE(docs[0].is_mapping());
+        REQUIRE(docs[0].size() == 1);
+        REQUIRE(docs[0]["matches %"].get_value<int>() == 20);
+        REQUIRE(docs[1].is_null());
     }
 
     SUBCASE("value separator beginning a line") {
@@ -2725,22 +2772,13 @@ TEST_CASE("Deserializer_FlowMapping") {
         REQUIRE(root_mapkey_node.as_str() == "bar");
     }
 
-    SUBCASE("flow mapping key of a flow mapping (not compact)") {
+    SUBCASE("multiline flow mapping as an implicit mapping key") {
         std::string input = "{\n"
                             "  {\n"
                             "    \"foo\": true\n"
                             "  }: \"bar\"\n"
                             "}";
-        REQUIRE_NOTHROW(root = deserializer.deserialize(fkyaml::detail::input_adapter(input)));
-
-        REQUIRE(root.is_mapping());
-        REQUIRE(root.size() == 1);
-        fkyaml::node mapkey = {{"foo", true}};
-        REQUIRE(root.contains(mapkey));
-
-        fkyaml::node& root_mapkey_node = root[std::move(mapkey)];
-        REQUIRE(root_mapkey_node.is_string());
-        REQUIRE(root_mapkey_node.as_str() == "bar");
+        REQUIRE_THROWS_AS(root = deserializer.deserialize(fkyaml::detail::input_adapter(input)), fkyaml::parse_error);
     }
 
     SUBCASE("flow sequence key of a flow mapping (compact)") {
@@ -2757,23 +2795,33 @@ TEST_CASE("Deserializer_FlowMapping") {
         REQUIRE(root_seqkey_node.as_str() == "bar");
     }
 
-    SUBCASE("flow sequence key of a flow mapping (not compact)") {
+    SUBCASE("multiline flow sequence as an implicit mapping key") {
         std::string input = "{\n"
                             "  [\n"
                             "    \"foo\",\n"
                             "    true\n"
                             "  ]: \"bar\"\n"
                             "}";
-        REQUIRE_NOTHROW(root = deserializer.deserialize(fkyaml::detail::input_adapter(input)));
+        REQUIRE_THROWS_AS(root = deserializer.deserialize(fkyaml::detail::input_adapter(input)), fkyaml::parse_error);
+    }
 
+    SUBCASE("root multiline flow sequence as an implicit mapping key") {
+        std::string input = "[23\n]: 42";
+        REQUIRE_THROWS_AS(root = deserializer.deserialize(fkyaml::detail::input_adapter(input)), fkyaml::parse_error);
+    }
+
+    SUBCASE("root multiline flow mapping as an implicit mapping key") {
+        std::string input = "{foo: 23\n}: 42";
+        REQUIRE_THROWS_AS(root = deserializer.deserialize(fkyaml::detail::input_adapter(input)), fkyaml::parse_error);
+    }
+
+    SUBCASE("multiline flow collections as explicit mapping keys") {
+        auto input = GENERATE(
+            std::string("? [ foo,\n    true ]\n: bar"), std::string("? { foo: true,\n    bar: false }\n: bar"));
+        REQUIRE_NOTHROW(root = deserializer.deserialize(fkyaml::detail::input_adapter(input)));
         REQUIRE(root.is_mapping());
         REQUIRE(root.size() == 1);
-        fkyaml::node seqkey = {"foo", true};
-        REQUIRE(root.contains(seqkey));
-
-        fkyaml::node& root_seqkey_node = root[std::move(seqkey)];
-        REQUIRE(root_seqkey_node.is_string());
-        REQUIRE(root_seqkey_node.as_str() == "bar");
+        REQUIRE(root.begin().value().as_str() == "bar");
     }
 
     SUBCASE("missing value separators") {

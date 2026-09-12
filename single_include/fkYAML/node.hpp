@@ -3753,6 +3753,8 @@ private:
             // A separator beginning a line ends the preceding entry of a flow collection, while in a
             // block context it is just an ordinary plain scalar character.
             return (m_state & flow_context_bit) != 0;
+        case '#':
+            return true;
         default:
             break;
         }
@@ -4449,7 +4451,7 @@ private:
                     indent = get_current_indent_level(&sv[pos]);
                     // The scalar begins a line of its own if its column is the indentation of that line.
                     // Only meaningful in a block context: in a flow context the surrounding collection
-                    // owns the following lines, so a scalar must not extend into them.
+                    // determines the required indentation of continuation lines.
                     begins_own_line =
                         ((m_state & flow_context_bit) == 0) && (m_pos_tracker.get_cur_pos_in_line() == indent);
                 }
@@ -4468,7 +4470,13 @@ private:
                 // ```
                 // One which follows a key on the same line must be continued by more indented lines,
                 // because a line at the key's indentation belongs to the parent mapping instead.
-                const uint32_t min_continuation_indent = begins_own_line ? indent : indent + 1;
+                uint32_t min_continuation_indent = 0;
+                if (m_state & flow_context_bit) {
+                    min_continuation_indent = m_flow_required_indent;
+                }
+                else {
+                    min_continuation_indent = begins_own_line ? indent : indent + 1;
+                }
 
                 if (non_space_pos == str_view::npos) {
                     if (trailing_white_space_pos != str_view::npos) {
@@ -7980,7 +7988,8 @@ class basic_deserializer {
             : line(line),
               indent(indent),
               state(state),
-              p_node(p_node) {
+              p_node(p_node),
+              is_explicit_key(state == context_state_t::BLOCK_MAPPING_EXPLICIT_KEY) {
         }
 
         /// @brief Construct a new parse_context object which owns its node.
@@ -7994,7 +8003,8 @@ class basic_deserializer {
               indent(indent),
               state(state),
               p_node(node.get()),
-              owned_node(std::move(node)) {
+              owned_node(std::move(node)),
+              is_explicit_key(state == context_state_t::BLOCK_MAPPING_EXPLICIT_KEY) {
         }
 
         // Parse contexts are move-only so that the ownership of an owned node cannot be duplicated.
@@ -8014,6 +8024,8 @@ class basic_deserializer {
         basic_node_type* p_node {nullptr};
         /// The node owned by this context, if any. Empty if p_node is owned by the result tree.
         std::unique_ptr<basic_node_type> owned_node {};
+        /// Whether this context originated as an explicit mapping key.
+        bool is_explicit_key {false};
     };
 
     /// @brief Definitions of state types for expected flow token hints.
@@ -8930,7 +8942,11 @@ private:
                 // keep the last state for later processing.
                 parse_context& last_context = m_context_stack.back();
                 mp_current_node = last_context.p_node;
-                indent = last_context.indent;
+                const uint32_t collection_begin_line = last_context.line;
+                const uint32_t collection_begin_indent = last_context.indent;
+                indent = collection_begin_indent;
+                const bool is_multiline_collection = collection_begin_line != lexer.get_lines_processed();
+                const bool is_explicit_key = last_context.is_explicit_key;
                 // The node stays alive until its value is either moved into the tree below or dropped here.
                 std::unique_ptr<basic_node_type> owned_node = std::move(last_context.owned_node);
                 m_context_stack.pop_back();
@@ -8939,6 +8955,24 @@ private:
                 // while that node is a key which has not been added to its parent mapping yet.
 
                 if (!m_context_stack.empty() && owned_node != nullptr) {
+                    if (is_explicit_key) {
+                        restore_explicit_flow_collection_key(
+                            lexer,
+                            std::move(owned_node),
+                            collection_begin_line,
+                            collection_begin_indent,
+                            is_multiline_collection,
+                            token,
+                            line,
+                            indent);
+                        continue;
+                    }
+                    if FK_YAML_UNLIKELY (is_multiline_collection) {
+                        throw parse_error(
+                            "An implicit mapping key cannot span multiple lines.",
+                            lexer.get_lines_processed(),
+                            lexer.get_last_token_begin_pos());
+                    }
                     if (m_expects_root_flow_key_separator) {
                         const lexical_token_t next_type = lexer.peek_next_token().type;
                         if FK_YAML_UNLIKELY (next_type != lexical_token_t::KEY_SEPARATOR) {
@@ -8958,6 +8992,12 @@ private:
 
                 token = lexer.get_next_token();
                 if (token.type == lexical_token_t::KEY_SEPARATOR) {
+                    if FK_YAML_UNLIKELY (is_multiline_collection) {
+                        throw parse_error(
+                            "An implicit mapping key cannot span multiple lines.",
+                            lexer.get_lines_processed(),
+                            lexer.get_last_token_begin_pos());
+                    }
                     basic_node_type key_node = basic_node_type::mapping();
                     apply_directive_set(key_node);
                     mp_current_node->swap(key_node);
@@ -9073,7 +9113,11 @@ private:
                 // keep the last state for later processing.
                 parse_context& last_context = m_context_stack.back();
                 mp_current_node = last_context.p_node;
-                indent = last_context.indent;
+                const uint32_t collection_begin_line = last_context.line;
+                const uint32_t collection_begin_indent = last_context.indent;
+                indent = collection_begin_indent;
+                const bool is_multiline_collection = collection_begin_line != lexer.get_lines_processed();
+                const bool is_explicit_key = last_context.is_explicit_key;
                 // The node stays alive until its value is either moved into the tree below or dropped here.
                 std::unique_ptr<basic_node_type> owned_node = std::move(last_context.owned_node);
                 m_context_stack.pop_back();
@@ -9082,6 +9126,24 @@ private:
                 // while that node is a key which has not been added to its parent mapping yet.
 
                 if (!m_context_stack.empty() && owned_node != nullptr) {
+                    if (is_explicit_key) {
+                        restore_explicit_flow_collection_key(
+                            lexer,
+                            std::move(owned_node),
+                            collection_begin_line,
+                            collection_begin_indent,
+                            is_multiline_collection,
+                            token,
+                            line,
+                            indent);
+                        continue;
+                    }
+                    if FK_YAML_UNLIKELY (is_multiline_collection) {
+                        throw parse_error(
+                            "An implicit mapping key cannot span multiple lines.",
+                            lexer.get_lines_processed(),
+                            lexer.get_last_token_begin_pos());
+                    }
                     if (m_expects_root_flow_key_separator) {
                         const lexical_token_t next_type = lexer.peek_next_token().type;
                         if FK_YAML_UNLIKELY (next_type != lexical_token_t::KEY_SEPARATOR) {
@@ -9101,6 +9163,12 @@ private:
 
                 token = lexer.get_next_token();
                 if (token.type == lexical_token_t::KEY_SEPARATOR) {
+                    if FK_YAML_UNLIKELY (is_multiline_collection) {
+                        throw parse_error(
+                            "An implicit mapping key cannot span multiple lines.",
+                            lexer.get_lines_processed(),
+                            lexer.get_last_token_begin_pos());
+                    }
                     basic_node_type key_node = basic_node_type::mapping();
                     apply_directive_set(key_node);
                     mp_current_node->swap(key_node);
@@ -9339,10 +9407,6 @@ private:
             });
         }
         else {
-            if FK_YAML_UNLIKELY (m_flow_token_state != flow_token_state_t::NEEDS_VALUE_OR_SUFFIX) {
-                throw parse_error("Flow mapping entry is found without separated with a comma.", line, indent);
-            }
-
             if (mp_current_node->is_sequence()) {
                 mp_current_node->as_seq().emplace_back(basic_node_type::mapping());
                 mp_current_node = &(mp_current_node->operator[](mp_current_node->size() - 1));
@@ -9359,6 +9423,46 @@ private:
         const parse_context& key_context = current_context(line, indent);
         m_context_stack.emplace_back(
             key_context.line, key_context.indent, context_state_t::MAPPING_VALUE, mp_current_node);
+    }
+
+    void restore_explicit_flow_collection_key(
+        lexer_type& lexer, std::unique_ptr<basic_node_type>&& owned_node, const uint32_t collection_begin_line,
+        const uint32_t collection_begin_indent, const bool is_multiline_collection, lexical_token& token,
+        uint32_t& line, uint32_t& indent) {
+        m_context_stack.emplace_back(
+            collection_begin_line,
+            collection_begin_indent,
+            context_state_t::BLOCK_MAPPING_EXPLICIT_KEY,
+            std::move(owned_node));
+        mp_current_node = m_context_stack.back().p_node;
+
+        const uint32_t collection_end_line = lexer.get_lines_processed();
+        token = lexer.get_next_token();
+        line = lexer.get_lines_processed();
+        indent = lexer.get_last_token_begin_pos();
+
+        const bool begins_compact_mapping = token.type == lexical_token_t::KEY_SEPARATOR && line == collection_end_line;
+        if (!begins_compact_mapping) {
+            return;
+        }
+        if FK_YAML_UNLIKELY (is_multiline_collection) {
+            throw parse_error(
+                "An implicit mapping key cannot span multiple lines.",
+                lexer.get_lines_processed(),
+                lexer.get_last_token_begin_pos());
+        }
+
+        basic_node_type collection_key = std::move(*mp_current_node);
+        *mp_current_node = basic_node_type::mapping();
+        apply_directive_set(*mp_current_node);
+        auto itr = mp_current_node->as_map().emplace(std::move(collection_key), basic_node_type());
+        mp_current_node = &(itr.first->second);
+        apply_directive_set(*mp_current_node);
+        m_context_stack.emplace_back(line, indent, context_state_t::MAPPING_VALUE, mp_current_node);
+
+        token = lexer.get_next_token();
+        line = lexer.get_lines_processed();
+        indent = lexer.get_last_token_begin_pos();
     }
 
     /// @brief Assign node value to the current node.
