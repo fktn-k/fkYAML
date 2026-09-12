@@ -10065,6 +10065,8 @@ private:
         }
 
         if (m_defers_tag) {
+            // Ensure the tag is valid in the current document before applying it.
+            tag_resolver_type::resolve_tag(m_deferred_tag_name, mp_meta);
             node.add_tag_name(std::string(m_deferred_tag_name.begin(), m_deferred_tag_name.end()));
             m_defers_tag = false;
             m_deferred_tag_name = {};
@@ -10081,6 +10083,8 @@ private:
         }
 
         if (m_needs_tag_impl) {
+            // Ensure the tag is valid in the current document before applying it.
+            tag_resolver_type::resolve_tag(m_tag_name, mp_meta);
             node.add_tag_name(std::string(m_tag_name.begin(), m_tag_name.end()));
             m_needs_tag_impl = false;
             m_tag_name = {};
