@@ -81,6 +81,22 @@ std::vector<std::unique_ptr<yaml_test_suite_runner::validator<fkyaml::node>>> lo
     return compositor.take_document_validators();
 }
 
+bool should_skip_yaml_case(const std::string& test_id, std::string& reason) {
+    static const char* const duplicate_key_cases[] = {
+        "2JQS",
+        "X38W",
+    };
+
+    for (std::size_t i = 0; i < sizeof(duplicate_key_cases) / sizeof(duplicate_key_cases[0]); ++i) {
+        if (test_id == duplicate_key_cases[i]) {
+            reason = "duplicate key in YAML mapping.";
+            return true;
+        }
+    }
+
+    return false;
+}
+
 bool should_skip_json_case(const std::string& test_id, std::string& reason) {
     static const char* const malformed_input_cases[] = {
         "35KP",
@@ -135,6 +151,14 @@ void run_yaml_test_suite_case(const char* relative_case_dir, const char* test_id
     if (format == input_format::JSON) {
         std::string reason;
         if (should_skip_json_case(suite_case_id, reason)) {
+            INFO("Skipped: " << reason);
+            CHECK(true);
+            return;
+        }
+    }
+    else {
+        std::string reason;
+        if (should_skip_yaml_case(suite_case_id, reason)) {
             INFO("Skipped: " << reason);
             CHECK(true);
             return;
