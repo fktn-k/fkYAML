@@ -185,7 +185,7 @@ TEST_CASE("FuzzRegression") {
     }
 
     SUBCASE("key node owned by a parse context is released on an error path") {
-        const char input[] = "? []";
+        const char input[] = "? [] ]";
         p_begin = input;
         p_end = input + sizeof(input) - 1;
         REQUIRE_THROWS_AS(root = fkyaml::node::deserialize(p_begin, p_end), fkyaml::parse_error);
