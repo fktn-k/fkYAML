@@ -4276,6 +4276,11 @@ private:
                 continue;
             }
 
+            if FK_YAML_UNLIKELY (content_pos - line_begin_pos < required) {
+                m_cur_itr = content.begin() + content_pos;
+                emit_error("A continuation line must be indented sufficiently.");
+            }
+
             const std::size_t tab_pos = content.find('\t', line_begin_pos);
             if FK_YAML_UNLIKELY (tab_pos < content_pos && tab_pos - line_begin_pos < required) {
                 m_cur_itr = content.begin() + content_pos;
@@ -4297,6 +4302,14 @@ private:
     /// @return uint32_t The indentation width required for the continuation lines.
     uint32_t get_required_continuation_indent() const noexcept {
         const char* p_line_begin = find_line_begin(m_token_begin_itr);
+
+        // The token begins after the opening quotation mark. When that mark follows a document
+        // start marker, the scalar is still the document root and owns the first column.
+        if (m_token_begin_itr - p_line_begin > 4 &&
+            (*(m_token_begin_itr - 1) == '\'' || *(m_token_begin_itr - 1) == '"') &&
+            std::equal(p_line_begin, p_line_begin + 3, "---")) {
+            return 0;
+        }
 
         uint32_t indent = 0;
         while (p_line_begin + indent < m_token_begin_itr && p_line_begin[indent] == ' ') {
