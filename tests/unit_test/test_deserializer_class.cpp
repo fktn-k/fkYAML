@@ -181,6 +181,26 @@ TEST_CASE("Deserializer_InvalidStructureAfterRootScalar") {
     REQUIRE_THROWS_AS(root = deserializer.deserialize(fkyaml::detail::input_adapter(input_str)), fkyaml::parse_error);
 }
 
+TEST_CASE("Deserializer_InvalidStructureAfterRootFlowCollection") {
+    const auto input = GENERATE(
+        std::string("[]\n? foo"), std::string("[]\n- foo"), std::string("[]\n[foo]"), std::string("[]\n{foo}"));
+
+    REQUIRE_THROWS_AS(fkyaml::node::deserialize(input), fkyaml::parse_error);
+}
+
+TEST_CASE("Deserializer_UnmatchedFlowMappingEnd") {
+    REQUIRE_THROWS_AS(fkyaml::node::deserialize("}"), fkyaml::parse_error);
+}
+
+TEST_CASE("Deserializer_MultipleRootScalars") {
+    const auto input = GENERATE(
+        std::string("!foo \"bar\"\n%TAG ! tag:example.com,2000:app/\n---\n!foo \"bar\"\n"),
+        std::string("word1  # comment\nword2\n"),
+        std::string("---\nscalar1 # comment\n%YAML 1.2\n---\nscalar2\n"));
+
+    REQUIRE_THROWS_AS(fkyaml::node::deserialize_docs(input), fkyaml::parse_error);
+}
+
 TEST_CASE("Deserializer_NullValue") {
     fkyaml::detail::basic_deserializer<fkyaml::node> deserializer;
     fkyaml::node root;

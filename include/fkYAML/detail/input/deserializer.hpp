@@ -1784,6 +1784,12 @@ private:
                 // https://yaml.org/spec/1.2.2/#71-alias-nodes
                 throw parse_error("Node properties cannot be specified to an alias node.", line, indent);
             }
+            const bool ends_document = token.type == lexical_token_t::END_OF_BUFFER ||
+                                       token.type == lexical_token_t::END_OF_DIRECTIVES ||
+                                       token.type == lexical_token_t::END_OF_DOCUMENT;
+            if FK_YAML_UNLIKELY (m_context_stack.empty() && !ends_document) {
+                throw parse_error("Multiple root nodes are not allowed in the same document.", line, indent);
+            }
             assign_node_value(std::move(node), line, indent);
         }
 
