@@ -3266,6 +3266,15 @@ TEST_CASE("Deserializer_TagDirective") {
         REQUIRE_THROWS_AS(deserializer.deserialize(fkyaml::detail::input_adapter(input)), fkyaml::parse_error);
     }
 
+    SUBCASE("named tag handle does not carry over to subsequent documents") {
+        std::string input = "%TAG !prefix! tag:example.com,2011:\n"
+                            "--- !prefix!A\n"
+                            "a: b\n"
+                            "--- !prefix!B\n"
+                            "c: d";
+        REQUIRE_THROWS_AS(deserializer.deserialize_docs(fkyaml::detail::input_adapter(input)), fkyaml::invalid_tag);
+    }
+
     SUBCASE("lacks the end of directives marker after TAG directive") {
         std::string input = "%TAG ! tag:test.com,2000:\n"
                             "foo: bar";
