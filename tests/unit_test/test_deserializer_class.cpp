@@ -4473,6 +4473,40 @@ TEST_CASE("Deserializer_NodeProperties") {
 
         REQUIRE(root[""][0][nullptr].is_null());
     }
+
+    SUBCASE("properties on a line of their own in a block sequence") {
+        std::string input = "- item1\n"
+                            "&node\n"
+                            "- item2\n";
+
+        REQUIRE_THROWS_AS(root = deserializer.deserialize(fkyaml::detail::input_adapter(input)), fkyaml::parse_error);
+    }
+
+    SUBCASE("properties on a line of their own before a zero indented block sequence") {
+        std::string input = "seq:\n"
+                            "&anchor\n"
+                            "- a\n";
+
+        REQUIRE_THROWS_AS(root = deserializer.deserialize(fkyaml::detail::input_adapter(input)), fkyaml::parse_error);
+    }
+
+    SUBCASE("a tag on a line of its own in a block mapping") {
+        std::string input = "foo:\n"
+                            "!!str\n"
+                            "bar: baz\n";
+
+        REQUIRE_THROWS_AS(root = deserializer.deserialize(fkyaml::detail::input_adapter(input)), fkyaml::parse_error);
+    }
+
+    SUBCASE("properties on a line of their own more indented than the block mapping") {
+        std::string input = "seq:\n"
+                            " &anchor\n"
+                            "- a\n";
+
+        REQUIRE_NOTHROW(root = deserializer.deserialize(fkyaml::detail::input_adapter(input)));
+        REQUIRE(root["seq"].get_anchor_name() == "anchor");
+        REQUIRE(root["seq"].as_seq().size() == 1);
+    }
 }
 
 TEST_CASE("Deserializer_NoMachingAnchor") {
