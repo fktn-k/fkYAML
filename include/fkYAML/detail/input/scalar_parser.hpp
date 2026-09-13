@@ -288,6 +288,9 @@ private:
             }
 
             if (!has_newline_at_end) {
+                if (line.find_first_not_of(" \t") == str_view::npos) {
+                    m_buffer.push_back('\n');
+                }
                 break;
             }
 

@@ -451,6 +451,23 @@ TEST_CASE("Deserializer_BlockLiteralScalar") {
         REQUIRE(root["foo"].as_str() == "# text\n");
     }
 
+    SUBCASE("an unterminated trailing empty line preserves spaces beyond the content indentation") {
+        std::string input = "foo: |\n"
+                            "  x\n"
+                            "   ";
+
+        REQUIRE_NOTHROW(root = deserializer.deserialize(fkyaml::detail::input_adapter(input)));
+        REQUIRE(root["foo"].as_str() == "x\n \n");
+    }
+
+    SUBCASE("an unterminated empty content line is kept") {
+        std::string input = "- |+\n"
+                            "   ";
+
+        REQUIRE_NOTHROW(root = deserializer.deserialize(fkyaml::detail::input_adapter(input)));
+        REQUIRE(root[0].as_str() == "\n");
+    }
+
     SUBCASE("a less indented line which is not a comment is still rejected") {
         std::string input = "foo: |\n"
                             "  text\n"
