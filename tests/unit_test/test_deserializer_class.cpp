@@ -4685,6 +4685,20 @@ TEST_CASE("Deserializer_TabInIndentation") {
         REQUIRE_THROWS_AS(root = deserializer.deserialize(fkyaml::detail::input_adapter(input)), fkyaml::parse_error);
     }
 
+    SUBCASE("a continuation line must have sufficient indentation") {
+        auto input = GENERATE(
+            std::string("foo: bar\nbaz\n"), std::string("foo: 'bar\nbaz'\n"), std::string("foo: \"bar\nbaz\"\n"));
+
+        REQUIRE_THROWS_AS(root = deserializer.deserialize(fkyaml::detail::input_adapter(input)), fkyaml::parse_error);
+    }
+
+    SUBCASE("a document-root quoted scalar needs no continuation indentation") {
+        auto input = GENERATE(std::string("--- 'foo\nbar'\n"), std::string("--- \"foo\nbar\"\n"));
+
+        REQUIRE_NOTHROW(root = deserializer.deserialize(fkyaml::detail::input_adapter(input)));
+        REQUIRE(root.as_str() == "foo bar");
+    }
+
     SUBCASE("a tab after the indentation of a continuation line is valid") {
         SUBCASE("in a quoted scalar") {
             std::string input = "foo: \"bar\n  \tbaz\"\n";
