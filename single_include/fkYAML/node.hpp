@@ -9444,6 +9444,18 @@ private:
             line = lexer.get_lines_processed();
             indent = lexer.get_last_token_begin_pos();
         }
+        else if FK_YAML_UNLIKELY (
+            line < lexer.get_lines_processed() && m_flow_context_depth == 0 && !m_context_stack.empty() &&
+            indent <= m_context_stack.back().indent) {
+            // Node properties which end their line belong to a node nested in the current block collection, so
+            // they must be more indented than it.
+            // ```yaml
+            // - item1
+            // &node   # error: not more indented than the sequence.
+            // - item2
+            // ```
+            throw parse_error("Node properties are not indented enough.", line, indent);
+        }
 
         return prop_specified;
     }
