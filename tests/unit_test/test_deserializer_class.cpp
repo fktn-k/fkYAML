@@ -475,6 +475,49 @@ TEST_CASE("Deserializer_BlockLiteralScalar") {
 
         REQUIRE_THROWS_AS(root = deserializer.deserialize(fkyaml::detail::input_adapter(input)), fkyaml::parse_error);
     }
+
+    SUBCASE("a header on a line of its own") {
+        std::string input = "foo:\n"
+                            "  |\n"
+                            "  bar\n";
+
+        REQUIRE_NOTHROW(root = deserializer.deserialize(fkyaml::detail::input_adapter(input)));
+        REQUIRE(root["foo"].as_str() == "bar\n");
+    }
+
+    SUBCASE("a header after node properties on a line of their own") {
+        std::string input = "foo:\n"
+                            "  &anchor !!str\n"
+                            "  |1\n"
+                            "  bar\n";
+
+        REQUIRE_NOTHROW(root = deserializer.deserialize(fkyaml::detail::input_adapter(input)));
+        REQUIRE(root["foo"].get_tag_name() == "!!str");
+        REQUIRE(root["foo"].as_str() == " bar\n");
+    }
+
+    SUBCASE("a header after node properties and comments on lines of their own") {
+        std::string input = "foo:\n"
+                            "  !!str # comment\n"
+                            "  # comment\n"
+                            "  |\n"
+                            "  bar\n";
+
+        REQUIRE_NOTHROW(root = deserializer.deserialize(fkyaml::detail::input_adapter(input)));
+        REQUIRE(root["foo"].get_tag_name() == "!!str");
+        REQUIRE(root["foo"].as_str() == "bar\n");
+    }
+
+    SUBCASE("a header after a tag with a number sign on a line of its own") {
+        std::string input = "foo:\n"
+                            "  !local#tag\n"
+                            "  |\n"
+                            "  bar\n";
+
+        REQUIRE_NOTHROW(root = deserializer.deserialize(fkyaml::detail::input_adapter(input)));
+        REQUIRE(root["foo"].get_tag_name() == "!local#tag");
+        REQUIRE(root["foo"].as_str() == "bar\n");
+    }
 }
 
 TEST_CASE("Deserializer_BlockFoldedScalar") {
@@ -541,6 +584,17 @@ TEST_CASE("Deserializer_BlockFoldedScalar") {
         REQUIRE_NOTHROW(root = deserializer.deserialize(fkyaml::detail::input_adapter(input)));
         REQUIRE(root.is_string());
         REQUIRE(root.as_str() == "first sentence. second sentence. last sentence.\n");
+    }
+
+    SUBCASE("a header with an indentation indicator after a tag on a line of its own") {
+        std::string input = "foo:\n"
+                            "   !!str\n"
+                            "  >1\n"
+                            " bar\n";
+
+        REQUIRE_NOTHROW(root = deserializer.deserialize(fkyaml::detail::input_adapter(input)));
+        REQUIRE(root["foo"].get_tag_name() == "!!str");
+        REQUIRE(root["foo"].as_str() == "bar\n");
     }
 }
 
