@@ -397,7 +397,8 @@ private:
                 return info;
             }
 
-            const uint32_t base_indent = get_current_indent_level(&sv[header_end_pos]);
+            const uint32_t base_indent =
+                get_current_indent_level(find_block_scalar_base_line_end(m_token_begin_itr, &sv[header_end_pos]));
             // Must be checked before m_token_begin_itr is moved to the beginning of the contents below.
             const bool is_document_root = begins_document_level_node();
 
@@ -595,6 +596,70 @@ private:
         }
 
         return indent;
+    }
+
+    /// @brief Finds the end of the line which the base indentation of a block scalar is taken from.
+    /// @note A block scalar header which has nothing but node properties before it on its line tells nothing
+    /// about the indentation of the parent node, so the lines above it are searched instead, skipping the ones
+    /// with nothing but node properties or comments.
+    /// ```yaml
+    /// folded:
+    ///    !foo
+    ///   >1
+    ///  value
+    /// ```
+    /// @param p_header_begin The beginning of the block scalar header.
+    /// @param p_header_line_end The end of the line which the block scalar header sits on.
+    /// @return The end of the line which the base indentation is taken from.
+    const char* find_block_scalar_base_line_end(const char* p_header_begin, const char* p_header_line_end) const {
+        const char* p_content_end = p_header_begin;
+        for (;;) {
+            const char* p_line_begin = p_content_end;
+            while (p_line_begin != m_begin_itr && *(p_line_begin - 1) != '\n') {
+                --p_line_begin;
+            }
+
+            if (!has_only_node_properties(p_line_begin, p_content_end)) {
+                return p_content_end == p_header_begin ? p_header_line_end : p_content_end;
+            }
+
+            if (p_line_begin == m_begin_itr) {
+                return p_header_line_end;
+            }
+
+            p_content_end = p_line_begin - 1;
+        }
+    }
+
+    /// @brief Checks if the given range has nothing but node properties, white spaces and a comment.
+    /// @param p_begin The beginning of the range.
+    /// @param p_end The end of the range.
+    /// @return true if the range has nothing but node properties, white spaces and a comment, false otherwise.
+    static bool has_only_node_properties(const char* p_begin, const char* p_end) noexcept {
+        bool is_separated = true;
+        for (const char* itr = p_begin; itr != p_end; ++itr) {
+            switch (*itr) {
+            case ' ':
+            case '\t':
+                is_separated = true;
+                break;
+            case '#':
+                if (is_separated) {
+                    return true;
+                }
+                break;
+            case '!':
+            case '&':
+                is_separated = false;
+                break;
+            default:
+                if (is_separated) {
+                    return false;
+                }
+                break;
+            }
+        }
+        return true;
     }
 
     /// @brief Skip until a newline code or a null character is found.
