@@ -207,7 +207,7 @@ private:
 
         m_has_document = false;
         m_expects_root_flow_key_separator = false;
-        m_has_explicit_document_start = false;
+        m_has_explicit_document_start = last_type == lexical_token_t::END_OF_DIRECTIVES;
 
         basic_node_type root;
         mp_current_node = &root;
@@ -474,6 +474,7 @@ private:
                     // ---
                     // # -> two documents, both empty
                     // ```
+                    m_explicit_document_start_line = lexer.get_lines_processed();
                     last_token = token;
                     lexer.set_document_state(false);
                     return;
@@ -1425,6 +1426,9 @@ private:
             case lexical_token_t::END_OF_DOCUMENT:
                 if FK_YAML_UNLIKELY (m_flow_context_depth > 0) {
                     throw parse_error("An invalid document marker found in a flow collection", line, indent);
+                }
+                if (token.type == lexical_token_t::END_OF_DIRECTIVES) {
+                    m_explicit_document_start_line = line;
                 }
                 last_type = token.type;
                 return;

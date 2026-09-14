@@ -4785,6 +4785,13 @@ TEST_CASE("Deserializer_MultipleDocuments") {
         REQUIRE(docs[0]["foo"].get_value<int>() == 123);
         REQUIRE(docs[1].is_null());
     }
+
+    SUBCASE("a document start marker consumed by the preceding document keeps its line") {
+        auto input = GENERATE(std::string("---\n--- a: b\n"), std::string("---\n--- - a\n"));
+
+        REQUIRE_THROWS_AS(
+            docs = deserializer.deserialize_docs(fkyaml::detail::input_adapter(input)), fkyaml::parse_error);
+    }
 }
 
 TEST_CASE("Deserializer_TabInIndentation") {
