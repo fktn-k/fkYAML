@@ -4956,6 +4956,26 @@ TEST_CASE("Deserializer_NodePropertiesBeforeBlockMapping") {
         }
     }
 
+    SUBCASE("invalid node properties before block nodes") {
+        SUBCASE("an anchor before a mapping on the document start line") {
+            auto input = GENERATE(
+                std::string("--- &anchor a: b\n"),
+                std::string("--- !tag a: b\n"),
+                std::string("--- &anchor !tag a: b\n"));
+            REQUIRE_THROWS_AS(
+                root = deserializer.deserialize(fkyaml::detail::input_adapter(input)), fkyaml::parse_error);
+        }
+
+        SUBCASE("an anchor before a sequence entry on the same line") {
+            auto input = GENERATE(
+                std::string("&anchor - sequence entry\n"),
+                std::string("!tag - sequence entry\n"),
+                std::string("&anchor !tag - sequence entry\n"));
+            REQUIRE_THROWS_AS(
+                root = deserializer.deserialize(fkyaml::detail::input_adapter(input)), fkyaml::parse_error);
+        }
+    }
+
     SUBCASE("a block sequence on the next line keeps taking them") {
         std::string input = "foo: &anchor\n  - 1\n";
         REQUIRE_NOTHROW(root = deserializer.deserialize(fkyaml::detail::input_adapter(input)));

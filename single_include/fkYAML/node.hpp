@@ -8209,6 +8209,8 @@ private:
 
         m_has_document = false;
         m_expects_root_flow_key_separator = false;
+        m_has_explicit_document_start = false;
+        m_reject_root_mapping_with_props = false;
 
         basic_node_type root;
         mp_current_node = &root;
@@ -8223,6 +8225,8 @@ private:
         uint32_t line = lexer.get_lines_processed();
         uint32_t indent = lexer.get_last_token_begin_pos();
         const bool found_props = deserialize_node_properties(lexer, token, line, indent);
+        m_reject_root_mapping_with_props =
+            m_has_explicit_document_start && found_props && line == m_explicit_document_start_line;
 
         // A stream which only holds comments, white spaces or a bare "..." contains no document. Node
         // properties on their own, however, do make up one: they belong to an empty scalar.
@@ -8238,6 +8242,10 @@ private:
 
         switch (token.type) {
         case lexical_token_t::SEQUENCE_BLOCK_PREFIX: {
+            if FK_YAML_UNLIKELY (found_props && line == lexer.get_lines_processed()) {
+                throw parse_error(
+                    "Node properties cannot precede a block sequence entry on the same line.", line, indent);
+            }
             check_tab_in_indentation(lexer, lexer.get_lines_processed(), lexer.get_last_token_begin_pos());
             root = basic_node_type::sequence({basic_node_type()});
             apply_directive_set(root);
@@ -8474,6 +8482,8 @@ private:
 
                 lacks_end_of_directives_marker = false;
                 m_has_document = true;
+                m_has_explicit_document_start = true;
+                m_explicit_document_start_line = lexer.get_lines_processed();
                 break;
             default:
                 if FK_YAML_UNLIKELY (lacks_end_of_directives_marker) {
@@ -9839,6 +9849,10 @@ private:
                 }
                 else {
                     // root mapping node
+                    if FK_YAML_UNLIKELY (m_reject_root_mapping_with_props && line == m_explicit_document_start_line) {
+                        throw parse_error(
+                            "Node properties cannot precede a block mapping on the document start line.", line, indent);
+                    }
 
                     m_context_stack.emplace_back(line, indent, context_state_t::BLOCK_MAPPING, mp_current_node);
                     *mp_current_node = basic_node_type::mapping();
@@ -10291,6 +10305,12 @@ private:
     bool m_has_document {false};
     /// Whether a provisional root mapping still requires a separator after its flow collection key.
     bool m_expects_root_flow_key_separator {false};
+    /// Whether the current document begins with an explicit document start marker.
+    bool m_has_explicit_document_start {false};
+    /// The line where the explicit document start marker was found.
+    uint32_t m_explicit_document_start_line {0};
+    /// Whether root node properties occupy the explicit document start line.
+    bool m_reject_root_mapping_with_props {false};
     /// Whether the pending node properties precede their node and are not bound yet.
     bool m_defers_anchor {false};
     /// Whether a tag which precedes its node is waiting to be bound.
