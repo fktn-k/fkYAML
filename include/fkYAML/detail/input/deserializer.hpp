@@ -208,7 +208,6 @@ private:
         m_has_document = false;
         m_expects_root_flow_key_separator = false;
         m_has_explicit_document_start = false;
-        m_reject_root_mapping_with_props = false;
 
         basic_node_type root;
         mp_current_node = &root;
@@ -223,8 +222,6 @@ private:
         uint32_t line = lexer.get_lines_processed();
         uint32_t indent = lexer.get_last_token_begin_pos();
         const bool found_props = deserialize_node_properties(lexer, token, line, indent);
-        m_reject_root_mapping_with_props =
-            m_has_explicit_document_start && found_props && line == m_explicit_document_start_line;
 
         // A stream which only holds comments, white spaces or a bare "..." contains no document. Node
         // properties on their own, however, do make up one: they belong to an empty scalar.
@@ -240,6 +237,10 @@ private:
 
         switch (token.type) {
         case lexical_token_t::SEQUENCE_BLOCK_PREFIX: {
+            if FK_YAML_UNLIKELY (
+                m_has_explicit_document_start && m_explicit_document_start_line == lexer.get_lines_processed()) {
+                throw parse_error("A block sequence entry cannot be on the document start line.", line, indent);
+            }
             if FK_YAML_UNLIKELY (found_props && line == lexer.get_lines_processed()) {
                 throw parse_error(
                     "Node properties cannot precede a block sequence entry on the same line.", line, indent);
@@ -1847,9 +1848,8 @@ private:
                 }
                 else {
                     // root mapping node
-                    if FK_YAML_UNLIKELY (m_reject_root_mapping_with_props && line == m_explicit_document_start_line) {
-                        throw parse_error(
-                            "Node properties cannot precede a block mapping on the document start line.", line, indent);
+                    if FK_YAML_UNLIKELY (m_has_explicit_document_start && line == m_explicit_document_start_line) {
+                        throw parse_error("A block mapping entry cannot be on the document start line.", line, indent);
                     }
 
                     m_context_stack.emplace_back(line, indent, context_state_t::BLOCK_MAPPING, mp_current_node);
@@ -2307,8 +2307,6 @@ private:
     bool m_has_explicit_document_start {false};
     /// The line where the explicit document start marker was found.
     uint32_t m_explicit_document_start_line {0};
-    /// Whether root node properties occupy the explicit document start line.
-    bool m_reject_root_mapping_with_props {false};
     /// Whether the pending node properties precede their node and are not bound yet.
     bool m_defers_anchor {false};
     /// Whether a tag which precedes its node is waiting to be bound.

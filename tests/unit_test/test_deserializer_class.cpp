@@ -1138,6 +1138,11 @@ TEST_CASE("Deserializer_BlockSequence") {
         std::string input = "{\n  foo:\n   - bar\n}";
         REQUIRE_THROWS_AS(root = deserializer.deserialize(fkyaml::detail::input_adapter(input)), fkyaml::parse_error);
     }
+
+    SUBCASE("invalid root sequence") {
+        std::string input = "--- - a\n";
+        REQUIRE_THROWS_AS(root = deserializer.deserialize(fkyaml::detail::input_adapter(input)), fkyaml::parse_error);
+    }
 }
 
 TEST_CASE("Deserializer_BlockMapping") {
@@ -5052,6 +5057,11 @@ TEST_CASE("Deserializer_NodePropertiesBeforeBlockMapping") {
         REQUIRE(itr.key().is_string());
         REQUIRE(itr.key().get_tag_name() == "!!str");
         REQUIRE(itr.value().get_value<bool>());
+    }
+
+    SUBCASE("invalid root mapping") {
+        std::string input = "--- a: b\n";
+        REQUIRE_THROWS_AS(root = deserializer.deserialize(fkyaml::detail::input_adapter(input)), fkyaml::parse_error);
     }
 }
 
