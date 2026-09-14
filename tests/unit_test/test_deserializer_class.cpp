@@ -3081,6 +3081,56 @@ TEST_CASE("Deserializer_FlowContentIndentation") {
         REQUIRE(root[0].as_str() == "foo");
         REQUIRE(root[1].as_str() == "bar");
     }
+
+    SUBCASE("explicit entry in a root flow sequence") {
+        std::string input = "[\n? foo\n bar : baz\n,?]";
+        REQUIRE_NOTHROW(root = deserializer.deserialize(fkyaml::detail::input_adapter(input)));
+
+        REQUIRE(root.is_sequence());
+        REQUIRE(root.size() == 2);
+        REQUIRE(root[0].is_mapping());
+        REQUIRE(root[0]["foo bar"].as_str() == "baz");
+        REQUIRE(root[1].is_mapping());
+        REQUIRE(root[1].contains(nullptr));
+        REQUIRE(root[1][nullptr].is_null());
+    }
+
+    SUBCASE("explicit entries in a root flow mapping") {
+        std::string input = "{\n? explicit: entry,\n?,\nimplicit: entry\n}";
+        REQUIRE_NOTHROW(root = deserializer.deserialize(fkyaml::detail::input_adapter(input)));
+
+        REQUIRE(root.is_mapping());
+        REQUIRE(root.size() == 3);
+        REQUIRE(root.contains("explicit"));
+        REQUIRE(root.contains(nullptr));
+        REQUIRE(root.contains("implicit"));
+        REQUIRE(root["explicit"].as_str() == "entry");
+        REQUIRE(root[nullptr].is_null());
+        REQUIRE(root["implicit"].as_str() == "entry");
+    }
+
+    SUBCASE("flow collections as explicit keys in flow collections") {
+        auto input = GENERATE(std::string("[? [foo, bar]: baz]"), std::string("{? {foo: bar}: baz}"));
+        REQUIRE_NOTHROW(root = deserializer.deserialize(fkyaml::detail::input_adapter(input)));
+
+        fkyaml::node* mapping = root.is_sequence() ? &root[0] : &root;
+        REQUIRE(mapping->is_mapping());
+        REQUIRE(mapping->size() == 1);
+        REQUIRE(mapping->begin().value().as_str() == "baz");
+    }
+
+    SUBCASE("nested explicit entries in a flow sequence") {
+        std::string input = "[? {? foo: bar}: baz]";
+        REQUIRE_NOTHROW(root = deserializer.deserialize(fkyaml::detail::input_adapter(input)));
+
+        fkyaml::node key = {{"foo", "bar"}};
+        REQUIRE(root[0][std::move(key)].as_str() == "baz");
+    }
+
+    SUBCASE("explicit key prefix without separated with a comma") {
+        std::string input = "[? \"foo\": \"bar\" ?]";
+        REQUIRE_THROWS_AS(root = deserializer.deserialize(fkyaml::detail::input_adapter(input)), fkyaml::parse_error);
+    }
 }
 
 TEST_CASE("Deserializer_BadIndentation") {
