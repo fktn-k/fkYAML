@@ -1647,6 +1647,22 @@ TEST_CASE("LexicalAnalyzer_FoldedString") {
         REQUIRE(token.type == fkyaml::detail::lexical_token_t::END_OF_BUFFER);
     }
 
+    SUBCASE("a folded scalar after other content on a document start line is nested") {
+        const char input[] = "--- foo: >\n"
+                             "  line1\n";
+        fkyaml::detail::lexical_analyzer lexer(input);
+
+        REQUIRE(lexer.get_next_token().type == fkyaml::detail::lexical_token_t::END_OF_DIRECTIVES);
+        REQUIRE(lexer.get_next_token().type == fkyaml::detail::lexical_token_t::PLAIN_SCALAR);
+        REQUIRE(lexer.get_next_token().type == fkyaml::detail::lexical_token_t::KEY_SEPARATOR);
+
+        REQUIRE_NOTHROW(token = lexer.get_next_token());
+        REQUIRE(token.type == fkyaml::detail::lexical_token_t::BLOCK_FOLDED_SCALAR);
+        REQUIRE(token.str.begin() == &input[11]);
+        REQUIRE(token.str.end() == &input[0] + 19);
+        REQUIRE(lexer.get_block_scalar_header().indent == 2);
+    }
+
     SUBCASE("folded string scalar with invalid block scalar headers") {
         auto input = GENERATE(
             fkyaml::detail::str_view(">++2\n  foo"),

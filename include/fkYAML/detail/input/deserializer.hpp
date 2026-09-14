@@ -207,6 +207,7 @@ private:
 
         m_has_document = false;
         m_expects_root_flow_key_separator = false;
+        m_has_explicit_document_start = last_type == lexical_token_t::END_OF_DIRECTIVES;
 
         basic_node_type root;
         mp_current_node = &root;
@@ -236,6 +237,14 @@ private:
 
         switch (token.type) {
         case lexical_token_t::SEQUENCE_BLOCK_PREFIX: {
+            if FK_YAML_UNLIKELY (
+                m_has_explicit_document_start && m_explicit_document_start_line == lexer.get_lines_processed()) {
+                throw parse_error("A block sequence entry cannot be on the document start line.", line, indent);
+            }
+            if FK_YAML_UNLIKELY (found_props && line == lexer.get_lines_processed()) {
+                throw parse_error(
+                    "Node properties cannot precede a block sequence entry on the same line.", line, indent);
+            }
             check_tab_in_indentation(lexer, lexer.get_lines_processed(), lexer.get_last_token_begin_pos());
             root = basic_node_type::sequence({basic_node_type()});
             apply_directive_set(root);
@@ -465,6 +474,7 @@ private:
                     // ---
                     // # -> two documents, both empty
                     // ```
+                    m_explicit_document_start_line = lexer.get_lines_processed();
                     last_token = token;
                     lexer.set_document_state(false);
                     return;
@@ -472,6 +482,8 @@ private:
 
                 lacks_end_of_directives_marker = false;
                 m_has_document = true;
+                m_has_explicit_document_start = true;
+                m_explicit_document_start_line = lexer.get_lines_processed();
                 break;
             default:
                 if FK_YAML_UNLIKELY (lacks_end_of_directives_marker) {
@@ -1415,6 +1427,9 @@ private:
                 if FK_YAML_UNLIKELY (m_flow_context_depth > 0) {
                     throw parse_error("An invalid document marker found in a flow collection", line, indent);
                 }
+                if (token.type == lexical_token_t::END_OF_DIRECTIVES) {
+                    m_explicit_document_start_line = line;
+                }
                 last_type = token.type;
                 return;
             // no way to come here while lexically analyzing document contents.
@@ -1837,6 +1852,9 @@ private:
                 }
                 else {
                     // root mapping node
+                    if FK_YAML_UNLIKELY (m_has_explicit_document_start && line == m_explicit_document_start_line) {
+                        throw parse_error("A block mapping entry cannot be on the document start line.", line, indent);
+                    }
 
                     m_context_stack.emplace_back(line, indent, context_state_t::BLOCK_MAPPING, mp_current_node);
                     *mp_current_node = basic_node_type::mapping();
@@ -2289,6 +2307,10 @@ private:
     bool m_has_document {false};
     /// Whether a provisional root mapping still requires a separator after its flow collection key.
     bool m_expects_root_flow_key_separator {false};
+    /// Whether the current document begins with an explicit document start marker.
+    bool m_has_explicit_document_start {false};
+    /// The line where the explicit document start marker was found.
+    uint32_t m_explicit_document_start_line {0};
     /// Whether the pending node properties precede their node and are not bound yet.
     bool m_defers_anchor {false};
     /// Whether a tag which precedes its node is waiting to be bound.

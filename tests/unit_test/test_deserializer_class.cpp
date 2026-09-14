@@ -1138,6 +1138,11 @@ TEST_CASE("Deserializer_BlockSequence") {
         std::string input = "{\n  foo:\n   - bar\n}";
         REQUIRE_THROWS_AS(root = deserializer.deserialize(fkyaml::detail::input_adapter(input)), fkyaml::parse_error);
     }
+
+    SUBCASE("invalid root sequence") {
+        std::string input = "--- - a\n";
+        REQUIRE_THROWS_AS(root = deserializer.deserialize(fkyaml::detail::input_adapter(input)), fkyaml::parse_error);
+    }
 }
 
 TEST_CASE("Deserializer_BlockMapping") {
@@ -4780,6 +4785,13 @@ TEST_CASE("Deserializer_MultipleDocuments") {
         REQUIRE(docs[0]["foo"].get_value<int>() == 123);
         REQUIRE(docs[1].is_null());
     }
+
+    SUBCASE("a document start marker consumed by the preceding document keeps its line") {
+        auto input = GENERATE(std::string("---\n--- a: b\n"), std::string("---\n--- - a\n"));
+
+        REQUIRE_THROWS_AS(
+            docs = deserializer.deserialize_docs(fkyaml::detail::input_adapter(input)), fkyaml::parse_error);
+    }
 }
 
 TEST_CASE("Deserializer_TabInIndentation") {
@@ -4956,6 +4968,26 @@ TEST_CASE("Deserializer_NodePropertiesBeforeBlockMapping") {
         }
     }
 
+    SUBCASE("invalid node properties before block nodes") {
+        SUBCASE("an anchor before a mapping on the document start line") {
+            auto input = GENERATE(
+                std::string("--- &anchor a: b\n"),
+                std::string("--- !tag a: b\n"),
+                std::string("--- &anchor !tag a: b\n"));
+            REQUIRE_THROWS_AS(
+                root = deserializer.deserialize(fkyaml::detail::input_adapter(input)), fkyaml::parse_error);
+        }
+
+        SUBCASE("an anchor before a sequence entry on the same line") {
+            auto input = GENERATE(
+                std::string("&anchor - sequence entry\n"),
+                std::string("!tag - sequence entry\n"),
+                std::string("&anchor !tag - sequence entry\n"));
+            REQUIRE_THROWS_AS(
+                root = deserializer.deserialize(fkyaml::detail::input_adapter(input)), fkyaml::parse_error);
+        }
+    }
+
     SUBCASE("a block sequence on the next line keeps taking them") {
         std::string input = "foo: &anchor\n  - 1\n";
         REQUIRE_NOTHROW(root = deserializer.deserialize(fkyaml::detail::input_adapter(input)));
@@ -5032,6 +5064,11 @@ TEST_CASE("Deserializer_NodePropertiesBeforeBlockMapping") {
         REQUIRE(itr.key().is_string());
         REQUIRE(itr.key().get_tag_name() == "!!str");
         REQUIRE(itr.value().get_value<bool>());
+    }
+
+    SUBCASE("invalid root mapping") {
+        std::string input = "--- a: b\n";
+        REQUIRE_THROWS_AS(root = deserializer.deserialize(fkyaml::detail::input_adapter(input)), fkyaml::parse_error);
     }
 }
 
