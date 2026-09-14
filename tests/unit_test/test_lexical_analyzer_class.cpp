@@ -527,6 +527,14 @@ TEST_CASE("LexicalAnalyzer_PlainScalar") {
             fkyaml::detail::str_view(".nanValue"),
             fkyaml::detail::str_view(".NaNValue"),
             fkyaml::detail::str_view(".NAN_VALUE"),
+
+            // "?" followed by a flow indicator can start a plain scalar if it is not in a flow context.
+            fkyaml::detail::str_view("?{"),
+            fkyaml::detail::str_view("?}"),
+            fkyaml::detail::str_view("?["),
+            fkyaml::detail::str_view("?]"),
+            fkyaml::detail::str_view("?,"),
+
             // "-" followed by a flow indicator can start a plain scalar if it is not in a flow context.
             fkyaml::detail::str_view("-{"),
             fkyaml::detail::str_view("-}"),

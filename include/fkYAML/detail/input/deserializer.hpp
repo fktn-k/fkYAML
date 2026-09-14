@@ -62,6 +62,7 @@ class basic_deserializer {
         FLOW_SEQUENCE_KEY,            //!< The underlying node is a flow sequence as a key.
         FLOW_MAPPING,                 //!< The underlying node is a flow mapping.
         FLOW_MAPPING_KEY,             //!< The underlying node is a flow mapping as a key.
+        FLOW_MAPPING_EXPLICIT_KEY,    //!< The underlying node is an explicit key in a flow collection.
     };
 
     /// @brief Context information set for parsing.
@@ -83,7 +84,9 @@ class basic_deserializer {
               indent(indent),
               state(state),
               p_node(p_node),
-              is_explicit_key(state == context_state_t::BLOCK_MAPPING_EXPLICIT_KEY) {
+              is_explicit_key(
+                  state == context_state_t::BLOCK_MAPPING_EXPLICIT_KEY ||
+                  state == context_state_t::FLOW_MAPPING_EXPLICIT_KEY) {
         }
 
         /// @brief Construct a new parse_context object which owns its node.
@@ -98,7 +101,9 @@ class basic_deserializer {
               state(state),
               p_node(node.get()),
               owned_node(std::move(node)),
-              is_explicit_key(state == context_state_t::BLOCK_MAPPING_EXPLICIT_KEY) {
+              is_explicit_key(
+                  state == context_state_t::BLOCK_MAPPING_EXPLICIT_KEY ||
+                  state == context_state_t::FLOW_MAPPING_EXPLICIT_KEY) {
         }
 
         // Parse contexts are move-only so that the ownership of an owned node cannot be duplicated.
@@ -518,6 +523,24 @@ private:
                     throw parse_error("An explicit key is not allowed in this context.", line, indent);
                 }
 
+                if (m_flow_context_depth > 0) {
+                    if FK_YAML_UNLIKELY (m_flow_token_state == flow_token_state_t::NEEDS_SEPARATOR_OR_SUFFIX) {
+                        throw parse_error("An explicit key is found without separated with a comma.", line, indent);
+                    }
+
+                    token = lexer.get_next_token();
+                    m_context_stack.emplace_back(
+                        line,
+                        indent,
+                        context_state_t::FLOW_MAPPING_EXPLICIT_KEY,
+                        std::unique_ptr<basic_node_type>(new basic_node_type()));
+                    mp_current_node = m_context_stack.back().p_node;
+                    apply_directive_set(*mp_current_node);
+                    indent = lexer.get_last_token_begin_pos();
+                    line = lexer.get_lines_processed();
+                    continue;
+                }
+
                 if (indent == m_context_stack.back().indent) {
                     // The preceding explicit key, if any, has no value at this point.
                     add_explicit_key_with_null_value();
@@ -592,6 +615,10 @@ private:
             case lexical_token_t::KEY_SEPARATOR: {
                 if FK_YAML_UNLIKELY (m_context_stack.empty()) {
                     throw parse_error("A key separator is not allowed in this context.", line, indent);
+                }
+                if (m_context_stack.back().state == context_state_t::FLOW_MAPPING_EXPLICIT_KEY) {
+                    add_explicit_flow_key(line, indent);
+                    break;
                 }
                 if ((m_context_stack.back().state == context_state_t::BLOCK_SEQUENCE_ENTRY ||
                      m_context_stack.back().state == context_state_t::MAPPING_VALUE) &&
@@ -1018,6 +1045,13 @@ private:
                     throw parse_error("Flow sequence ending is found outside the flow context.", line, indent);
                 }
 
+                const bool is_flow_explicit_key =
+                    !m_context_stack.empty() &&
+                    m_context_stack.back().state == context_state_t::FLOW_MAPPING_EXPLICIT_KEY;
+                if (is_flow_explicit_key) {
+                    add_explicit_flow_key(line, indent);
+                }
+
                 if (--m_flow_context_depth == 0) {
                     lexer.set_context_state(false);
                     m_flow_base_indent = -1;
@@ -1190,6 +1224,13 @@ private:
                     throw parse_error("Flow mapping ending is found outside the flow context.", line, indent);
                 }
 
+                const bool is_flow_explicit_key =
+                    !m_context_stack.empty() &&
+                    m_context_stack.back().state == context_state_t::FLOW_MAPPING_EXPLICIT_KEY;
+                if (is_flow_explicit_key) {
+                    add_explicit_flow_key(line, indent);
+                }
+
                 if (--m_flow_context_depth == 0) {
                     lexer.set_context_state(false);
                     m_flow_base_indent = -1;
@@ -1288,6 +1329,10 @@ private:
             case lexical_token_t::VALUE_SEPARATOR:
                 if FK_YAML_UNLIKELY (m_flow_context_depth == 0) {
                     throw parse_error("invalid value separator is found.", line, indent);
+                }
+                if (!m_context_stack.empty() &&
+                    m_context_stack.back().state == context_state_t::FLOW_MAPPING_EXPLICIT_KEY) {
+                    add_explicit_flow_key(line, indent);
                 }
                 close_omitted_mapping_value(line, indent);
                 if FK_YAML_UNLIKELY (m_flow_token_state != flow_token_state_t::NEEDS_SEPARATOR_OR_SUFFIX) {
@@ -1535,17 +1580,21 @@ private:
         lexer_type& lexer, std::unique_ptr<basic_node_type>&& owned_node, const uint32_t collection_begin_line,
         const uint32_t collection_begin_indent, const bool is_multiline_collection, lexical_token& token,
         uint32_t& line, uint32_t& indent) {
+        const context_state_t explicit_key_state = m_flow_context_depth > 0
+                                                       ? context_state_t::FLOW_MAPPING_EXPLICIT_KEY
+                                                       : context_state_t::BLOCK_MAPPING_EXPLICIT_KEY;
         m_context_stack.emplace_back(
-            collection_begin_line,
-            collection_begin_indent,
-            context_state_t::BLOCK_MAPPING_EXPLICIT_KEY,
-            std::move(owned_node));
+            collection_begin_line, collection_begin_indent, explicit_key_state, std::move(owned_node));
         mp_current_node = m_context_stack.back().p_node;
 
         const uint32_t collection_end_line = lexer.get_lines_processed();
         token = lexer.get_next_token();
         line = lexer.get_lines_processed();
         indent = lexer.get_last_token_begin_pos();
+
+        if (m_flow_context_depth > 0) {
+            return;
+        }
 
         const bool begins_compact_mapping = token.type == lexical_token_t::KEY_SEPARATOR && line == collection_end_line;
         if (!begins_compact_mapping) {
@@ -1599,7 +1648,9 @@ private:
             return;
         }
 
-        if FK_YAML_LIKELY (m_context_stack.back().state != context_state_t::BLOCK_MAPPING_EXPLICIT_KEY) {
+        if FK_YAML_LIKELY (
+            m_context_stack.back().state != context_state_t::BLOCK_MAPPING_EXPLICIT_KEY &&
+            m_context_stack.back().state != context_state_t::FLOW_MAPPING_EXPLICIT_KEY) {
             m_context_stack.pop_back();
             mp_current_node = current_context(line, indent).p_node;
 
@@ -1632,6 +1683,13 @@ private:
             }
             apply_deferred_properties(node);
             apply_node_properties(node);
+        }
+
+        if (!m_context_stack.empty() && m_context_stack.back().state == context_state_t::FLOW_MAPPING_EXPLICIT_KEY) {
+            assign_node_value(std::move(node), line, indent);
+            indent = lexer.get_last_token_begin_pos();
+            line = lexer.get_lines_processed();
+            return;
         }
 
         if (mp_current_node->is_mapping()) {
@@ -1941,6 +1999,19 @@ private:
         auto itr = p_parent_node->as_map().emplace(std::move(key_node), basic_node_type());
         mp_current_node = &(itr.first->second);
         m_context_stack.emplace_back(line, indent, context_state_t::BLOCK_MAPPING_EXPLICIT_VALUE, mp_current_node);
+    }
+
+    /// @brief Adds an explicit flow mapping key and makes its value node the current node.
+    /// @param line The line where the value separator or entry ending is found.
+    /// @param indent The indentation width where the value separator or entry ending is found.
+    void add_explicit_flow_key(const uint32_t line, const uint32_t indent) {
+        FK_YAML_ASSERT(m_context_stack.back().state == context_state_t::FLOW_MAPPING_EXPLICIT_KEY);
+
+        apply_deferred_properties(*m_context_stack.back().p_node);
+        basic_node_type key_node = std::move(*m_context_stack.back().p_node);
+        m_context_stack.pop_back();
+        mp_current_node = current_context(line, indent).p_node;
+        add_new_key(std::move(key_node), line, indent);
     }
 
     /// @brief Adds an entry with a null value for an explicit key which is not followed by its value.
