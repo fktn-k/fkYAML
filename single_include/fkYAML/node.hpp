@@ -8634,15 +8634,43 @@ private:
                     add_explicit_flow_key(line, indent);
                     break;
                 }
-                if ((m_context_stack.back().state == context_state_t::BLOCK_SEQUENCE_ENTRY ||
-                     m_context_stack.back().state == context_state_t::MAPPING_VALUE) &&
-                    (m_needs_tag_impl || m_needs_anchor_impl) && m_context_stack.back().line != line &&
-                    indent <= m_context_stack.back().indent) {
-                    pop_to_parent_node(line, indent, [indent](const parse_context& c) {
-                        return c.state == context_state_t::BLOCK_MAPPING && indent == c.indent;
-                    });
-                    add_empty_key_entry(lexer, token, line, indent);
-                    continue;
+                {
+                    // A key separator after node properties on a line of their own begins an entry whose empty key
+                    // the properties are for.
+                    const parse_context& last_context = m_context_stack.back();
+                    const bool begins_entry_with_empty_key =
+                        m_flow_context_depth == 0 && (m_needs_tag_impl || m_needs_anchor_impl) &&
+                        last_context.line < line &&
+                        (last_context.state == context_state_t::BLOCK_MAPPING ||
+                         last_context.state == context_state_t::MAPPING_VALUE ||
+                         last_context.state == context_state_t::BLOCK_SEQUENCE_ENTRY) &&
+                        !has_explicit_key_context_at(indent);
+                    if (begins_entry_with_empty_key && indent <= last_context.indent) {
+                        // ```yaml
+                        // foo: 1
+                        // &anchor : bar
+                        // # -> {foo: 1, &anchor null: bar}
+                        // ```
+                        pop_to_parent_node(line, indent, [indent](const parse_context& c) {
+                            return c.state == context_state_t::BLOCK_MAPPING && indent == c.indent;
+                        });
+                        add_empty_key_entry(lexer, token, line, indent);
+                        continue;
+                    }
+                    if (begins_entry_with_empty_key && last_context.state == context_state_t::MAPPING_VALUE) {
+                        // The mapping value is a mapping whose first key is empty.
+                        // ```yaml
+                        // foo:
+                        //   &anchor : bar
+                        // # -> {foo: {&anchor null: bar}}
+                        // ```
+                        *mp_current_node = basic_node_type::mapping();
+                        apply_directive_set(*mp_current_node);
+                        apply_deferred_properties(*mp_current_node);
+                        m_context_stack.emplace_back(line, indent, context_state_t::BLOCK_MAPPING, mp_current_node);
+                        add_empty_key_entry(lexer, token, line, indent);
+                        continue;
+                    }
                 }
 
                 if (m_context_stack.back().state == context_state_t::BLOCK_SEQUENCE_ENTRY) {
@@ -8714,15 +8742,27 @@ private:
                     // defer applying node properties for the subsequent node on the same line.
                     continue;
                 }
+                if (found_props && line > old_line && line == lexer.get_lines_processed()) {
+                    // The properties are followed by a key separator on their line (any other token is handled
+                    // above), so they are for the empty key of an entry which begins there, and the key separator
+                    // is handled at the position of the properties.
+                    // ```yaml
+                    // foo:
+                    // &anchor : bar
+                    // ```
+                    continue;
+                }
 
                 const bool has_explicit_key_context = has_explicit_key_context_at(old_indent);
 
-                if (found_props && token.type != lexical_token_t::KEY_SEPARATOR && !has_explicit_key_context) {
+                if (found_props && line < lexer.get_lines_processed() && !has_explicit_key_context) {
                     // The properties belong to whatever begins on the following line, which the token
                     // after it decides.
                     // ```yaml
                     // foo: &anchor
                     //   bar: baz   # the anchor is for the mapping, not for the "bar" key.
+                    // foo: &anchor
+                    // : bar        # the anchor is for the empty value of "foo", not for the empty key.
                     // ```
                     defer_node_properties();
                 }
@@ -8832,6 +8872,39 @@ private:
                             std::any_of(m_context_stack.rbegin(), m_context_stack.rend(), is_explicit_key_at_indent);
                         if (closes_explicit_key) {
                             defer_node_properties();
+                            continue;
+                        }
+
+                        const bool begins_entry_with_empty_key =
+                            m_context_stack.back().state == context_state_t::MAPPING_VALUE &&
+                            !has_explicit_key_context_at(indent);
+                        if (begins_entry_with_empty_key) {
+                            // Nothing but properties, if any, is between this key separator and the one of the
+                            // preceding key, so the preceding value is omitted and this separator begins an entry
+                            // with an empty key. The deferred properties are for the omitted value.
+                            if (indent <= m_context_stack.back().indent) {
+                                // ```yaml
+                                // foo: &anchor
+                                // : bar
+                                // # -> {foo: &anchor null, null: bar}
+                                // ```
+                                pop_to_parent_node(line, indent, [indent](const parse_context& c) {
+                                    return c.state == context_state_t::BLOCK_MAPPING && indent == c.indent;
+                                });
+                            }
+                            else {
+                                // ```yaml
+                                // foo: &anchor
+                                //   : bar
+                                // # -> {foo: &anchor {null: bar}}
+                                // ```
+                                *mp_current_node = basic_node_type::mapping();
+                                apply_directive_set(*mp_current_node);
+                                apply_deferred_properties(*mp_current_node);
+                                m_context_stack.emplace_back(
+                                    line, indent, context_state_t::BLOCK_MAPPING, mp_current_node);
+                            }
+                            add_empty_key_entry(lexer, token, line, indent);
                             continue;
                         }
                     }
