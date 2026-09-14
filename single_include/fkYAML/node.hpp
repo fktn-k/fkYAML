@@ -8371,6 +8371,8 @@ class basic_deserializer {
         std::unique_ptr<basic_node_type> owned_node {};
         /// Whether this context originated as an explicit mapping key.
         bool is_explicit_key {false};
+        /// The node properties which precede the flow collection of this context on an earlier line.
+        pending_node_properties held_props {};
     };
 
     /// @brief Represents the state of a YAML document during parsing.
@@ -8579,10 +8581,13 @@ private:
             lexer.enter_flow_context();
             root = basic_node_type::sequence();
             apply_directive_set(root);
-            apply_deferred_properties(root);
+            if (found_props && line < lexer.get_lines_processed()) {
+                defer_node_properties();
+            }
             apply_node_properties(root);
             m_context_stack.emplace_back(
                 lexer.get_lines_processed(), lexer.get_last_token_begin_pos(), context_state_t::FLOW_SEQUENCE, &root);
+            m_context_stack.back().held_props = take_deferred_properties();
             token = lexer.get_next_token();
             line = lexer.get_lines_processed();
             indent = lexer.get_last_token_begin_pos();
@@ -8592,10 +8597,13 @@ private:
             lexer.enter_flow_context();
             root = basic_node_type::mapping();
             apply_directive_set(root);
-            apply_deferred_properties(root);
+            if (found_props && line < lexer.get_lines_processed()) {
+                defer_node_properties();
+            }
             apply_node_properties(root);
             m_context_stack.emplace_back(
                 lexer.get_lines_processed(), lexer.get_last_token_begin_pos(), context_state_t::FLOW_MAPPING, &root);
+            m_context_stack.back().held_props = take_deferred_properties();
             token = lexer.get_next_token();
             line = lexer.get_lines_processed();
             indent = lexer.get_last_token_begin_pos();
@@ -9434,6 +9442,8 @@ private:
                     last_context.line = line;
                     last_context.indent = indent;
                     last_context.state = context_state_t::FLOW_SEQUENCE;
+                    // The collection may turn out to be an implicit key, which is only known at its end.
+                    last_context.held_props = take_deferred_properties();
                     break;
                 }
                 }
@@ -9479,6 +9489,7 @@ private:
                 indent = collection_begin_indent;
                 const bool is_multiline_collection = collection_begin_line != lexer.get_lines_processed();
                 const bool is_explicit_key = last_context.is_explicit_key;
+                const pending_node_properties held_props = last_context.held_props;
                 // The node stays alive until its value is either moved into the tree below or dropped here.
                 std::unique_ptr<basic_node_type> owned_node = std::move(last_context.owned_node);
                 m_context_stack.pop_back();
@@ -9491,6 +9502,7 @@ private:
                         restore_explicit_flow_collection_key(
                             lexer,
                             std::move(owned_node),
+                            held_props,
                             collection_begin_line,
                             collection_begin_indent,
                             is_multiline_collection,
@@ -9533,6 +9545,8 @@ private:
                     basic_node_type key_node = basic_node_type::mapping();
                     apply_directive_set(key_node);
                     mp_current_node->swap(key_node);
+                    // The properties which precede the collection are for the mapping which it begins as a key.
+                    apply_held_properties(held_props, *mp_current_node);
 
                     m_context_stack.emplace_back(line, indent, context_state_t::BLOCK_MAPPING, mp_current_node);
                     m_flow_context_state.set_token_state(flow_token_state_t::NEEDS_VALUE_OR_SUFFIX);
@@ -9540,6 +9554,7 @@ private:
                     add_new_key(std::move(key_node), line, indent);
                 }
                 else {
+                    apply_held_properties(held_props, *mp_current_node);
                     if (!m_context_stack.empty()) {
                         mp_current_node = m_context_stack.back().p_node;
                     }
@@ -9608,6 +9623,8 @@ private:
                     last_context.line = line;
                     last_context.indent = indent;
                     last_context.state = context_state_t::FLOW_MAPPING;
+                    // The collection may turn out to be an implicit key, which is only known at its end.
+                    last_context.held_props = take_deferred_properties();
                     break;
                 }
                 }
@@ -9654,6 +9671,7 @@ private:
                 indent = collection_begin_indent;
                 const bool is_multiline_collection = collection_begin_line != lexer.get_lines_processed();
                 const bool is_explicit_key = last_context.is_explicit_key;
+                const pending_node_properties held_props = last_context.held_props;
                 // The node stays alive until its value is either moved into the tree below or dropped here.
                 std::unique_ptr<basic_node_type> owned_node = std::move(last_context.owned_node);
                 m_context_stack.pop_back();
@@ -9666,6 +9684,7 @@ private:
                         restore_explicit_flow_collection_key(
                             lexer,
                             std::move(owned_node),
+                            held_props,
                             collection_begin_line,
                             collection_begin_indent,
                             is_multiline_collection,
@@ -9708,6 +9727,8 @@ private:
                     basic_node_type key_node = basic_node_type::mapping();
                     apply_directive_set(key_node);
                     mp_current_node->swap(key_node);
+                    // The properties which precede the collection are for the mapping which it begins as a key.
+                    apply_held_properties(held_props, *mp_current_node);
 
                     m_context_stack.emplace_back(line, indent, context_state_t::BLOCK_MAPPING, mp_current_node);
                     m_flow_context_state.set_token_state(flow_token_state_t::NEEDS_VALUE_OR_SUFFIX);
@@ -9715,6 +9736,7 @@ private:
                     add_new_key(std::move(key_node), line, indent);
                 }
                 else {
+                    apply_held_properties(held_props, *mp_current_node);
                     if (!m_context_stack.empty()) {
                         mp_current_node = m_context_stack.back().p_node;
                     }
@@ -9981,9 +10003,9 @@ private:
     }
 
     void restore_explicit_flow_collection_key(
-        lexer_type& lexer, std::unique_ptr<basic_node_type>&& owned_node, const uint32_t collection_begin_line,
-        const uint32_t collection_begin_indent, const bool is_multiline_collection, lexical_token& token,
-        uint32_t& line, uint32_t& indent) {
+        lexer_type& lexer, std::unique_ptr<basic_node_type>&& owned_node, const pending_node_properties& held_props,
+        const uint32_t collection_begin_line, const uint32_t collection_begin_indent,
+        const bool is_multiline_collection, lexical_token& token, uint32_t& line, uint32_t& indent) {
         const context_state_t explicit_key_state = m_flow_context_state.is_active()
                                                        ? context_state_t::FLOW_MAPPING_EXPLICIT_KEY
                                                        : context_state_t::BLOCK_MAPPING_EXPLICIT_KEY;
@@ -9996,12 +10018,16 @@ private:
         line = lexer.get_lines_processed();
         indent = lexer.get_last_token_begin_pos();
 
-        if (m_flow_context_state.is_active()) {
-            return;
-        }
-
-        const bool begins_compact_mapping = token.type == lexical_token_t::KEY_SEPARATOR && line == collection_end_line;
+        const bool begins_compact_mapping = !m_flow_context_state.is_active() &&
+                                            token.type == lexical_token_t::KEY_SEPARATOR && line == collection_end_line;
         if (!begins_compact_mapping) {
+            // The collection is the explicit key itself.
+            // ```yaml
+            // ? &anchor
+            //   [foo]
+            // : bar   # the anchor is for the [foo] key.
+            // ```
+            apply_held_properties(held_props, *mp_current_node);
             return;
         }
         if FK_YAML_UNLIKELY (is_multiline_collection) {
@@ -10011,9 +10037,16 @@ private:
                 lexer.get_last_token_begin_pos());
         }
 
+        // The collection is the first key of a mapping as the explicit key.
+        // ```yaml
+        // ? &anchor
+        //   [foo]: bar   # the anchor is for the {[foo]: bar} mapping.
+        // : baz
+        // ```
         basic_node_type collection_key = std::move(*mp_current_node);
         *mp_current_node = basic_node_type::mapping();
         apply_directive_set(*mp_current_node);
+        apply_held_properties(held_props, *mp_current_node);
         auto itr = mp_current_node->as_map().emplace(std::move(collection_key), basic_node_type());
         mp_current_node = &(itr.first->second);
         apply_directive_set(*mp_current_node);
@@ -10668,14 +10701,29 @@ private:
     /// @brief Set the node properties which precede their node to the given node.
     /// @param node A node type object the deferred properties belong to.
     void apply_deferred_properties(basic_node_type& node) {
-        if (m_deferred_properties.has_anchor()) {
-            const str_view anchor_name = m_deferred_properties.release_anchor();
+        apply_held_properties(take_deferred_properties(), node);
+    }
+
+    /// @brief Take the node properties which precede their node, leaving none deferred.
+    /// @return The deferred node properties.
+    pending_node_properties take_deferred_properties() noexcept {
+        const pending_node_properties props = m_deferred_properties;
+        m_deferred_properties = {};
+        return props;
+    }
+
+    /// @brief Set the given node properties to the given node.
+    /// @param props The node properties to be set.
+    /// @param node A node type object the properties belong to.
+    void apply_held_properties(const pending_node_properties& props, basic_node_type& node) {
+        if (props.has_anchor()) {
+            const str_view anchor_name = props.get_anchor();
             node.add_anchor_name(std::string(anchor_name.begin(), anchor_name.end()));
         }
 
-        if (m_deferred_properties.has_tag()) {
+        if (props.has_tag()) {
             // Ensure the tag is valid in the current document before applying it.
-            const str_view tag_name = m_deferred_properties.release_tag();
+            const str_view tag_name = props.get_tag();
             tag_resolver_type::resolve_tag(tag_name, m_document_state.get_meta());
             node.add_tag_name(std::string(tag_name.begin(), tag_name.end()));
         }
