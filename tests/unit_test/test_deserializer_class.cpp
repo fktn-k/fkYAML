@@ -79,6 +79,68 @@ TEST_CASE("Deserializer_KeySeparator") {
         REQUIRE(root[nullptr].as_str() == "empty key");
     }
 
+    SUBCASE("empty mapping key with properties after a normal entry") {
+        std::string input = "key: value\n"
+                            "&anchor : empty key\n";
+        REQUIRE_NOTHROW(root = deserializer.deserialize(fkyaml::detail::input_adapter(input)));
+        REQUIRE(root.size() == 2);
+        REQUIRE(root["key"].as_str() == "value");
+        REQUIRE(root.as_map().find(nullptr)->first.get_anchor_name() == "anchor");
+        REQUIRE(root[nullptr].as_str() == "empty key");
+    }
+
+    SUBCASE("empty mapping key with properties after an omitted mapping value") {
+        std::string input = "foo:\n"
+                            "!!str : bar\n";
+        REQUIRE_NOTHROW(root = deserializer.deserialize(fkyaml::detail::input_adapter(input)));
+        REQUIRE(root.size() == 2);
+        REQUIRE(root["foo"].is_null());
+        REQUIRE(root.as_map().find("")->first.get_tag_name() == "!!str");
+        REQUIRE(root[""].as_str() == "bar");
+    }
+
+    SUBCASE("empty mapping key with properties which begins a mapping value") {
+        std::string input = "foo: &map\n"
+                            "  &key : bar\n";
+        REQUIRE_NOTHROW(root = deserializer.deserialize(fkyaml::detail::input_adapter(input)));
+        REQUIRE(root.size() == 1);
+        REQUIRE(root["foo"].get_anchor_name() == "map");
+        REQUIRE(root["foo"].size() == 1);
+        REQUIRE(root["foo"].as_map().find(nullptr)->first.get_anchor_name() == "key");
+        REQUIRE(root["foo"][nullptr].as_str() == "bar");
+    }
+
+    SUBCASE("empty mapping key after a mapping value with properties only") {
+        std::string input = "foo: &anchor\n"
+                            ": bar\n";
+        REQUIRE_NOTHROW(root = deserializer.deserialize(fkyaml::detail::input_adapter(input)));
+        REQUIRE(root.size() == 2);
+        REQUIRE(root["foo"].is_null());
+        REQUIRE(root["foo"].get_anchor_name() == "anchor");
+        REQUIRE_FALSE(root.as_map().find(nullptr)->first.has_anchor_name());
+        REQUIRE(root[nullptr].as_str() == "bar");
+    }
+
+    SUBCASE("empty mapping key which begins a mapping value with properties") {
+        std::string input = "foo: &anchor\n"
+                            "  : bar\n";
+        REQUIRE_NOTHROW(root = deserializer.deserialize(fkyaml::detail::input_adapter(input)));
+        REQUIRE(root.size() == 1);
+        REQUIRE(root["foo"].is_mapping());
+        REQUIRE(root["foo"].get_anchor_name() == "anchor");
+        REQUIRE(root["foo"].size() == 1);
+        REQUIRE(root["foo"][nullptr].as_str() == "bar");
+    }
+
+    SUBCASE("empty mapping key after an omitted mapping value") {
+        std::string input = "foo:\n"
+                            ": bar\n";
+        REQUIRE_NOTHROW(root = deserializer.deserialize(fkyaml::detail::input_adapter(input)));
+        REQUIRE(root.size() == 2);
+        REQUIRE(root["foo"].is_null());
+        REQUIRE(root[nullptr].as_str() == "bar");
+    }
+
     SUBCASE("empty mapping key whose value is omitted") {
         std::string input = ":\n"
                             "bar: baz\n";
