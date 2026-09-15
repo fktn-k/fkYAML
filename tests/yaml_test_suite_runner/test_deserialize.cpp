@@ -86,10 +86,22 @@ bool should_skip_yaml_case(const std::string& test_id, std::string& reason) {
         "2JQS",
         "X38W",
     };
+    static const char* const percent_encoded_tag_cases[] = {
+        "6CK3",
+    };
 
     for (std::size_t i = 0; i < sizeof(duplicate_key_cases) / sizeof(duplicate_key_cases[0]); ++i) {
         if (test_id == duplicate_key_cases[i]) {
             reason = "duplicate key in YAML mapping.";
+            return true;
+        }
+    }
+
+    for (std::size_t i = 0; i < sizeof(percent_encoded_tag_cases) / sizeof(percent_encoded_tag_cases[0]); ++i) {
+        if (test_id == percent_encoded_tag_cases[i]) {
+            // https://yaml.org/spec/1.2.2/#56-miscellaneous-characters
+            // https://github.com/yaml/yaml-test-suite/issues/9
+            reason = "expects %-escaped characters in a tag to be expanded, which the YAML spec prohibits.";
             return true;
         }
     }
