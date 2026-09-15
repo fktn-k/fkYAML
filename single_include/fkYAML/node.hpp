@@ -14664,7 +14664,13 @@ inline void from_node(const BasicNodeType& n, bool& b) {
         break;
     case node_type::INTEGER:
         // true: non-zero, false: zero
-        b = (n.as_int() != 0);
+        if (n.is_uint()) {
+            // An unsigned integer may exceed the range of the signed integer type.
+            b = (n.as_uint() != 0);
+        }
+        else {
+            b = (n.as_int() != 0);
+        }
         break;
     case node_type::FLOAT:
         // true: non-zero, false: zero
@@ -14855,7 +14861,13 @@ inline void from_node(const BasicNodeType& n, FloatType& f) {
         f = static_cast<bool>(n.as_bool()) ? static_cast<FloatType>(1.) : static_cast<FloatType>(0.);
         break;
     case node_type::INTEGER:
-        f = static_cast<FloatType>(n.as_int());
+        if (n.is_uint()) {
+            // An unsigned integer may exceed the range of the signed integer type.
+            f = static_cast<FloatType>(n.as_uint());
+        }
+        else {
+            f = static_cast<FloatType>(n.as_int());
+        }
         break;
     case node_type::FLOAT:
         f = from_node_float_helper<BasicNodeType, FloatType>::convert(n);
@@ -15933,7 +15945,9 @@ public:
             ret = (lhs.m_value.boolean == act_rhs.m_value.boolean);
             break;
         case detail::node_attr_bits::int_bit:
-            ret = (lhs.m_value.integer == act_rhs.m_value.integer);
+            // An unsigned integer beyond the signed range has the same bit pattern as a negative integer.
+            ret = (lhs.m_value.integer == act_rhs.m_value.integer) &&
+                  (lhs.m_attrs.is_uint() == act_rhs.m_attrs.is_uint());
             break;
         case detail::node_attr_bits::float_bit:
             ret =
@@ -15996,9 +16010,21 @@ public:
             // false < true
             ret = (!lhs.m_value.boolean && act_rhs.m_value.boolean);
             break;
-        case detail::node_attr_bits::int_bit:
-            ret = (lhs.m_value.integer < act_rhs.m_value.integer);
+        case detail::node_attr_bits::int_bit: {
+            const bool lhs_is_uint = lhs.m_attrs.is_uint();
+            const bool rhs_is_uint = act_rhs.m_attrs.is_uint();
+            if (lhs_is_uint != rhs_is_uint) {
+                // An unsigned integer beyond the signed range is greater than any signed integer.
+                ret = rhs_is_uint;
+            }
+            else if (lhs_is_uint) {
+                ret = (static_cast<uint64_t>(lhs.m_value.integer) < static_cast<uint64_t>(act_rhs.m_value.integer));
+            }
+            else {
+                ret = (lhs.m_value.integer < act_rhs.m_value.integer);
+            }
             break;
+        }
         case detail::node_attr_bits::float_bit:
             ret = (lhs.m_value.float_val < act_rhs.m_value.float_val);
             break;
