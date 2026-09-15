@@ -6372,7 +6372,8 @@ inline void to_node(BasicNodeType& n, T i) noexcept {
     using integer_type = typename BasicNodeType::integer_type;
     // Only an unsigned integer as wide as the signed integer type can exceed its range.
     using may_exceed_integer_type = std::integral_constant<
-        bool, std::is_unsigned<T>::value && std::is_signed<integer_type>::value && sizeof(T) >= sizeof(integer_type)>;
+        bool,
+        std::is_unsigned<T>::value && std::is_signed<integer_type>::value && sizeof(T) >= sizeof(integer_type)>;
     integer_to_node(n, i, may_exceed_integer_type {});
 }
 
