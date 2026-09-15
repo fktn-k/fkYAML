@@ -2282,7 +2282,13 @@ struct hash<fkyaml::basic_node<
             hash_combine(seed, std::hash<boolean_type>()(n.template get_value<boolean_type>()));
             return seed;
         case fkyaml::node_type::INTEGER:
-            hash_combine(seed, std::hash<integer_type>()(n.template get_value<integer_type>()));
+            if (n.is_uint()) {
+                // An unsigned integer may exceed the range of the signed integer type.
+                hash_combine(seed, std::hash<uint64_t>()(n.as_uint()));
+            }
+            else {
+                hash_combine(seed, std::hash<integer_type>()(n.template get_value<integer_type>()));
+            }
             return seed;
         case fkyaml::node_type::FLOAT:
             hash_combine(seed, std::hash<float_number_type>()(n.template get_value<float_number_type>()));

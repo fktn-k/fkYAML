@@ -5944,6 +5944,8 @@ FK_YAML_DETAIL_NAMESPACE_END
 #ifndef FK_YAML_DETAIL_CONVERSIONS_TO_NODE_HPP
 #define FK_YAML_DETAIL_CONVERSIONS_TO_NODE_HPP
 
+#include <limits>
+#include <type_traits>
 #include <utility>
 
 // #include <fkYAML/detail/macros/define_macros.hpp>
@@ -6331,6 +6333,33 @@ inline void to_node(BasicNodeType& n, typename BasicNodeType::boolean_type b) no
     external_node_constructor<BasicNodeType>::boolean_scalar(n, b);
 }
 
+/// @brief Constructs an integer node from a value which fits in the integer type of the node.
+/// @tparam BasicNodeType A basic_node template instance type.
+/// @tparam T An integer type.
+/// @param n A basic_node object.
+/// @param i An integer object.
+template <typename BasicNodeType, typename T>
+inline void integer_to_node(BasicNodeType& n, T i, std::false_type /*unused*/) noexcept {
+    external_node_constructor<BasicNodeType>::integer_scalar(n, static_cast<typename BasicNodeType::integer_type>(i));
+}
+
+/// @brief Constructs an integer node from an unsigned value which may exceed the range of the integer type of the node.
+/// @note A value beyond the range keeps its bit pattern and is flagged as unsigned so that as_uint() can recover it.
+/// @tparam BasicNodeType A basic_node template instance type.
+/// @tparam T An unsigned integer type.
+/// @param n A basic_node object.
+/// @param i An unsigned integer object.
+template <typename BasicNodeType, typename T>
+inline void integer_to_node(BasicNodeType& n, T i, std::true_type /*unused*/) noexcept {
+    using integer_type = typename BasicNodeType::integer_type;
+    if (i > static_cast<T>((std::numeric_limits<integer_type>::max)())) {
+        external_node_constructor<BasicNodeType>::unsigned_integer_scalar(n, static_cast<integer_type>(i));
+    }
+    else {
+        external_node_constructor<BasicNodeType>::integer_scalar(n, static_cast<integer_type>(i));
+    }
+}
+
 /// @brief to_node function for integers.
 /// @tparam BasicNodeType A basic_node template instance type.
 /// @tparam T An integer type.
@@ -6340,7 +6369,12 @@ template <
     typename BasicNodeType, typename T,
     enable_if_t<conjunction<is_basic_node<BasicNodeType>, is_non_bool_integral<T>>::value, int> = 0>
 inline void to_node(BasicNodeType& n, T i) noexcept {
-    external_node_constructor<BasicNodeType>::integer_scalar(n, i);
+    using integer_type = typename BasicNodeType::integer_type;
+    // Only an unsigned integer as wide as the signed integer type can exceed its range.
+    using may_exceed_integer_type = std::integral_constant<
+        bool,
+        std::is_unsigned<T>::value && std::is_signed<integer_type>::value && sizeof(T) >= sizeof(integer_type)>;
+    integer_to_node(n, i, may_exceed_integer_type {});
 }
 
 /// @brief to_node function for floating point numbers.
@@ -13147,7 +13181,13 @@ private:
             str += m_tmp_str_buff;
             break;
         case node_type::INTEGER:
-            to_string(node.template get_value<typename BasicNodeType::integer_type>(), m_tmp_str_buff);
+            if (node.is_uint()) {
+                // An unsigned integer may exceed the range of the signed integer type.
+                to_string(node.as_uint(), m_tmp_str_buff);
+            }
+            else {
+                to_string(node.template get_value<typename BasicNodeType::integer_type>(), m_tmp_str_buff);
+            }
             str += m_tmp_str_buff;
             break;
         case node_type::FLOAT:
@@ -17192,7 +17232,13 @@ struct hash<fkyaml::basic_node<
             hash_combine(seed, std::hash<boolean_type>()(n.template get_value<boolean_type>()));
             return seed;
         case fkyaml::node_type::INTEGER:
-            hash_combine(seed, std::hash<integer_type>()(n.template get_value<integer_type>()));
+            if (n.is_uint()) {
+                // An unsigned integer may exceed the range of the signed integer type.
+                hash_combine(seed, std::hash<uint64_t>()(n.as_uint()));
+            }
+            else {
+                hash_combine(seed, std::hash<integer_type>()(n.template get_value<integer_type>()));
+            }
             return seed;
         case fkyaml::node_type::FLOAT:
             hash_combine(seed, std::hash<float_number_type>()(n.template get_value<float_number_type>()));
