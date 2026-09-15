@@ -740,6 +740,12 @@ private:
                     (line == old_line) && (m_context_stack.empty() || old_indent > m_context_stack.back().indent);
                 if (is_implicit_same_line) {
                     // a key separator for an implicit key with its value on the same line.
+                    if FK_YAML_UNLIKELY (token.type == lexical_token_t::SEQUENCE_BLOCK_PREFIX) {
+                        // ```yaml
+                        // foo: - bar   # error: a block sequence cannot begin on the line of its mapping key.
+                        // ```
+                        throw parse_error("A block sequence cannot begin on the line of a mapping key.", line, indent);
+                    }
                     continue;
                 }
 
@@ -940,6 +946,16 @@ private:
                 if FK_YAML_UNLIKELY (m_context_stack.empty()) {
                     throw parse_error("invalid block sequence entry is found.", line, indent);
                 }
+
+                // A block sequence cannot begin on the line of its node properties.
+                // ```yaml
+                // foo: &anchor - bar   # error
+                // ```
+                if FK_YAML_UNLIKELY (m_needs_anchor_impl || m_needs_tag_impl) {
+                    throw parse_error(
+                        "Node properties cannot precede a block sequence entry on the same line.", line, indent);
+                }
+
                 const uint32_t parent_indent = m_context_stack.back().indent;
                 if (indent == parent_indent) {
                     // If the previous block sequence entry is empty, just move to the parent context.

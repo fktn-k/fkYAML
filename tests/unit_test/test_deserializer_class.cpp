@@ -153,6 +153,13 @@ TEST_CASE("Deserializer_KeySeparator") {
 
         REQUIRE(thrown);
     }
+
+    SUBCASE("block sequence on the line of its mapping key") {
+        std::string input = "foo: bar\n"
+                            "baz: - qux\n";
+
+        REQUIRE_THROWS_AS(root = deserializer.deserialize(fkyaml::detail::input_adapter(input)), fkyaml::parse_error);
+    }
 }
 
 TEST_CASE("Deserializer_ValueSeparator") {
@@ -1141,6 +1148,21 @@ TEST_CASE("Deserializer_BlockSequence") {
 
     SUBCASE("invalid root sequence") {
         std::string input = "--- - a\n";
+        REQUIRE_THROWS_AS(root = deserializer.deserialize(fkyaml::detail::input_adapter(input)), fkyaml::parse_error);
+    }
+
+    SUBCASE("block sequence on the line of the properties of the root node") {
+        std::string input = "&anchor - foo\n";
+        REQUIRE_THROWS_AS(root = deserializer.deserialize(fkyaml::detail::input_adapter(input)), fkyaml::parse_error);
+    }
+
+    SUBCASE("block sequence on the line of the properties of a mapping value") {
+        std::string input = "foo: !!seq - bar\n";
+        REQUIRE_THROWS_AS(root = deserializer.deserialize(fkyaml::detail::input_adapter(input)), fkyaml::parse_error);
+    }
+
+    SUBCASE("block sequence on the line of the properties of a block sequence entry") {
+        std::string input = "- &anchor - foo\n";
         REQUIRE_THROWS_AS(root = deserializer.deserialize(fkyaml::detail::input_adapter(input)), fkyaml::parse_error);
     }
 }
