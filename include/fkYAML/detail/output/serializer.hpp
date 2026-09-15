@@ -266,7 +266,13 @@ private:
             str += m_tmp_str_buff;
             break;
         case node_type::INTEGER:
-            to_string(node.template get_value<typename BasicNodeType::integer_type>(), m_tmp_str_buff);
+            if (node.is_uint()) {
+                // An unsigned integer may exceed the range of the signed integer type.
+                to_string(node.as_uint(), m_tmp_str_buff);
+            }
+            else {
+                to_string(node.template get_value<typename BasicNodeType::integer_type>(), m_tmp_str_buff);
+            }
             str += m_tmp_str_buff;
             break;
         case node_type::FLOAT:

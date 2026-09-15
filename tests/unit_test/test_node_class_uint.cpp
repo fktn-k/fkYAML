@@ -142,3 +142,28 @@ TEST_CASE("Node_UintBit_ClearedOnReassignment") {
     REQUIRE(n.is_uint() == false);
     REQUIRE(n.as_int() == -42);
 }
+
+TEST_CASE("Node_ConstructFromUInt64") {
+    SUBCASE("a value above the signed range") {
+        fkyaml::node n(std::numeric_limits<uint64_t>::max());
+        REQUIRE(n.is_integer() == true);
+        REQUIRE(n.is_uint() == true);
+        REQUIRE(n.as_uint() == std::numeric_limits<uint64_t>::max());
+        REQUIRE_THROWS_AS(n.as_int(), fkyaml::type_error);
+    }
+
+    SUBCASE("a value within the signed range") {
+        fkyaml::node n(static_cast<uint64_t>(42));
+        REQUIRE(n.is_integer() == true);
+        REQUIRE(n.as_int() == 42);
+        REQUIRE(n.as_uint() == 42);
+    }
+}
+
+TEST_CASE("Node_HashIntegerNodes") {
+    auto input = GENERATE(std::string("18446744073709551615"), std::string("-42"));
+    const fkyaml::node node = fkyaml::node::deserialize(input);
+    const fkyaml::node same = fkyaml::node::deserialize(input);
+    REQUIRE_NOTHROW(std::hash<fkyaml::node>()(node));
+    REQUIRE(std::hash<fkyaml::node>()(node) == std::hash<fkyaml::node>()(same));
+}

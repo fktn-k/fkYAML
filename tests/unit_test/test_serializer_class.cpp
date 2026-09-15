@@ -85,9 +85,19 @@ TEST_CASE("Serializer_BooleanNode") {
 
 TEST_CASE("Serializer_IntegerNode") {
     using node_str_pair_t = std::pair<fkyaml::node, std::string>;
-    auto node_str_pair = GENERATE(node_str_pair_t(-1234, "-1234"), node_str_pair_t(5678, "5678"));
+    auto node_str_pair = GENERATE(
+        node_str_pair_t(-1234, "-1234"),
+        node_str_pair_t(5678, "5678"),
+        node_str_pair_t(std::numeric_limits<uint64_t>::max(), "18446744073709551615"));
     fkyaml::detail::basic_serializer<fkyaml::node> serializer;
     REQUIRE(serializer.serialize(node_str_pair.first) == node_str_pair.second);
+}
+
+TEST_CASE("Serializer_UInt64IntegerNode") {
+    auto input = GENERATE(std::string("9223372036854775808"), std::string("18446744073709551615"));
+    fkyaml::node node = fkyaml::node::deserialize(input);
+    fkyaml::detail::basic_serializer<fkyaml::node> serializer;
+    REQUIRE(serializer.serialize(node) == input);
 }
 
 TEST_CASE("SerializeClassTest_FloatNode") {
