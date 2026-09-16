@@ -2,6 +2,7 @@
 [![Windows](https://github.com/fktn-k/fkYAML/workflows/Windows/badge.svg)](https://github.com/fktn-k/fkYAML/actions?query=workflow%3AWindows)
 [![macOS](https://github.com/fktn-k/fkYAML/workflows/macOS/badge.svg)](https://github.com/fktn-k/fkYAML/actions?query=workflow%3AmacOS)
 [![Coverage Status](https://coveralls.io/repos/github/fktn-k/fkYAML/badge.svg?branch=develop)](https://coveralls.io/github/fktn-k/fkYAML?branch=develop)
+[![YAML test suite](https://github.com/fktn-k/fkYAML/workflows/YAML%20Test%20Suite/badge.svg)](https://github.com/fktn-k/fkYAML/actions?query=branch%3Adevelop+workflow%3A%22%22YAML+Test+Suite%22%22++)
 [![Codacy Badge](https://app.codacy.com/project/badge/Grade/cded6969c7344ea5be60ab472e13000f)](https://app.codacy.com/gh/fktn-k/fkYAML/dashboard?utm_source=gh&utm_medium=referral&utm_content=&utm_campaign=Badge_grade)
 [![CodeQL](https://github.com/fktn-k/fkYAML/workflows/CodeQL/badge.svg)](https://github.com/fktn-k/fkYAML/actions?query=workflow%3ACodeQL)
 [![GitHub Releases](https://img.shields.io/github/release/fktn-k/fkYAML.svg)](https://github.com/fktn-k/fkYAML/releases/latest)
@@ -13,7 +14,7 @@
 
 # fkYAML
 fkYAML is a C++ header-only library to deserialize, serialize and build YAML documents.  
-It is also carefully desinged and tested to work with various compilers, C++ standards and platforms.  
+It is also carefully designed and tested to work with various compilers, C++ standards and platforms.  
 So, if you want portability & development speed-up, fkYAML is the way to go.  
 You can add YAML support into your projects by just including the header file(s).  
 This simple example (1) deserializes a YAML string into a document, (2) modifies the documentation, and finally (3) serializes the modified documentation to a YAML string.  
@@ -106,9 +107,8 @@ See the [supported compilers](#supported-compilers) section for more details.
         * Support scalars, sequences, mappings in both block and flow styles.
             * Sequences and mappings are accepted as mapping keys in de/serialization. Such a key can also be passed to query a mapping value like [`operator[]`](https://fktn-k.github.io/fkYAML/api/basic_node/operator[]/) or [`at`](https://fktn-k.github.io/fkYAML/api/basic_node/at/).
             * Node values can be referenced by using [`as_seq`](https://fktn-k.github.io/fkYAML/api/basic_node/as_seq/) or [`as_map`](https://fktn-k.github.io/fkYAML/api/basic_node/as_map/), or converted to arbitrary types by [`get_value`](https://fktn-k.github.io/fkYAML/api/basic_node/get_value/) or [`get_value_inplace`](https://fktn-k.github.io/fkYAML/api/basic_node/get_value_inplace/).
-            * Empty mapping keys like `: value` or `- : value` are NOT supported.
         * Support `%TAG` and `%YAML` directives
-            * `%YAML` directives have no effect and YAML 1.2 is always assumed.
+            * `%YAML` directives have no effect. The library parses YAML based on the YAML 1.2 spec.
             * Any unknown directives are just ignored during deserialization.
         * Support tags, anchors and aliases
         * Support de/serializing a single document by [`deserialize`](https://fktn-k.github.io/fkYAML/api/basic_node/deserialize/) and [`serialize`](https://fktn-k.github.io/fkYAML/api/basic_node/serialize/).
@@ -202,8 +202,16 @@ If you encounter a problem regarding compilers, please let us know by [creating 
 
 ## Test suite status
 
-Testing fkYAML with [the YAML test suite](https://github.com/yaml/yaml-test-suite) is available.  
-Run the following commands to see the current coverage of the test suite.  
+fkYAML can correctly parse all test cases in [the YAML test suite](https://github.com/yaml/yaml-test-suite) except for the following deliberately unaddressed cases:
+
+* Test cases containing duplicate keys.
+    * Since fkYAML internally uses `std::map` for mappings, duplicate keys are not allowed.
+* Test cases requiring percent escape decoding during tag resolution.
+    * [Section 5.6 of the YAML 1.2.2 spec](https://yaml.org/spec/1.2.2/#56-miscellaneous-characters) says the processor must not expand such escaped characters, and the expected output is questioned in the issue [yaml/yaml-test-suite#9](https://github.com/yaml/yaml-test-suite/issues/9).
+    * So, fkYAML is decided to not expand %-escaped characters in tag resolution.
+    * Visit [\#640](https://github.com/fktn-k/fkYAML/pull/640) for more details.
+
+Run the following commands to check the current test suite status.
 ```bash
 $ cd /path/to/fkYAML
 $ cmake -B build -S . -DCMAKE_BUILD_TYPE=Debug -DFK_YAML_USE_YAML_TEST_SUITE=ON
