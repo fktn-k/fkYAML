@@ -2,6 +2,7 @@
 [![Windows](https://github.com/fktn-k/fkYAML/workflows/Windows/badge.svg)](https://github.com/fktn-k/fkYAML/actions?query=workflow%3AWindows)
 [![macOS](https://github.com/fktn-k/fkYAML/workflows/macOS/badge.svg)](https://github.com/fktn-k/fkYAML/actions?query=workflow%3AmacOS)
 [![Coverage Status](https://coveralls.io/repos/github/fktn-k/fkYAML/badge.svg?branch=develop)](https://coveralls.io/github/fktn-k/fkYAML?branch=develop)
+[![YAML test suite](https://github.com/fktn-k/fkYAML/workflows/YAML%20Test%20Suite/badge.svg)](https://github.com/fktn-k/fkYAML/actions?query=branch%3Adevelop+workflow%3A%22%22YAML+Test+Suite%22%22++)
 [![Codacy Badge](https://app.codacy.com/project/badge/Grade/cded6969c7344ea5be60ab472e13000f)](https://app.codacy.com/gh/fktn-k/fkYAML/dashboard?utm_source=gh&utm_medium=referral&utm_content=&utm_campaign=Badge_grade)
 [![CodeQL](https://github.com/fktn-k/fkYAML/workflows/CodeQL/badge.svg)](https://github.com/fktn-k/fkYAML/actions?query=workflow%3ACodeQL)
 [![GitHub Releases](https://img.shields.io/github/release/fktn-k/fkYAML.svg)](https://github.com/fktn-k/fkYAML/releases/latest)
@@ -106,9 +107,8 @@ See the [supported compilers](#supported-compilers) section for more details.
         * Support scalars, sequences, mappings in both block and flow styles.
             * Sequences and mappings are accepted as mapping keys in de/serialization. Such a key can also be passed to query a mapping value like [`operator[]`](https://fktn-k.github.io/fkYAML/api/basic_node/operator[]/) or [`at`](https://fktn-k.github.io/fkYAML/api/basic_node/at/).
             * Node values can be referenced by using [`as_seq`](https://fktn-k.github.io/fkYAML/api/basic_node/as_seq/) or [`as_map`](https://fktn-k.github.io/fkYAML/api/basic_node/as_map/), or converted to arbitrary types by [`get_value`](https://fktn-k.github.io/fkYAML/api/basic_node/get_value/) or [`get_value_inplace`](https://fktn-k.github.io/fkYAML/api/basic_node/get_value_inplace/).
-            * Empty mapping keys like `: value` or `- : value` are NOT supported.
         * Support `%TAG` and `%YAML` directives
-            * `%YAML` directives have no effect and YAML 1.2 is always assumed.
+            * `%YAML` directives have no effect. The library parses YAML based on the YAML 1.2 spec.
             * Any unknown directives are just ignored during deserialization.
         * Support tags, anchors and aliases
         * Support de/serializing a single document by [`deserialize`](https://fktn-k.github.io/fkYAML/api/basic_node/deserialize/) and [`serialize`](https://fktn-k.github.io/fkYAML/api/basic_node/serialize/).
@@ -149,60 +149,75 @@ Here is the list you might want to know:
 Compilers with complete C++11 support should compile the library without warnings.  
 Actually, fkYAML is compiled and tested with 40+ different C++ compilers with different operating systems and C++ standards in GitHub Actions workflows.
 
-| Compiler                   | Operating System                                                                                               |
-| -------------------------- | -------------------------------------------------------------------------------------------------------------- |
-| AppleClang 14.0.0.14000029 | [macOS 13](https://github.com/actions/runner-images/blob/main/images/macos/macos-13-Readme.md)                 |
-| AppleClang 14.0.3.14030022 | [macOS 13](https://github.com/actions/runner-images/blob/main/images/macos/macos-13-Readme.md)                 |
-| AppleClang 15.0.0.15000040 | [macOS 13](https://github.com/actions/runner-images/blob/main/images/macos/macos-13-Readme.md)                 |
-| AppleClang 15.0.0.15000040 | [macOS 14](https://github.com/actions/runner-images/blob/main/images/macos/macos-14-Readme.md)                 |
-| AppleClang 15.0.0.15000100 | [macOS 13](https://github.com/actions/runner-images/blob/main/images/macos/macos-13-Readme.md)                 |
-| AppleClang 15.0.0.15000100 | [macOS 14](https://github.com/actions/runner-images/blob/main/images/macos/macos-14-Readme.md)                 |
-| AppleClang 15.0.0.15000309 | [macOS 14](https://github.com/actions/runner-images/blob/main/images/macos/macos-14-Readme.md)                 |
-| AppleClang 16.0.0.16000026 | [macOS 15](https://github.com/actions/runner-images/blob/main/images/macos/macos-15-Readme.md)                 |
-| Clang 3.4.2                | [Ubuntu 22.04](https://github.com/actions/runner-images/blob/main/images/ubuntu/Ubuntu2204-Readme.md)          |
-| Clang 3.5.2                | [Ubuntu 22.04](https://github.com/actions/runner-images/blob/main/images/ubuntu/Ubuntu2204-Readme.md)          |
-| Clang 3.6.2                | [Ubuntu 22.04](https://github.com/actions/runner-images/blob/main/images/ubuntu/Ubuntu2204-Readme.md)          |
-| Clang 3.7.1                | [Ubuntu 22.04](https://github.com/actions/runner-images/blob/main/images/ubuntu/Ubuntu2204-Readme.md)          |
-| Clang 3.8.1                | [Ubuntu 22.04](https://github.com/actions/runner-images/blob/main/images/ubuntu/Ubuntu2204-Readme.md)          |
-| Clang 3.9.1                | [Ubuntu 22.04](https://github.com/actions/runner-images/blob/main/images/ubuntu/Ubuntu2204-Readme.md)          |
-| Clang 4.0.1                | [Ubuntu 22.04](https://github.com/actions/runner-images/blob/main/images/ubuntu/Ubuntu2204-Readme.md)          |
-| Clang 5.0.2                | [Ubuntu 22.04](https://github.com/actions/runner-images/blob/main/images/ubuntu/Ubuntu2204-Readme.md)          |
-| Clang 6.0.1                | [Ubuntu 22.04](https://github.com/actions/runner-images/blob/main/images/ubuntu/Ubuntu2204-Readme.md)          |
-| Clang 7.1.0                | [Ubuntu 22.04](https://github.com/actions/runner-images/blob/main/images/ubuntu/Ubuntu2204-Readme.md)          |
-| Clang 9.0.1                | [Ubuntu 22.04](https://github.com/actions/runner-images/blob/main/images/ubuntu/Ubuntu2204-Readme.md)          |
-| Clang 10.0.1               | [Ubuntu 22.04](https://github.com/actions/runner-images/blob/main/images/ubuntu/Ubuntu2204-Readme.md)          |
-| Clang 11.1.0               | [Ubuntu 22.04](https://github.com/actions/runner-images/blob/main/images/ubuntu/Ubuntu2204-Readme.md)          |
-| Clang 12.0.1               | [Ubuntu 22.04](https://github.com/actions/runner-images/blob/main/images/ubuntu/Ubuntu2204-Readme.md)          |
-| Clang 13.0.1               | [Ubuntu 22.04](https://github.com/actions/runner-images/blob/main/images/ubuntu/Ubuntu2204-Readme.md)          |
-| Clang 14.0.6               | [Ubuntu 22.04](https://github.com/actions/runner-images/blob/main/images/ubuntu/Ubuntu2204-Readme.md)          |
-| Clang 15.0.7               | [Ubuntu 22.04](https://github.com/actions/runner-images/blob/main/images/ubuntu/Ubuntu2204-Readme.md)          |
-| Clang 16.0.6               | [Ubuntu 22.04](https://github.com/actions/runner-images/blob/main/images/ubuntu/Ubuntu2204-Readme.md)          |
-| Clang 17.0.6               | [Ubuntu 22.04](https://github.com/actions/runner-images/blob/main/images/ubuntu/Ubuntu2204-Readme.md)          |
-| Clang 18.1.6               | [Ubuntu 22.04](https://github.com/actions/runner-images/blob/main/images/ubuntu/Ubuntu2204-Readme.md)          |
-| Clang 19.1.4               | [Ubuntu 22.04](https://github.com/actions/runner-images/blob/main/images/ubuntu/Ubuntu2204-Readme.md)          |
-| GCC 4.8.5                  | [Ubuntu 22.04](https://github.com/actions/runner-images/blob/main/images/ubuntu/Ubuntu2204-Readme.md)          |
-| GCC 5.3.1                  | [Ubuntu 22.04](https://github.com/actions/runner-images/blob/main/images/ubuntu/Ubuntu2204-Readme.md)          |
-| GCC 6.4.0                  | [Ubuntu 22.04](https://github.com/actions/runner-images/blob/main/images/ubuntu/Ubuntu2204-Readme.md)          |
-| GCC 7.5.0                  | [Ubuntu 22.04](https://github.com/actions/runner-images/blob/main/images/ubuntu/Ubuntu2204-Readme.md)          |
-| GCC 8.5.0                  | [Ubuntu 22.04](https://github.com/actions/runner-images/blob/main/images/ubuntu/Ubuntu2204-Readme.md)          |
-| GCC 9.5.0                  | [Ubuntu 22.04](https://github.com/actions/runner-images/blob/main/images/ubuntu/Ubuntu2204-Readme.md)          |
-| GCC 10.5.0                 | [Ubuntu 22.04](https://github.com/actions/runner-images/blob/main/images/ubuntu/Ubuntu2204-Readme.md)          |
-| GCC 11.4.0                 | [Ubuntu 22.04](https://github.com/actions/runner-images/blob/main/images/ubuntu/Ubuntu2204-Readme.md)          |
-| GCC 12.3.0                 | [Ubuntu 22.04](https://github.com/actions/runner-images/blob/main/images/ubuntu/Ubuntu2204-Readme.md)          |
-| GCC 13.3.0                 | [Ubuntu 22.04](https://github.com/actions/runner-images/blob/main/images/ubuntu/Ubuntu2204-Readme.md)          |
-| GCC 14.2.0                 | [Ubuntu 22.04](https://github.com/actions/runner-images/blob/main/images/ubuntu/Ubuntu2204-Readme.md)          |
-| IntelLLVM 2024.1.2         | [Ubuntu 22.04](https://github.com/actions/runner-images/blob/main/images/ubuntu/Ubuntu2204-Readme.md)          |
-| MinGW-64 8.1.0             | [Windows Server 2019](https://github.com/actions/runner-images/blob/main/images/windows/Windows2019-Readme.md) |
-| MinGW-64 12.2.0            | [Windows Server 2022](https://github.com/actions/runner-images/blob/main/images/windows/Windows2022-Readme.md) |
-| Visual Studio 16 2019      | [Windows Server 2019](https://github.com/actions/runner-images/blob/main/images/windows/Windows2019-Readme.md) |
-| Visual Studio 17 2022      | [Windows Server 2022](https://github.com/actions/runner-images/blob/main/images/windows/Windows2022-Readme.md) |
+| Compiler              | Operating System                                                                                               |
+| --------------------- | -------------------------------------------------------------------------------------------------------------- |
+| AppleClang 15.0.0     | [macOS 14](https://github.com/actions/runner-images/blob/main/images/macos/macos-14-Readme.md)                 |
+| AppleClang 16.0.0     | [macOS 15](https://github.com/actions/runner-images/blob/main/images/macos/macos-15-Readme.md)                 |
+| AppleClang 17.0.0     | [macOS 15](https://github.com/actions/runner-images/blob/main/images/macos/macos-15-Readme.md)                 |
+| AppleClang 17.0.0     | [macOS 26](https://github.com/actions/runner-images/blob/main/images/macos/macos-26-Readme.md)                 |
+| AppleClang 21.0.0     | [macOS 26](https://github.com/actions/runner-images/blob/main/images/macos/macos-26-Readme.md)                 |
+| Clang 3.4.2           | [Ubuntu 24.04](https://github.com/actions/runner-images/blob/main/images/ubuntu/Ubuntu2204-Readme.md)          |
+| Clang 3.5.2           | [Ubuntu 24.04](https://github.com/actions/runner-images/blob/main/images/ubuntu/Ubuntu2204-Readme.md)          |
+| Clang 3.6.2           | [Ubuntu 24.04](https://github.com/actions/runner-images/blob/main/images/ubuntu/Ubuntu2204-Readme.md)          |
+| Clang 3.7.1           | [Ubuntu 24.04](https://github.com/actions/runner-images/blob/main/images/ubuntu/Ubuntu2204-Readme.md)          |
+| Clang 3.8.1           | [Ubuntu 24.04](https://github.com/actions/runner-images/blob/main/images/ubuntu/Ubuntu2204-Readme.md)          |
+| Clang 3.9.1           | [Ubuntu 24.04](https://github.com/actions/runner-images/blob/main/images/ubuntu/Ubuntu2204-Readme.md)          |
+| Clang 4.0.1           | [Ubuntu 24.04](https://github.com/actions/runner-images/blob/main/images/ubuntu/Ubuntu2204-Readme.md)          |
+| Clang 5.0.2           | [Ubuntu 24.04](https://github.com/actions/runner-images/blob/main/images/ubuntu/Ubuntu2204-Readme.md)          |
+| Clang 6.0.1           | [Ubuntu 24.04](https://github.com/actions/runner-images/blob/main/images/ubuntu/Ubuntu2204-Readme.md)          |
+| Clang 7.1.0           | [Ubuntu 24.04](https://github.com/actions/runner-images/blob/main/images/ubuntu/Ubuntu2204-Readme.md)          |
+| Clang 9.0.1           | [Ubuntu 24.04](https://github.com/actions/runner-images/blob/main/images/ubuntu/Ubuntu2204-Readme.md)          |
+| Clang 10.0.1          | [Ubuntu 24.04](https://github.com/actions/runner-images/blob/main/images/ubuntu/Ubuntu2204-Readme.md)          |
+| Clang 11.1.0          | [Ubuntu 24.04](https://github.com/actions/runner-images/blob/main/images/ubuntu/Ubuntu2204-Readme.md)          |
+| Clang 12.0.1          | [Ubuntu 24.04](https://github.com/actions/runner-images/blob/main/images/ubuntu/Ubuntu2204-Readme.md)          |
+| Clang 13.0.1          | [Ubuntu 24.04](https://github.com/actions/runner-images/blob/main/images/ubuntu/Ubuntu2204-Readme.md)          |
+| Clang 14.0.6          | [Ubuntu 24.04](https://github.com/actions/runner-images/blob/main/images/ubuntu/Ubuntu2204-Readme.md)          |
+| Clang 15.0.7          | [Ubuntu 24.04](https://github.com/actions/runner-images/blob/main/images/ubuntu/Ubuntu2204-Readme.md)          |
+| Clang 16.0.6          | [Ubuntu 24.04](https://github.com/actions/runner-images/blob/main/images/ubuntu/Ubuntu2204-Readme.md)          |
+| Clang 17.0.6          | [Ubuntu 24.04](https://github.com/actions/runner-images/blob/main/images/ubuntu/Ubuntu2204-Readme.md)          |
+| Clang 18.1.6          | [Ubuntu 24.04](https://github.com/actions/runner-images/blob/main/images/ubuntu/Ubuntu2204-Readme.md)          |
+| Clang 19.1.4          | [Ubuntu 24.04](https://github.com/actions/runner-images/blob/main/images/ubuntu/Ubuntu2204-Readme.md)          |
+| Clang 20.1.8          | [Ubuntu 24.04](https://github.com/actions/runner-images/blob/main/images/ubuntu/Ubuntu2204-Readme.md)          |
+| Clang 21.1.8          | [Ubuntu 24.04](https://github.com/actions/runner-images/blob/main/images/ubuntu/Ubuntu2204-Readme.md)          |
+| GCC 5.3.1             | [Ubuntu 24.04](https://github.com/actions/runner-images/blob/main/images/ubuntu/Ubuntu2204-Readme.md)          |
+| GCC 6.4.0             | [Ubuntu 24.04](https://github.com/actions/runner-images/blob/main/images/ubuntu/Ubuntu2204-Readme.md)          |
+| GCC 7.5.0             | [Ubuntu 24.04](https://github.com/actions/runner-images/blob/main/images/ubuntu/Ubuntu2204-Readme.md)          |
+| GCC 8.5.0             | [Ubuntu 24.04](https://github.com/actions/runner-images/blob/main/images/ubuntu/Ubuntu2204-Readme.md)          |
+| GCC 9.5.0             | [Ubuntu 24.04](https://github.com/actions/runner-images/blob/main/images/ubuntu/Ubuntu2204-Readme.md)          |
+| GCC 10.5.0            | [Ubuntu 24.04](https://github.com/actions/runner-images/blob/main/images/ubuntu/Ubuntu2204-Readme.md)          |
+| GCC 11.4.0            | [Ubuntu 24.04](https://github.com/actions/runner-images/blob/main/images/ubuntu/Ubuntu2204-Readme.md)          |
+| GCC 12.3.0            | [Ubuntu 24.04](https://github.com/actions/runner-images/blob/main/images/ubuntu/Ubuntu2204-Readme.md)          |
+| GCC 13.3.0            | [Ubuntu 24.04](https://github.com/actions/runner-images/blob/main/images/ubuntu/Ubuntu2204-Readme.md)          |
+| GCC 14.2.0            | [Ubuntu 24.04](https://github.com/actions/runner-images/blob/main/images/ubuntu/Ubuntu2204-Readme.md)          |
+| GCC 15.3.0            | [Ubuntu 24.04](https://github.com/actions/runner-images/blob/main/images/ubuntu/Ubuntu2204-Readme.md)          |
+| GCC 16.1.0            | [Ubuntu 24.04](https://github.com/actions/runner-images/blob/main/images/ubuntu/Ubuntu2204-Readme.md)          |
+| IntelLLVM 2026.1.0    | [Ubuntu 24.04](https://github.com/actions/runner-images/blob/main/images/ubuntu/Ubuntu2204-Readme.md)          |
+| GCC 14.2.0            | [Windows Server 2022](https://github.com/actions/runner-images/blob/main/images/windows/Windows2022-Readme.md) |
+| GCC 15.2.0            | [Windows Server 2025](https://github.com/actions/runner-images/blob/main/images/windows/Windows2025-Readme.md) |
+| Visual Studio 17 2022 | [Windows Server 2022](https://github.com/actions/runner-images/blob/main/images/windows/Windows2022-Readme.md) |
+| Visual Studio 18 2026 | [Windows Server 2025](https://github.com/actions/runner-images/blob/main/images/windows/Windows2025-Readme.md) |
 
 Requests for new compiler supports are welcome.  
 If you encounter a problem regarding compilers, please let us know by [creating an issue](https://github.com/fktn-k/fkYAML/issues/new?assignees=&labels=kind%3A+bug&projects=&template=bug-report.yml) or a PR with the information of your Operating System so that the same issue can be reproduced.  
 
 ## Test suite status
 
-Testing of the library with [the YAML test suite](https://github.com/yaml/yaml-test-suite) is currently a work in progress.
+fkYAML can correctly parse all test cases in [the YAML test suite](https://github.com/yaml/yaml-test-suite) except for the following deliberately unaddressed cases:
+
+* Test cases containing duplicate keys.
+    * Since fkYAML internally uses `std::map` for mappings, duplicate keys are not allowed.
+* Test cases requiring percent escape decoding during tag resolution.
+    * [Section 5.6 of the YAML 1.2.2 spec](https://yaml.org/spec/1.2.2/#56-miscellaneous-characters) says the processor must not expand such escaped characters, and the expected output is questioned in the issue [yaml/yaml-test-suite#9](https://github.com/yaml/yaml-test-suite/issues/9).
+    * So, fkYAML is decided to not expand %-escaped characters in tag resolution.
+    * Visit [\#640](https://github.com/fktn-k/fkYAML/pull/640) for more details.
+
+Run the following commands to check the current test suite status.
+```bash
+$ cd /path/to/fkYAML
+$ cmake -B build -S . -DCMAKE_BUILD_TYPE=Debug -DFK_YAML_USE_YAML_TEST_SUITE=ON
+$ cmake --build build --config Debug
+$ ctest -C Debug --test-dir build --output-on-failure -R yaml_test_suite_
+```
 
 ## Benchmarking
 
@@ -217,33 +232,33 @@ The following tables are created from the benchmarking results in the following 
 
 | Benchmark                          | processed bytes per second (Release) |
 | ---------------------------------- | ------------------------------------ |
-| fkYAML                             | 62.5049Mi/s                          |
-| libfyaml                           | 39.235Mi/s                           |
-| rapidyaml<br>(with mutable buff)   | 22.007Gi/s                           |
-| rapidyaml<br>(with immutable buff) | 133.311Mi/s                          |
-| yaml-cpp                           | 9.07876Mi/s                          |
+| fkYAML                             | 76.1277Mi/s                          |
+| libfyaml                           | 35.9803Mi/s                          |
+| rapidyaml<br>(with mutable buff)   | 151.126Mi/s                          |
+| rapidyaml<br>(with immutable buff) | 132.36Mi/s                           |
+| yaml-cpp                           | 10.122Mi/s                           |
 
 ### Parsing [citm_catalog.json](https://github.com/fktn-k/fkYAML/blob/develop/tools/benchmark/cases/citm_catalog.json)
 
 | Benchmark                          | processed bytes per second (Release) |
 | ---------------------------------- | ------------------------------------ |
-| fkYAML                             | 97.216Mi/s                           |
-| libfyaml                           | 57.3021Mi/s                          |
-| rapidyaml<br>(with mutable buff)   | 37.9026Gi/s                          |
-| rapidyaml<br>(with immutable buff) | 140.375Mi/s                          |
-| yaml-cpp                           | 14.3192Mi/s                          |
+| fkYAML                             | 121.04Mi/s                          |
+| libfyaml                           | 50.7076Mi/s                          |
+| rapidyaml<br>(with mutable buff)   | 109.535Mi/s                          |
+| rapidyaml<br>(with immutable buff) | 113.083Mi/s                          |
+| yaml-cpp                           | 16.6685Mi/s                          |
 
 ### Parsing [citm_catalog.yml](https://github.com/fktn-k/fkYAML/blob/develop/tools/benchmark/cases/citm_catalog.yml)
 
 | Benchmark                          | processed bytes per second (Release) |
 | ---------------------------------- | ------------------------------------ |
-| fkYAML                             | 38.7563Mi/s                          |
-| libfyaml                           | 24.7526Mi/s                          |
-| rapidyaml<br>(with mutable buff)   | 37.9676Gi/s                          |
-| rapidyaml<br>(with immutable buff) | 68.4245Mi/s                          |
-| yaml-cpp                           | 6.47003Mi/s                          |
+| fkYAML                             | 56.0765Mi/s                          |
+| libfyaml                           | 21.9363Mi/s                          |
+| rapidyaml<br>(with mutable buff)   | 53.6721Mi/s                          |
+| rapidyaml<br>(with immutable buff) | 53.3632Mi/s                          |
+| yaml-cpp                           | 7.30883Mi/s                           |
 
-Although [rapidyaml](https://github.com/biojppm/rapidyaml) is about 2x faster with immutable buffers and far faster with mutable buffers than fkYAML as it focuses on high performance, fkYAML is in general 70% faster than [libfyaml](https://github.com/pantoniou/libfyaml) and also about 6.5x faster than [yaml-cpp](https://github.com/jbeder/yaml-cpp).  
+Although [rapidyaml](https://github.com/biojppm/rapidyaml) focuses on high performance and can be up to about 2x faster than fkYAML depending on the input, fkYAML is in general 2.1x to 2.6x faster than [libfyaml](https://github.com/pantoniou/libfyaml) and also more than 7x faster than [yaml-cpp](https://github.com/jbeder/yaml-cpp).
 Note that, since fkYAML deserializes scalars into native booleans or integers during the parsing, the performance could be more faster in some use cases since there is no need for string manipulations upon data queries.  
 
 ## Community Support
@@ -302,7 +317,7 @@ The library itself depends only on C++ standards and licensed under the MIT lice
 fkYAML is distributed under the [MIT License](https://opensource.org/license/mit/):  
 
 ```
-Copyright (c) 2023-2025 Kensuke Fukutani
+Copyright (c) 2023-2026 Kensuke Fukutani
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
