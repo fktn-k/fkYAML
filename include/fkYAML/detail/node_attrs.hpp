@@ -11,6 +11,7 @@
 
 #include <cstdint>
 #include <limits>
+#include <utility>
 
 #include <fkYAML/detail/macros/define_macros.hpp>
 #include <fkYAML/node_type.hpp>
@@ -72,70 +73,237 @@ constexpr node_attr_t alias_bit = 0x02000000u;
 /// A utility bit set for initialization.
 constexpr node_attr_t default_bits = null_bit;
 
-/// @brief Converts a node_type value to a node_attr_t value.
-/// @param t A type of node value.
-/// @return The associated node value bit.
-inline node_attr_t from_node_type(node_type t) noexcept {
-    switch (t) {
-    case node_type::SEQUENCE:
-        return seq_bit;
-    case node_type::MAPPING:
-        return map_bit;
-    case node_type::NULL_OBJECT:
-        return null_bit;
-    case node_type::BOOLEAN:
-        return bool_bit;
-    case node_type::INTEGER:
-        return int_bit;
-    case node_type::FLOAT:
-        return float_bit;
-    case node_type::STRING:
-        return string_bit;
-    default:                        // LCOV_EXCL_LINE
-        return node_attr_mask::all; // LCOV_EXCL_LINE
-    }
-}
-
-/// @brief Converts a node_attr_t value to a node_type value.
-/// @param bits node attribute bits
-/// @return An associated node value type with the given node value bit.
-inline node_type to_node_type(node_attr_t bits) noexcept {
-    switch (bits & node_attr_mask::value) {
-    case seq_bit:
-        return node_type::SEQUENCE;
-    case map_bit:
-        return node_type::MAPPING;
-    case null_bit:
-        return node_type::NULL_OBJECT;
-    case bool_bit:
-        return node_type::BOOLEAN;
-    case int_bit:
-        return node_type::INTEGER;
-    case float_bit:
-        return node_type::FLOAT;
-    case string_bit:
-        return node_type::STRING;
-    default:                   // LCOV_EXCL_LINE
-        detail::unreachable(); // LCOV_EXCL_LINE
-    }
-}
-
-/// @brief Get an anchor offset used to reference an anchor node from the given attribute bits.
-/// @param attrs node attribute bits
-/// @return An anchor offset value.
-inline uint32_t get_anchor_offset(node_attr_t attrs) noexcept {
-    return (attrs & node_attr_mask::anchor_offset) >> 26;
-}
-
-/// @brief Set an anchor offset value to the appropriate bits.
-/// @param offset An anchor offset value.
-/// @param attrs node attribute bit set into which the offset value is written.
-inline void set_anchor_offset(uint32_t offset, node_attr_t& attrs) noexcept {
-    attrs &= ~node_attr_mask::anchor_offset;
-    attrs |= (offset & 0x3Fu) << 26;
-}
-
 } // namespace node_attr_bits
+
+/// @brief The class which manages node attributes.
+/// @details This class provides an interface to manipulate and query the attributes of a node,
+/// including its type, style, and other properties. It encapsulates the underlying bit representation
+/// and provides utility functions to set, unset, and check specific attribute bits.
+class node_attrs {
+public:
+    /// @brief Creates a default-initialized node_attrs object.
+    node_attrs() noexcept = default;
+
+    /// @brief Creates a node_attrs object with the specified attribute bits.
+    /// @param attrs The initial attribute bits to set.
+    explicit node_attrs(node_attr_t attrs) noexcept
+        : m_attrs(attrs) {
+    }
+
+    /// @brief Creates a node_attrs object with the specified node type.
+    /// @param type The node type to set.
+    explicit node_attrs(node_type type) noexcept
+        : m_attrs(from_node_type(type)) {
+    }
+
+    /// @brief Creates a copy of the specified node_attrs object.
+    /// @param other The node_attrs object to copy.
+    node_attrs(const node_attrs&) noexcept = default;
+
+    /// @brief Moves the specified node_attrs object into a new one.
+    /// @param other The node_attrs object to move.
+    node_attrs(node_attrs&&) noexcept = default;
+
+    /// @brief Copy-assigns the specified node_attrs object.
+    /// @param other The node_attrs object to copy.
+    /// @return A reference to this node_attrs object.
+    node_attrs& operator=(const node_attrs&) noexcept = default;
+
+    /// @brief Move-assigns the specified node_attrs object.
+    /// @param other The node_attrs object to move.
+    /// @return A reference to this node_attrs object.
+    node_attrs& operator=(node_attrs&&) noexcept = default;
+
+    /// @brief Destroys the node_attrs object.
+    ~node_attrs() noexcept = default;
+
+    /// @brief Retrieves the raw attribute bits of the node.
+    /// @return The raw attribute bits.
+    node_attr_t get() const noexcept {
+        return m_attrs;
+    }
+
+    /// @brief Retrieves the value-related attribute bits of the node.
+    /// @return The value-related attribute bits.
+    node_attr_t get_value_bits() const noexcept {
+        return m_attrs & node_attr_mask::value;
+    }
+
+    /// @brief Sets the specified attribute bits.
+    /// @param mask The attribute bits to set.
+    void set(node_attr_t mask) noexcept {
+        m_attrs |= mask;
+    }
+
+    /// @brief Sets the specified value-related attribute bit, unsetting any existing value-related bits.
+    /// @param bit The value-related attribute bit to set.
+    void set_value_bit(node_attr_t bit) noexcept {
+        unset(node_attr_mask::value);
+        set(bit);
+    }
+
+    /// @brief Unsets the specified attribute bits.
+    /// @param mask The attribute bits to unset.
+    void unset(node_attr_t mask) noexcept {
+        m_attrs &= ~mask;
+    }
+
+    /// @brief Checks if all of the specified attribute bits are set.
+    /// @param mask The attribute bits to check.
+    /// @return True if all specified bits are set, false otherwise.
+    bool has(node_attr_t mask) const noexcept {
+        return (m_attrs & mask) == mask;
+    }
+
+    /// @brief Checks if any of the specified attribute bits are set.
+    /// @param mask The attribute bits to check.
+    /// @return True if any specified bit is set, false otherwise.
+    bool has_any(node_attr_t mask) const noexcept {
+        return (m_attrs & mask) != 0;
+    }
+
+    /// @brief Retrieves the node type based on the value-related attribute bits.
+    /// @return The node type.
+    node_type get_node_type() const noexcept {
+        switch (get_value_bits()) {
+        case node_attr_bits::seq_bit:
+            return node_type::SEQUENCE;
+        case node_attr_bits::map_bit:
+            return node_type::MAPPING;
+        case node_attr_bits::null_bit:
+            return node_type::NULL_OBJECT;
+        case node_attr_bits::bool_bit:
+            return node_type::BOOLEAN;
+        case node_attr_bits::int_bit:
+            return node_type::INTEGER;
+        case node_attr_bits::float_bit:
+            return node_type::FLOAT;
+        case node_attr_bits::string_bit:
+            return node_type::STRING;
+        default:                   // LCOV_EXCL_LINE
+            detail::unreachable(); // LCOV_EXCL_LINE
+        }
+    }
+
+    /// @brief Checks if the node is a sequence.
+    /// @return True if the node is a sequence, false otherwise.
+    bool is_sequence() const noexcept {
+        return has(node_attr_bits::seq_bit);
+    }
+
+    /// @brief Checks if the node is a mapping.
+    /// @return True if the node is a mapping, false otherwise.
+    bool is_mapping() const noexcept {
+        return has(node_attr_bits::map_bit);
+    }
+
+    /// @brief Checks if the node is null.
+    /// @return True if the node is null, false otherwise.
+    bool is_null() const noexcept {
+        return has(node_attr_bits::null_bit);
+    }
+
+    /// @brief Checks if the node is a boolean.
+    /// @return True if the node is a boolean, false otherwise.
+    bool is_boolean() const noexcept {
+        return has(node_attr_bits::bool_bit);
+    }
+
+    /// @brief Checks if the node is an integer.
+    /// @return True if the node is an integer, false otherwise.
+    bool is_integer() const noexcept {
+        return has(node_attr_bits::int_bit);
+    }
+
+    /// @brief Checks if the node is an unsigned integer.
+    /// @return True if the node is an unsigned integer, false otherwise.
+    bool is_uint() const noexcept {
+        return has(node_attr_bits::int_bit | node_attr_bits::uint_bit);
+    }
+
+    /// @brief Checks if the node is a floating-point number.
+    /// @return True if the node is a floating-point number, false otherwise.
+    bool is_float_number() const noexcept {
+        return has(node_attr_bits::float_bit);
+    }
+
+    /// @brief Checks if the node is a string.
+    /// @return True if the node is a string, false otherwise.
+    bool is_string() const noexcept {
+        return has(node_attr_bits::string_bit);
+    }
+
+    /// @brief Checks if the node is a scalar.
+    /// @return True if the node is a scalar, false otherwise.
+    bool is_scalar() const noexcept {
+        return has_any(node_attr_bits::scalar_bits);
+    }
+
+    /// @brief Checks if the node is an anchor.
+    /// @return True if the node is an anchor, false otherwise.
+    bool is_anchor() const noexcept {
+        return has(node_attr_bits::anchor_bit);
+    }
+
+    /// @brief Checks if the node is an alias.
+    /// @return True if the node is an alias, false otherwise.
+    bool is_alias() const noexcept {
+        return has(node_attr_bits::alias_bit);
+    }
+
+    /// @brief Retrieves the anchor offset of the node.
+    /// @return The anchor offset.
+    uint32_t get_anchor_offset() const noexcept {
+        return (m_attrs & node_attr_mask::anchor_offset) >> 26;
+    }
+
+    /// @brief Sets the anchor offset of the node.
+    /// @param offset The anchor offset to set.
+    void set_anchor_offset(uint32_t offset) noexcept {
+        m_attrs &= ~node_attr_mask::anchor_offset;
+        m_attrs |= (offset & 0x3Fu) << 26;
+    }
+
+    /// @brief Swaps the contents of this node_attrs object with another.
+    /// @param other The other node_attrs object to swap with.
+    void swap(node_attrs& other) noexcept {
+        std::swap(m_attrs, other.m_attrs);
+    }
+
+private:
+    /// @brief Converts a node_type value to a node_attr_t value.
+    /// @param t A type of node value.
+    /// @return The associated node value bit.
+    static node_attr_t from_node_type(node_type t) noexcept {
+        switch (t) {
+        case node_type::SEQUENCE:
+            return node_attr_bits::seq_bit;
+        case node_type::MAPPING:
+            return node_attr_bits::map_bit;
+        case node_type::NULL_OBJECT:
+            return node_attr_bits::null_bit;
+        case node_type::BOOLEAN:
+            return node_attr_bits::bool_bit;
+        case node_type::INTEGER:
+            return node_attr_bits::int_bit;
+        case node_type::FLOAT:
+            return node_attr_bits::float_bit;
+        case node_type::STRING:
+            return node_attr_bits::string_bit;
+        default:                   // LCOV_EXCL_LINE
+            detail::unreachable(); // LCOV_EXCL_LINE
+        }
+    }
+
+    node_attr_t m_attrs {node_attr_bits::default_bits};
+};
+
+/// @brief Swaps the contents of two node_attrs objects.
+/// @param lhs The first node_attrs object.
+/// @param rhs The second node_attrs object.
+inline void swap(node_attrs& lhs, node_attrs& rhs) noexcept {
+    lhs.swap(rhs);
+}
 
 FK_YAML_DETAIL_NAMESPACE_END
 

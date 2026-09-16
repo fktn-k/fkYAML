@@ -10,7 +10,7 @@
 
 #include <fkYAML/node.hpp>
 
-TEST_CASE("NodeAttrs_FromNodeType") {
+TEST_CASE("NodeAttrs_CtorWithNodeType") {
     using test_data_t = std::pair<fkyaml::node_type, fkyaml::detail::node_attr_t>;
     auto test_data = GENERATE(
         test_data_t {fkyaml::node_type::SEQUENCE, fkyaml::detail::node_attr_bits::seq_bit},
@@ -20,10 +20,11 @@ TEST_CASE("NodeAttrs_FromNodeType") {
         test_data_t {fkyaml::node_type::INTEGER, fkyaml::detail::node_attr_bits::int_bit},
         test_data_t {fkyaml::node_type::FLOAT, fkyaml::detail::node_attr_bits::float_bit},
         test_data_t {fkyaml::node_type::STRING, fkyaml::detail::node_attr_bits::string_bit});
-    REQUIRE(fkyaml::detail::node_attr_bits::from_node_type(test_data.first) == test_data.second);
+    fkyaml::detail::node_attrs attrs {test_data.first};
+    REQUIRE(attrs.get() == test_data.second);
 }
 
-TEST_CASE("NodeAttrs_ToNodeType") {
+TEST_CASE("NodeAttrs_GetNodeType") {
     using test_data_t = std::pair<fkyaml::detail::node_attr_t, fkyaml::node_type>;
     auto test_data = GENERATE(
         test_data_t {fkyaml::detail::node_attr_bits::seq_bit, fkyaml::node_type::SEQUENCE},
@@ -33,19 +34,21 @@ TEST_CASE("NodeAttrs_ToNodeType") {
         test_data_t {fkyaml::detail::node_attr_bits::int_bit, fkyaml::node_type::INTEGER},
         test_data_t {fkyaml::detail::node_attr_bits::float_bit, fkyaml::node_type::FLOAT},
         test_data_t {fkyaml::detail::node_attr_bits::string_bit, fkyaml::node_type::STRING});
-    REQUIRE(fkyaml::detail::node_attr_bits::to_node_type(test_data.first) == test_data.second);
+    fkyaml::detail::node_attrs attrs {test_data.first};
+    REQUIRE(attrs.get_node_type() == test_data.second);
 }
 
 TEST_CASE("NodeAttrs_GetAnchorOffset") {
     using test_data_t = std::pair<fkyaml::detail::node_attr_t, uint32_t>;
     auto test_data = GENERATE(test_data_t {0, 0}, test_data_t {0xA0000000u, 0x28u}, test_data_t {0xFC000000u, 0x3Fu});
-    REQUIRE(fkyaml::detail::node_attr_bits::get_anchor_offset(test_data.first) == test_data.second);
+    fkyaml::detail::node_attrs attrs {test_data.first};
+    REQUIRE(attrs.get_anchor_offset() == test_data.second);
 }
 
 TEST_CASE("NodeAttrs_SetAnchorOffset") {
     using test_data_t = std::pair<uint32_t, fkyaml::detail::node_attr_t>;
     auto test_data = GENERATE(test_data_t {0, 0}, test_data_t {0x28u, 0xA0000000u}, test_data_t {0x3Fu, 0xFC000000u});
-    fkyaml::detail::node_attr_t attrs = 0;
-    fkyaml::detail::node_attr_bits::set_anchor_offset(test_data.first, attrs);
-    REQUIRE(attrs == test_data.second);
+    fkyaml::detail::node_attrs attrs {0};
+    attrs.set_anchor_offset(test_data.first);
+    REQUIRE(attrs.get() == test_data.second);
 }

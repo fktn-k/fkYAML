@@ -638,12 +638,12 @@ private:
         const auto first_event_index = static_cast<uint32_t>(m_anchor_reference_events.size());
         if (node.is_alias()) {
             anchor_reference_event alias_event(
-                node.get_anchor_name(), detail::node_attr_bits::get_anchor_offset(node.m_attrs), position++, false);
+                node.get_anchor_name(), node.m_attrs.get_anchor_offset(), position++, false);
             m_anchor_reference_events.emplace_back(std::move(alias_event));
         }
         else if (node.is_anchor()) {
             anchor_reference_event anchor_event(
-                node.get_anchor_name(), detail::node_attr_bits::get_anchor_offset(node.m_attrs), position++, true);
+                node.get_anchor_name(), node.m_attrs.get_anchor_offset(), position++, true);
             m_anchor_reference_events.emplace_back(std::move(anchor_event));
         }
 
