@@ -64,8 +64,6 @@ This class provides features to handle YAML nodes.
 | ----------------------------------------------- | ------------------------------------------------------------------- |
 | [value_converter_type](value_converter_type.md) | The type used to convert between node and native data.              |
 | initializer_list_t                              | The type for initializer lists of `basic_node` values.              |
-| [node_t](node_t.md)                             | **(DEPRECATED)** The type used to store the internal value type.    |
-| [yaml_version_t](yaml_version_t.md)             | **(DEPRECATED)** The type used to store the enable version of YAML. |
 | [map_range](map_range.md)                       | The helper type for the `map_items()` function.                     |
 | [const_map_range](map_range.md)                 | The helper type for the `map_items()` function.                     |
 
@@ -85,7 +83,6 @@ This class provides features to handle YAML nodes.
 | Name                                  | Description                                                        |
 | ------------------------------------- | ------------------------------------------------------------------ |
 | [get_type](get_type.md)               | returns the type of a node value in a basic_node.                  |
-| [type](type.md)                       | **(DEPRECATED)** returns the type of a node value in a basic_node. |
 | [is_sequence](is_sequence.md)         | checks if a basic_node has a sequence node value.                  |
 | [is_mapping](is_mapping.md)           | checks if a basic_node has a mapping node value.                   |
 | [is_null](is_null.md)                 | checks if a basic_node has a null node value.                      |
@@ -113,7 +110,6 @@ This class provides features to handle YAML nodes.
 | [as_int](as_int.md)                       |          | get reference to the integer node value.                                                          |
 | [as_float](as_float.md)                   |          | get reference to the float node value.                                                            |
 | [as_str](as_str.md)                       |          | get reference to the string node value.                                                           |
-| [get_value_ref](get_value_ref.md)         |          | **(DEPRECATED)** converts a basic_node into reference to a target type.                           |
 
 ### Iterators
 | Name                      | Description                                                                                                |
@@ -169,8 +165,6 @@ This class provides features to handle YAML nodes.
 | ------------------------------------------------- | ------------------------------------------------------------------------- |
 | [get_yaml_version_type](get_yaml_version_type.md) | gets a YAML version associated with a basic_node object.                  |
 | [set_yaml_version_type](set_yaml_version_type.md) | sets a YAML version to a basic_node object.                               |
-| [get_yaml_version](get_yaml_version.md)           | **(DEPRECATED)** gets a YAML version associated with a basic_node object. |
-| [set_yaml_version](set_yaml_version.md)           | **(DEPRECATED)** sets a YAML version to a basic_node object.              |
 
 ### Modifiers
 

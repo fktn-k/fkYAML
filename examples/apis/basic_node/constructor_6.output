@@ -1,16 +1,5 @@
 - true
 - false
-- false
 
-- foo
-- 123
-- true
+foo: 1024
 
--456: 1.41
-123: 3.14
-
-null
-false
-12345
-3.14159
-test

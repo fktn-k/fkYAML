@@ -52,4 +52,3 @@ Swaps the internally stored data with the given basic_node object.
 
 * [basic_node](index.md)
 * [get_value](get_value.md)
-* [get_value_ref](get_value_ref.md)

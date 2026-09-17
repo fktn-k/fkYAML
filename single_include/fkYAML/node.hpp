@@ -1529,22 +1529,6 @@ FK_YAML_DETAIL_NAMESPACE_END
 
 #endif /* FK_YAML_DETAIL_STRING_FORMATTER_HPP */
 
-// #include <fkYAML/detail/types/node_t.hpp>
-//  _______   __ __   __  _____   __  __  __
-// |   __| |_/  |  \_/  |/  _  \ /  \/  \|  |     fkYAML: A C++ header-only YAML library
-// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.4.4
-// |__|  |_| \__|  |_|  |_|   |_|___||___|______| https://github.com/fktn-k/fkYAML
-//
-// SPDX-FileCopyrightText: 2023-2026 Kensuke Fukutani <fktn.dev@gmail.com>
-// SPDX-License-Identifier: MIT
-
-#ifndef FK_YAML_DETAIL_TYPES_NODE_T_HPP
-#define FK_YAML_DETAIL_TYPES_NODE_T_HPP
-
-#include <cstdint>
-
-// #include <fkYAML/detail/macros/define_macros.hpp>
-
 // #include <fkYAML/node_type.hpp>
 //  _______   __ __   __  _____   __  __  __
 // |   __| |_/  |  \_/  |/  _  \ /  \/  \|  |     fkYAML: A C++ header-only YAML library
@@ -1600,87 +1584,6 @@ inline const char* to_string(node_type t) noexcept {
 FK_YAML_NAMESPACE_END
 
 #endif /* FK_YAML_NODE_TYPE_HPP */
-
-
-FK_YAML_DETAIL_NAMESPACE_BEGIN
-
-/// @brief Definition of node value types.
-enum class node_t : std::uint8_t {
-    SEQUENCE,     //!< sequence value type
-    MAPPING,      //!< mapping value type
-    NULL_OBJECT,  //!< null value type
-    BOOLEAN,      //!< boolean value type
-    INTEGER,      //!< integer value type
-    FLOAT_NUMBER, //!< float number value type
-    STRING,       //!< string value type
-};
-
-inline const char* to_string(node_t t) noexcept {
-    switch (t) {
-    case node_t::SEQUENCE:
-        return "sequence";
-    case node_t::MAPPING:
-        return "mapping";
-    case node_t::NULL_OBJECT:
-        return "null";
-    case node_t::BOOLEAN:
-        return "boolean";
-    case node_t::INTEGER:
-        return "integer";
-    case node_t::FLOAT_NUMBER:
-        return "float";
-    case node_t::STRING:
-        return "string";
-    default:                   // LCOV_EXCL_LINE
-        detail::unreachable(); // LCOV_EXCL_LINE
-    }
-}
-
-inline node_t convert_from_node_type(node_type t) {
-    switch (t) {
-    case node_type::SEQUENCE:
-        return node_t::SEQUENCE;
-    case node_type::MAPPING:
-        return node_t::MAPPING;
-    case node_type::NULL_OBJECT:
-        return node_t::NULL_OBJECT;
-    case node_type::BOOLEAN:
-        return node_t::BOOLEAN;
-    case node_type::INTEGER:
-        return node_t::INTEGER;
-    case node_type::FLOAT:
-        return node_t::FLOAT_NUMBER;
-    case node_type::STRING:
-        return node_t::STRING;
-    default:                   // LCOV_EXCL_LINE
-        detail::unreachable(); // LCOV_EXCL_LINE
-    }
-}
-
-inline node_type convert_to_node_type(node_t t) {
-    switch (t) {
-    case node_t::SEQUENCE:
-        return node_type::SEQUENCE;
-    case node_t::MAPPING:
-        return node_type::MAPPING;
-    case node_t::NULL_OBJECT:
-        return node_type::NULL_OBJECT;
-    case node_t::BOOLEAN:
-        return node_type::BOOLEAN;
-    case node_t::INTEGER:
-        return node_type::INTEGER;
-    case node_t::FLOAT_NUMBER:
-        return node_type::FLOAT;
-    case node_t::STRING:
-        return node_type::STRING;
-    default:                   // LCOV_EXCL_LINE
-        detail::unreachable(); // LCOV_EXCL_LINE
-    }
-}
-
-FK_YAML_DETAIL_NAMESPACE_END
-
-#endif /* FK_YAML_DETAIL_TYPES_NODE_T_HPP */
 
 
 FK_YAML_NAMESPACE_BEGIN
@@ -1804,15 +1707,6 @@ public:
     /// @param[in] type The type of a source node value.
     explicit type_error(const char* msg, node_type type) noexcept
         : exception(generate_error_message(msg, type).c_str()) {
-    }
-
-    /// @brief Construct a new type_error object with an error message and a node type.
-    /// @deprecated Use type_error(const char*, node_type) constructor. (since 0.3.12).
-    /// @param[in] msg An error message.
-    /// @param[in] type The type of a source node value.
-    FK_YAML_DEPRECATED("Since 0.3.12; Use explicit type_error(const char*, node_type)")
-    explicit type_error(const char* msg, detail::node_t type) noexcept
-        : type_error(msg, detail::convert_to_node_type(type)) {
     }
 
 private:
@@ -14194,59 +14088,6 @@ FK_YAML_DETAIL_NAMESPACE_END
 
 #endif /* FK_YAML_DETAIL_REVERSE_ITERATOR_HPP */
 
-// #include <fkYAML/detail/types/node_t.hpp>
-
-// #include <fkYAML/detail/types/yaml_version_t.hpp>
-//  _______   __ __   __  _____   __  __  __
-// |   __| |_/  |  \_/  |/  _  \ /  \/  \|  |     fkYAML: A C++ header-only YAML library
-// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.4.4
-// |__|  |_| \__|  |_|  |_|   |_|___||___|______| https://github.com/fktn-k/fkYAML
-//
-// SPDX-FileCopyrightText: 2023-2026 Kensuke Fukutani <fktn.dev@gmail.com>
-// SPDX-License-Identifier: MIT
-
-#ifndef FK_YAML_DETAIL_TYPES_YAML_VERSION_T_HPP
-#define FK_YAML_DETAIL_TYPES_YAML_VERSION_T_HPP
-
-#include <cstdint>
-
-// #include <fkYAML/detail/macros/define_macros.hpp>
-
-// #include <fkYAML/yaml_version_type.hpp>
-
-
-FK_YAML_DETAIL_NAMESPACE_BEGIN
-
-/// @brief Definition of YAML version types.
-enum class yaml_version_t : std::uint8_t {
-    VER_1_1, //!< YAML version 1.1
-    VER_1_2, //!< YAML version 1.2
-};
-
-inline yaml_version_t convert_from_yaml_version_type(yaml_version_type t) noexcept {
-    switch (t) {
-    case yaml_version_type::VERSION_1_1:
-        return yaml_version_t::VER_1_1;
-    case yaml_version_type::VERSION_1_2:
-    default:
-        return yaml_version_t::VER_1_2;
-    }
-}
-
-inline yaml_version_type convert_to_yaml_version_type(yaml_version_t t) noexcept {
-    switch (t) {
-    case yaml_version_t::VER_1_1:
-        return yaml_version_type::VERSION_1_1;
-    case yaml_version_t::VER_1_2:
-    default:
-        return yaml_version_type::VERSION_1_2;
-    }
-}
-
-FK_YAML_DETAIL_NAMESPACE_END
-
-#endif /* FK_YAML_DETAIL_TYPES_YAML_VERSION_T_HPP */
-
 // #include <fkYAML/exception.hpp>
 
 // #include <fkYAML/node_type.hpp>
@@ -14293,8 +14134,6 @@ FK_YAML_DETAIL_NAMESPACE_END
 // #include <fkYAML/detail/meta/stl_supplement.hpp>
 
 // #include <fkYAML/detail/meta/type_traits.hpp>
-
-// #include <fkYAML/detail/types/node_t.hpp>
 
 // #include <fkYAML/exception.hpp>
 
@@ -15276,16 +15115,6 @@ public:
     template <typename T, typename SFINAE>
     using value_converter_type = ConverterType<T, SFINAE>;
 
-    /// @brief Definition of node value types.
-    /// @deprecated Use fkyaml::node_type enum class. (since 0.3.12)
-    /// @sa https://fktn-k.github.io/fkYAML/api/basic_node/node_t/
-    using node_t = detail::node_t;
-
-    /// @brief Definition of YAML version types.
-    /// @deprecated Use fkyaml::yaml_version_type enum class. (since 0.3.12)
-    /// @sa https://fktn-k.github.io/fkYAML/api/basic_node/yaml_version_t/
-    using yaml_version_t = detail::yaml_version_t;
-
     /// @brief A type for mapping range objects for the map_items() function.
     /// @sa https://fktn-k.github.io/fkYAML/api/basic_node/map_range/
     using map_range = fkyaml::detail::map_range_proxy<basic_node>;
@@ -15392,14 +15221,6 @@ public:
     /// @brief Constructs a new basic_node object of null type.
     /// @sa https://fktn-k.github.io/fkYAML/api/basic_node/constructor/
     basic_node() = default;
-
-    /// @brief Constructs a new basic_node object with a specified type.
-    /// @param[in] type A YAML node type.
-    /// @sa https://fktn-k.github.io/fkYAML/api/basic_node/constructor/
-    FK_YAML_DEPRECATED("Since 0.3.12; Use explicit basic_node(const node_type)")
-    explicit basic_node(const node_t type)
-        : basic_node(detail::convert_to_node_type(type)) {
-    }
 
     explicit basic_node(const node_type type)
         : m_attrs(type),
@@ -16007,16 +15828,6 @@ public:
         return resolve_reference().m_attrs.get_node_type();
     }
 
-    /// @brief Returns the type of the current basic_node value.
-    /// @deprecated Use get_type() function. (since 0.3.12)
-    /// @return The type of the YAML node value.
-    /// @sa https://fktn-k.github.io/fkYAML/api/basic_node/type/
-    FK_YAML_DEPRECATED("Since 0.3.12; Use get_type()")
-    node_t type() const noexcept {
-        node_type tmp_type = get_type();
-        return detail::convert_from_node_type(tmp_type);
-    }
-
     /// @brief Tests whether the current basic_node value is of sequence type.
     /// @return true if the type is sequence, false otherwise.
     /// @sa https://fktn-k.github.io/fkYAML/api/basic_node/is_sequence/
@@ -16328,25 +16139,6 @@ public:
         directives.is_version_specified = true;
     }
 
-    /// @brief Get the YAML version for this basic_node object.
-    /// @deprecated Use get_yaml_version_type() function. (since 0.3.12)
-    /// @return The YAML version if already set, `yaml_version_t::VER_1_2` otherwise.
-    /// @sa https://fktn-k.github.io/fkYAML/api/basic_node/get_yaml_version/
-    FK_YAML_DEPRECATED("Since 0.3.12; Use get_yaml_version_type()")
-    yaml_version_t get_yaml_version() const noexcept {
-        yaml_version_type tmp_type = get_yaml_version_type();
-        return detail::convert_from_yaml_version_type(tmp_type);
-    }
-
-    /// @brief Set the YAML version for this basic_node object.
-    /// @deprecated Use set_yaml_version_type(yaml_version_type) function. (since 0.3.12)
-    /// @param[in] version The target YAML version.
-    /// @sa https://fktn-k.github.io/fkYAML/api/basic_node/set_yaml_version/
-    FK_YAML_DEPRECATED("Since 0.3.12; Use set_yaml_version_type(const yaml_version_type)")
-    void set_yaml_version(const yaml_version_t version) {
-        set_yaml_version_type(detail::convert_to_yaml_version_type(version));
-    }
-
     /// @brief Check whether this basic_node object has already had any anchor name.
     /// @return true if ths basic_node has an anchor name, false otherwise.
     /// @sa https://fktn-k.github.io/fkYAML/api/basic_node/has_anchor_name/
@@ -16545,31 +16337,6 @@ public:
             // and std::exception is usually the base class of user-defined exception types.
             return std::forward<U>(default_value);
         }
-    }
-
-    /// @brief Explicit reference access to the internally stored YAML node value.
-    /// @tparam ReferenceType Reference type to the target YAML node value.
-    /// @return Reference to the internally stored YAML node value.
-    /// @sa https://fktn-k.github.io/fkYAML/api/basic_node/get_value_ref/
-    template <typename ReferenceType, detail::enable_if_t<std::is_reference<ReferenceType>::value, int> = 0>
-    FK_YAML_DEPRECATED("Since 0.4.3; Use one of as_seq(), as_map(), as_bool(), as_int(), as_float() or as_str()")
-    ReferenceType get_value_ref() {
-        return get_value_ref_impl(static_cast<detail::add_pointer_t<ReferenceType>>(nullptr));
-    }
-
-    /// @brief Explicit reference access to the internally stored YAML node value.
-    /// @tparam ReferenceType Constant reference type to the target YAML node value.
-    /// @return Constant reference to the internally stored YAML node value.
-    /// @sa https://fktn-k.github.io/fkYAML/api/basic_node/get_value_ref/
-    template <
-        typename ReferenceType,
-        detail::enable_if_t<
-            detail::conjunction<
-                std::is_reference<ReferenceType>, std::is_const<detail::remove_reference_t<ReferenceType>>>::value,
-            int> = 0>
-    FK_YAML_DEPRECATED("Since 0.4.3; Use one of as_seq(), as_map(), as_bool(), as_int(), as_float() or as_str()")
-    ReferenceType get_value_ref() const {
-        return get_value_ref_impl(static_cast<detail::add_pointer_t<ReferenceType>>(nullptr));
     }
 
     /// @brief Returns reference to the sequence node value.
@@ -17133,90 +16900,6 @@ private:
     template <typename ValueType, detail::enable_if_t<detail::is_basic_node<ValueType>::value, int> = 0>
     void get_value_impl(ValueType& v) const {
         v = *this;
-    }
-
-    /// @brief Returns reference to the sequence node value.
-    /// @throw fkyaml::exception The node value is not a sequence.
-    /// @return Reference to the sequence node value.
-    sequence_type& get_value_ref_impl(sequence_type* /*unused*/) {
-        return as_seq();
-    }
-
-    /// @brief Returns constant reference to the sequence node value.
-    /// @throw fkyaml::exception The node value is not a sequence.
-    /// @return Constant reference to the sequence node value.
-    const sequence_type& get_value_ref_impl(const sequence_type* /*unused*/) const {
-        return as_seq();
-    }
-
-    /// @brief Returns reference to the mapping node value.
-    /// @throw fkyaml::exception The node value is not a mapping.
-    /// @return Reference to the mapping node value.
-    mapping_type& get_value_ref_impl(mapping_type* /*unused*/) {
-        return as_map();
-    }
-
-    /// @brief Returns constant reference to the mapping node value.
-    /// @throw fkyaml::exception The node value is not a mapping.
-    /// @return Constant reference to the mapping node value.
-    const mapping_type& get_value_ref_impl(const mapping_type* /*unused*/) const {
-        return as_map();
-    }
-
-    /// @brief Returns reference to the boolean node value.
-    /// @throw fkyaml::exception The node value is not a boolean.
-    /// @return Reference to the boolean node value.
-    boolean_type& get_value_ref_impl(boolean_type* /*unused*/) {
-        return as_bool();
-    }
-
-    /// @brief Returns reference to the boolean node value.
-    /// @throw fkyaml::exception The node value is not a boolean.
-    /// @return Constant reference to the boolean node value.
-    const boolean_type& get_value_ref_impl(const boolean_type* /*unused*/) const {
-        return as_bool();
-    }
-
-    /// @brief Returns reference to the integer node value.
-    /// @throw fkyaml::exception The node value is not an integer.
-    /// @return Reference to the integer node value.
-    integer_type& get_value_ref_impl(integer_type* /*unused*/) {
-        return as_int();
-    }
-
-    /// @brief Returns reference to the integer node value.
-    /// @throw fkyaml::exception The node value is not an integer.
-    /// @return Constant reference to the integer node value.
-    const integer_type& get_value_ref_impl(const integer_type* /*unused*/) const {
-        return as_int();
-    }
-
-    /// @brief Returns reference to the floating point number node value.
-    /// @throw fkyaml::exception The node value is not a floating point number.
-    /// @return Reference to the floating point number node value.
-    float_number_type& get_value_ref_impl(float_number_type* /*unused*/) {
-        return as_float();
-    }
-
-    /// @brief Returns reference to the floating point number node value.
-    /// @throw fkyaml::exception The node value is not a floating point number.
-    /// @return Constant reference to the floating point number node value.
-    const float_number_type& get_value_ref_impl(const float_number_type* /*unused*/) const {
-        return as_float();
-    }
-
-    /// @brief Returns reference to the string node value.
-    /// @throw fkyaml::exception The node value is not a string.
-    /// @return Reference to the string node value.
-    string_type& get_value_ref_impl(string_type* /*unused*/) {
-        return as_str();
-    }
-
-    /// @brief Returns reference to the string node value.
-    /// @throw fkyaml::exception The node value is not a string.
-    /// @return Constant reference to the string node value.
-    const string_type& get_value_ref_impl(const string_type* /*unused*/) const {
-        return as_str();
     }
 
     /// The current node attributes.

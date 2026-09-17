@@ -57,4 +57,3 @@ A value of a compatible type converted from a basic_node.
 
 * [node](../basic_node/node.md)
 * [basic_node::get_value](../basic_node/get_value.md)
-* [basic_node::get_value_ref](../basic_node/get_value_ref.md)

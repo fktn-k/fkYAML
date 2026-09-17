@@ -7,17 +7,15 @@ basic_node() = default; // (1)
 
 explicit basic_node(const node_type type); // (2)
 
-explicit basic_node(const node_t type); // (3) deprecated
+basic_node(const basic_node& rhs); // (3)
 
-basic_node(const basic_node& rhs); // (4)
-
-basic_node(basic_node&& rhs) noexcept; // (5)
+basic_node(basic_node&& rhs) noexcept; // (4)
 
 template <typename CompatibleType, typename U = detail::remove_cvref_t<CompatibleType>>
 basic_node(CompatibleType&& val) noexcept(
-    noexcept(ConverterType<U>::to_node(std::declval<basic_node&>(), std::declval<CompatibleType>()))); // (6)
+    noexcept(ConverterType<U>::to_node(std::declval<basic_node&>(), std::declval<CompatibleType>()))); // (5)
 
-basic_node(initializer_list_t init); // (7)
+basic_node(initializer_list_t init); // (6)
 ```
 
 Constructs a new basic_node from a variety of data sources.  
@@ -38,28 +36,10 @@ Available overloads are:
     | node_type::FLOAT      | `#!cpp 0.0`      |
     | node_type::STRING     | (empty string)   |
 
-3. Constructs a basic_node with the given type.  
-   The resulting basic_node has a default value for the given type.  
-   Default values are the same as those in the above table.  
-
-    !!! warning "Deprecation"
-
-        The overload(2) `#!cpp basic_node(const node_type);` replaces the overload(3) `#!cpp basic_node(const node_t);` which has been deprecated in version 0.3.12. It will be removed in a future version. Please replace calls like  
-
-        ```cpp
-        fkyaml::node n(fkyaml::node::node_t::MAPPING);
-        ```
-
-        with  
-
-        ```cpp
-        fkyaml::node n(fkyaml::node_type::MAPPING);
-        ```
-
-4. Copy constructs a basic_node with an existing basic_node.
-5. Move constructs a basic_node with an existing basic_node.  
+3. Copy constructs a basic_node with an existing basic_node.
+4. Move constructs a basic_node with an existing basic_node.  
    The existing basic_node will be the same as a default-constructed basic_node at the end of this constructor.
-6. Constructs a basic_node with a value of a compatible type (see below).  
+5. Constructs a basic_node with a value of a compatible type (see below).  
    The resulting basic_node has the value of `val` and the type which is associated with `CompatibleType`.  
    Template parameter `CompatibleType` includes, but not limited to, the following types:  
     * sequences:
@@ -89,7 +69,7 @@ Available overloads are:
         * types with which [`string_type`](string_type.md) is constructible such as `char[]`, `char*` or [`std::string_view`](https://en.cppreference.com/w/cpp/string/basic_string_view) (since C++17)
 
     You can add types to meet your needs by implementing custom `to_node()` functions. See [`node_value_converter`](../node_value_converter/to_node.md) for details.
-7. Constructs a basic_node with a initializer_list_t object.  
+6. Constructs a basic_node with a initializer_list_t object.  
    The resulting basic_node has the value of a container (sequence or mapping) which has the contents of `init`.  
    Basically, `init` is considered to be a sequence.  
    If `init` contains a sequence where each element contains 2 basic_node objects, however, such a sequence is interpreted as a mapping.  
@@ -146,7 +126,7 @@ Available overloads are:
     --8<-- "apis/basic_node/constructor_2.output"
     ```
 
-??? Example "Overload(3): create an empty value with a given type (deprecated)"
+??? Example "Overload(3): copy construct a basic_node object"
 
     ```cpp
     --8<-- "apis/basic_node/constructor_3.cpp:9"
@@ -157,7 +137,7 @@ Available overloads are:
     --8<-- "apis/basic_node/constructor_3.output"
     ```
 
-??? Example "Overload(4): copy construct a basic_node object"
+??? Example "Overload(4): move construct a basic_node object"
 
     ```cpp
     --8<-- "apis/basic_node/constructor_4.cpp:9"
@@ -168,7 +148,7 @@ Available overloads are:
     --8<-- "apis/basic_node/constructor_4.output"
     ```
 
-??? Example "Overload(5): move construct a basic_node object"
+??? Example "Overload(5): create a basic_node object with compatible types"
 
     ```cpp
     --8<-- "apis/basic_node/constructor_5.cpp:9"
@@ -179,7 +159,7 @@ Available overloads are:
     --8<-- "apis/basic_node/constructor_5.output"
     ```
 
-??? Example "Overload(6): create a basic_node object with compatible types"
+??? Example "Overload(6): create a basic_node object from an initializer list"
 
     ```cpp
     --8<-- "apis/basic_node/constructor_6.cpp:9"
@@ -188,17 +168,6 @@ Available overloads are:
     output:
     ```bash
     --8<-- "apis/basic_node/constructor_6.output"
-    ```
-
-??? Example "Overload(7): create a basic_node object from an initializer list"
-
-    ```cpp
-    --8<-- "apis/basic_node/constructor_7.cpp:9"
-    ```
-
-    output:
-    ```bash
-    --8<-- "apis/basic_node/constructor_7.output"
     ```
 ---
 
