@@ -4,8 +4,8 @@
 <!-- Edit ./tools/natvis_generator/fkYAML.natvis.j2 -->
 
 <AutoVisualizer xmlns="http://schemas.microsoft.com/vstudio/debugger/natvis/2010">
-    <!-- Namespace fkyaml::v0_4_4 -->
-    <Type Name="fkyaml::v0_4_4::basic_node&lt;*&gt;">
+    <!-- Namespace fkyaml::v0_5_0 -->
+    <Type Name="fkyaml::v0_5_0::basic_node&lt;*&gt;">
         <DisplayString Condition="m_attrs.is_sequence()">{*(m_value.p_seq)}</DisplayString>
         <DisplayString Condition="m_attrs.is_mapping()">{*(m_value.p_map)}</DisplayString>
         <DisplayString Condition="m_attrs.is_null()">nullptr</DisplayString>
@@ -23,7 +23,7 @@
         </Expand>
     </Type>
 
-    <Type Name="std::pair&lt;*, fkyaml::v0_4_4::basic_node&lt;*&gt;&gt;" IncludeView="MapHelper">
+    <Type Name="std::pair&lt;*, fkyaml::v0_5_0::basic_node&lt;*&gt;&gt;" IncludeView="MapHelper">
         <DisplayString>{second}</DisplayString>
         <Expand>
             <ExpandedItem>second</ExpandedItem>

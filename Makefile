@@ -15,8 +15,8 @@ TOOL_SRCS = $(shell find tools -type f -name '*.cpp' | sort)
 
 # target version definition
 TARGET_MAJOR_VERSION := 0
-TARGET_MINOR_VERSION := 4
-TARGET_PATCH_VERSION := 4
+TARGET_MINOR_VERSION := 5
+TARGET_PATCH_VERSION := 0
 TARGET_VERSION_FULL := $(TARGET_MAJOR_VERSION).$(TARGET_MINOR_VERSION).$(TARGET_PATCH_VERSION)
 VERSION_MACRO_FILE := include/fkYAML/detail/macros/version_macros.hpp
 

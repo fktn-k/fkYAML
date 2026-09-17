@@ -8,7 +8,7 @@ static basic_node sequence(const sequence_type& seq);
 static basic_node sequence(sequence_type&& seq);
 ```
 
-The factory method which constructs a basic_node with the [`node_type::SEQUENCE`](node_type.md) type from a sequence node value.  
+The factory method which constructs a basic_node with the [`node_type::SEQUENCE`](../node_type.md) type from a sequence node value.  
 Calling this API with no arguments will constructs a basic_node with an empty sequence node value.  
 The resulting basic_node has the [`node_type::SEQUENCE`](../node_type.md) type.  
 
