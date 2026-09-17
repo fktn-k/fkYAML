@@ -1,9 +1,9 @@
 //  _______   __ __   __  _____   __  __  __
 // |   __| |_/  |  \_/  |/  _  \ /  \/  \|  |     fkYAML: A C++ header-only YAML library
-// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.4.2
+// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.5.0
 // |__|  |_| \__|  |_|  |_|   |_|___||___|______| https://github.com/fktn-k/fkYAML
 //
-// SPDX-FileCopyrightText: 2023-2025 Kensuke Fukutani <fktn.dev@gmail.com>
+// SPDX-FileCopyrightText: 2023-2026 Kensuke Fukutani <fktn.dev@gmail.com>
 // SPDX-License-Identifier: MIT
 
 #ifndef FK_YAML_DETAIL_INPUT_SCALAR_PARSER_HPP
@@ -12,6 +12,7 @@
 #include <fkYAML/detail/macros/define_macros.hpp>
 #include <fkYAML/detail/assert.hpp>
 #include <fkYAML/detail/conversions/scalar_conv.hpp>
+#include <fkYAML/detail/conversions/to_node.hpp>
 #include <fkYAML/detail/encodings/yaml_escaper.hpp>
 #include <fkYAML/detail/input/block_scalar_header.hpp>
 #include <fkYAML/detail/input/scalar_scanner.hpp>
@@ -287,6 +288,9 @@ private:
             }
 
             if (!has_newline_at_end) {
+                if (line.find_first_not_of(" \t") == str_view::npos) {
+                    m_buffer.push_back('\n');
+                }
                 break;
             }
 
@@ -311,11 +315,18 @@ private:
         m_use_owned_buffer = true;
         m_buffer.reserve(token.size());
 
-        constexpr str_view white_space_filter {" \t"};
+        constexpr str_view space_filter {" "};
+
+        enum class folding_state_t : std::uint8_t {
+            FOLDABLE,
+            EMPTY_AFTER_FOLDABLE,
+            EMPTY_AFTER_OTHER,
+            OTHER,
+        };
 
         std::size_t cur_line_begin_pos = 0;
         bool has_newline_at_end = true;
-        bool can_be_folded = false;
+        folding_state_t folding_state {folding_state_t::OTHER};
         do {
             std::size_t cur_line_end_pos = token.find('\n', cur_line_begin_pos);
             if (cur_line_end_pos == str_view::npos) {
@@ -323,14 +334,16 @@ private:
                 cur_line_end_pos = token.size();
             }
 
-            const std::size_t line_size = cur_line_end_pos - cur_line_begin_pos;
-            const str_view line = token.substr(cur_line_begin_pos, line_size);
-            const bool is_empty = line.find_first_not_of(white_space_filter) == str_view::npos;
+            const str_view line = token.substr(cur_line_begin_pos, cur_line_end_pos - cur_line_begin_pos);
+            const std::size_t non_space_pos = line.find_first_not_of(space_filter);
+            const bool is_empty = non_space_pos == str_view::npos;
+            const bool is_more_indented =
+                !is_empty &&
+                (non_space_pos > header.indent || (non_space_pos == header.indent && line[non_space_pos] == '\t'));
 
             if (line.size() <= header.indent) {
                 // A less-indented line is turned into a newline.
                 m_buffer.push_back('\n');
-                can_be_folded = false;
             }
             else if (is_empty) {
                 // more-indented empty lines are not folded.
@@ -339,10 +352,7 @@ private:
                 m_buffer.push_back('\n');
             }
             else {
-                const std::size_t non_space_pos = line.find_first_not_of(white_space_filter);
-                const bool is_more_indented = (non_space_pos != str_view::npos) && (non_space_pos > header.indent);
-
-                if (can_be_folded) {
+                if (folding_state == folding_state_t::FOLDABLE) {
                     if (is_more_indented) {
                         // The content line right before more-indented lines is not folded.
                         m_buffer.push_back('\n');
@@ -350,8 +360,18 @@ private:
                     else {
                         m_buffer.push_back(' ');
                     }
-
-                    can_be_folded = false;
+                }
+                else if (
+                    is_more_indented && folding_state == folding_state_t::EMPTY_AFTER_FOLDABLE && has_newline_at_end) {
+                    // Preserve the line break after an empty line before a more-indented line.
+                    // ```yaml
+                    // >
+                    //   foo
+                    //
+                    //    bar
+                    // ```
+                    // is parsed as "foo\n\n bar\n".
+                    m_buffer.push_back('\n');
                 }
 
                 m_buffer.append(line.begin() + header.indent, line.end());
@@ -360,9 +380,19 @@ private:
                     // more-indented lines are not folded.
                     m_buffer.push_back('\n');
                 }
-                else {
-                    can_be_folded = true;
-                }
+            }
+
+            if (is_empty && folding_state == folding_state_t::FOLDABLE) {
+                folding_state = folding_state_t::EMPTY_AFTER_FOLDABLE;
+            }
+            else if (is_empty) {
+                folding_state = folding_state_t::EMPTY_AFTER_OTHER;
+            }
+            else if (!has_newline_at_end || is_more_indented) {
+                folding_state = folding_state_t::OTHER;
+            }
+            else {
+                folding_state = folding_state_t::FOLDABLE;
             }
 
             if (!has_newline_at_end) {
@@ -372,7 +402,7 @@ private:
             cur_line_begin_pos = cur_line_end_pos + 1;
         } while (cur_line_begin_pos < token.size());
 
-        if (has_newline_at_end && can_be_folded) {
+        if (has_newline_at_end && folding_state == folding_state_t::FOLDABLE) {
             // The final content line break are not folded.
             m_buffer.push_back('\n');
         }
@@ -432,11 +462,8 @@ private:
     /// @param newline_pos Position of the target newline code.
     void process_line_folding(str_view& token, std::size_t newline_pos) noexcept {
         // discard trailing white spaces which precedes the line break in the current line.
-        const std::size_t last_non_space_pos = token.substr(0, newline_pos + 1).find_last_not_of(" \t");
-        if (last_non_space_pos == str_view::npos) {
-            m_buffer.append(token.begin(), newline_pos);
-        }
-        else {
+        const std::size_t last_non_space_pos = token.substr(0, newline_pos).find_last_not_of(" \t");
+        if (last_non_space_pos != str_view::npos) {
             m_buffer.append(token.begin(), last_non_space_pos + 1);
         }
         token.remove_prefix(newline_pos + 1); // move next to the LF
@@ -534,6 +561,24 @@ private:
             if FK_YAML_LIKELY (converted) {
                 return basic_node_type(integer);
             }
+
+            // For untagged plain integer scalars, attempt a uint64_t parse to handle large
+            // positive values that exceed int64_t max (e.g. xxHash/UUID results like
+            // 15745692345339290292). This only applies when integer_type is a signed 64-bit
+            // type; any other width would not be able to represent the value anyway.
+            if (tag_type != tag_t::INTEGER && std::is_signed<integer_type>::value &&
+                sizeof(integer_type) == sizeof(uint64_t)) {
+                uint64_t u64 = 0;
+                if (detail::atoi(token.begin(), token.end(), u64)) {
+                    basic_node_type node;
+                    // Store the bit pattern in the signed field and set uint_bit so that
+                    // as_uint() / get_value<uint64_t>() can recover the correct value.
+                    detail::external_node_constructor<basic_node_type>::unsigned_integer_scalar(
+                        node, static_cast<integer_type>(u64));
+                    return node;
+                }
+            }
+
             if FK_YAML_UNLIKELY (tag_type == tag_t::INTEGER) {
                 throw parse_error("Failed to convert a scalar to an integer.", m_line, m_indent);
             }

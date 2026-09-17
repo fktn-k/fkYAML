@@ -11,7 +11,7 @@ on:
       - include/**
       - single_include/**
       - test/**
-      - tool/**
+      - tools/**
       - .clang-tidy
       - CMakeLists.txt
       - Makefile
@@ -22,7 +22,7 @@ on:
       - include/**
       - single_include/**
       - test/**
-      - tool/**
+      - tools/**
       - .clang-tidy
       - CMakeLists.txt
       - Makefile

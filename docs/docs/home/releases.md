@@ -1,5 +1,362 @@
 # Releases
 
+## **fkYAML version 0.5.0**
+
+!!! abstract "Release Packages"
+
+    * CMake package of the multiple header version
+        * [fkYAML.zip](https://github.com/fktn-k/fkYAML/releases/download/v0.5.0/fkYAML.zip)
+        * [fkYAML.tgz](https://github.com/fktn-k/fkYAML/releases/download/v0.5.0/fkYAML.tgz)
+    * CMake package of the single header version
+        * [fkYAML_single_header.zip](https://github.com/fktn-k/fkYAML/releases/download/v0.5.0/fkYAML_single_header.zip)
+        * [fkYAML_single_header.tgz](https://github.com/fktn-k/fkYAML/releases/download/v0.5.0/fkYAML_single_header.tgz)
+    * minimum repository contents for CMake
+        * [fkYAML_min.zip](https://github.com/fktn-k/fkYAML/releases/download/v0.5.0/fkYAML_min.zip)
+        * [fkYAML_min.tgz](https://github.com/fktn-k/fkYAML/releases/download/v0.5.0/fkYAML_min.tgz)
+    * single headers
+        * [node.hpp](https://github.com/fktn-k/fkYAML/releases/download/v0.5.0/node.hpp)
+        * [fkyaml_fwd.hpp](https://github.com/fktn-k/fkYAML/releases/download/v0.5.0/fkyaml_fwd.hpp)
+
+### What's Changed
+
+In this release, YAML parsing compliance has been significantly improved. As a result, fkYAML now passes all test cases in the [YAML Test Suite](https://github.com/yaml/yaml-test-suite), with only a few exceptions. Additionally, depending on the YAML input and the execution environment, parsing performance has improved by a factor of 1.3 or more.  
+We have also resolved an issue where anchor resolution would break after serialization, resulting in a more stable round-trip.  
+While this release introduces compatibility-breaking changes to the API and ABI, the migration process has been simplified as much as possible.  
+For details, please refer to the "Breaking Changes" section down below.  
+
+Translated with DeepL.com (free version)
+
+#### :boom: Breaking Changes
+
+This release changes selected parsing results, public API contracts, and the `basic_node` ABI.  
+Review the following migration notes before upgrading.
+
+- Support empty keys in block and flow mappings [\#558](https://github.com/fktn-k/fkYAML/pull/558) ([sndth](https://github.com/sndth))
+    - **Breaking changes:** An unquoted empty mapping key is represented by a null node instead of a string node.
+    - **Affected users:** Applications that access a deserialized empty mapping key with `node[""]`.
+    - **Migration:** Use `node[nullptr]` for an unquoted empty key. An explicitly quoted key (`""`) remains a string key and must continue to use `node[""]`.
+- Allocate node properties and document metainfo only when needed [\#581](https://github.com/fktn-k/fkYAML/pull/581) ([sndth](https://github.com/sndth))
+    - **Breaking changes:** The `basic_node` size and layout have changed, and `set_yaml_version_type()` is no longer `noexcept` because it may allocate document metainfo on first use.
+    - **Affected users:** Applications and libraries that pass `fkyaml::basic_node` across binary boundaries, depend on its object layout, or require `set_yaml_version_type()` to be `noexcept`.
+    - **Migration:** Rebuild all dependent binaries and libraries. Update function types, wrappers, and conditional `noexcept` expressions that require `set_yaml_version_type()` to be non-throwing.
+- Let ordered\_map entries be moved when the storage grows [\#593](https://github.com/fktn-k/fkYAML/pull/593) ([sndth](https://github.com/sndth))
+    - **Breaking changes:** `ordered_map::value_type` is now `std::pair<Key, Value>` rather than `std::pair<const Key, Value>`.
+    - **Affected users:** Users of `basic_node<std::vector, fkyaml::ordered_map>` whose code explicitly names `ordered_map::value_type` as `std::pair<const Key, Value>`.
+    - **Migration:** Replace `std::pair<const Key, Value>` with `std::pair<Key, Value>`, or prefer `auto&` when iterating. Do not modify mapping keys in place.
+- Count a document only if it has contents or a directives end marker [\#595](https://github.com/fktn-k/fkYAML/pull/595) ([sndth](https://github.com/sndth))
+    - **Breaking changes:** `deserialize_docs()` no longer returns a document for comment-only, whitespace-only, or bare `...` stream sections.
+    - **Affected users:** Callers of `deserialize_docs()` that expect empty nodes for comment-only, whitespace-only, or bare `...` stream sections.
+    - **Migration:** Update document-count assumptions and tests. These sections no longer produce a document; an explicit `---` still begins a document.
+- Remove deprecated types and functions [\#645](https://github.com/fktn-k/fkYAML/pull/645) ([fktn-k](https://github.com/fktn-k))
+    - **Breaking changes:** Deprecated node-type, YAML-version, type-query, and value-reference APIs have been removed.
+    - **Affected users:** Code using the deprecated `basic_node::node_t`, `basic_node::yaml_version_t`, `type()`, YAML-version accessors, or `get_value_ref<T>()` APIs.
+    - **Migration:** Replace them with `node_type`, `yaml_version_type`, `get_type()`, `get_yaml_version_type()`, `set_yaml_version_type()`, and the matching `as_*()` accessor. See the [Migration Guide](../migration.md) for the complete replacement table.
+
+#### :zap: Improvements
+
+Internal node attribute management has been refactored, and character classification is now safer for non-ASCII input values.
+
+- Avoid passing a negative char to cctype functions [\#579](https://github.com/fktn-k/fkYAML/pull/579) ([sndth](https://github.com/sndth))
+- Refactor node attribute management [\#641](https://github.com/fktn-k/fkYAML/pull/641) ([fktn-k](https://github.com/fktn-k))
+
+#### :bug: Bug Fixes
+
+Parsing, serialization, and packaging issues have been resolved across YAML document structure, scalar styles, collections, mapping keys, and node properties.
+
+##### YAML document marker parsing
+
+- Fix incorrect document counts if a stream ends with a document end marker \(`...`\) [\#569](https://github.com/fktn-k/fkYAML/pull/569) ([fktn-k](https://github.com/fktn-k))
+- Emit an error on an end-of-document marker followed by non-whitespace characters [\#601](https://github.com/fktn-k/fkYAML/pull/601) ([fktn-k](https://github.com/fktn-k))
+- Reject document markers in the quoted scalar content [\#613](https://github.com/fktn-k/fkYAML/pull/613) ([fktn-k](https://github.com/fktn-k))
+- Fix empty documents being dropped [\#619](https://github.com/fktn-k/fkYAML/pull/619) ([sndth](https://github.com/sndth))
+
+##### YAML directive parsing
+
+- Accept the YAML 1.x minor versions which the library does not know [\#621](https://github.com/fktn-k/fkYAML/pull/621) ([sndth](https://github.com/sndth))
+
+##### Block scalar parsing
+
+- Allow block scalars with only its header [\#570](https://github.com/fktn-k/fkYAML/pull/570) ([fktn-k](https://github.com/fktn-k))
+- Fix the indentation base of a document level block scalar [\#589](https://github.com/fktn-k/fkYAML/pull/589) ([sndth](https://github.com/sndth))
+- End a block scalar at a less indented trailing comment [\#596](https://github.com/fktn-k/fkYAML/pull/596) ([sndth](https://github.com/sndth))
+- Terminate a block scalar when a document marker begins a content line [\#600](https://github.com/fktn-k/fkYAML/pull/600) ([fktn-k](https://github.com/fktn-k))
+- Fix a block scalar whose first content line holds a single character [\#610](https://github.com/fktn-k/fkYAML/pull/610) ([sndth](https://github.com/sndth))
+- Fix bug in parsing empty block scalars before a mapping entry [\#618](https://github.com/fktn-k/fkYAML/pull/618) ([fktn-k](https://github.com/fktn-k))
+- Fix folded scalar line breaks after empty lines [\#620](https://github.com/fktn-k/fkYAML/pull/620) ([fktn-k](https://github.com/fktn-k))
+- Fix the handling of trailing whitespace-only lines in block scalars [\#632](https://github.com/fktn-k/fkYAML/pull/632) ([fktn-k](https://github.com/fktn-k))
+- Fix block scalar headers on a line of their own [\#633](https://github.com/fktn-k/fkYAML/pull/633) ([sndth](https://github.com/sndth))
+
+##### Flow scalar parsing
+
+- Continue a multiline plain scalar across equally indented lines [\#590](https://github.com/fktn-k/fkYAML/pull/590) ([sndth](https://github.com/sndth))
+- Let any number of white spaces separate plain scalar characters [\#605](https://github.com/fktn-k/fkYAML/pull/605) ([sndth](https://github.com/sndth))
+- End a plain scalar at flow separator [\#611](https://github.com/fktn-k/fkYAML/pull/611) ([sndth](https://github.com/sndth))
+- Fix incorrect parse result of scalars which look like a directive end marker [\#614](https://github.com/fktn-k/fkYAML/pull/614) ([fktn-k](https://github.com/fktn-k))
+- Fix incorrect parse result of multiline plain scalars [\#615](https://github.com/fktn-k/fkYAML/pull/615) ([fktn-k](https://github.com/fktn-k))
+- Fix trailing white spaces not being trimmed when folding flow scalars [\#617](https://github.com/fktn-k/fkYAML/pull/617) ([sndth](https://github.com/sndth))
+- Reject multiple root nodes in a document [\#628](https://github.com/fktn-k/fkYAML/pull/628) ([fktn-k](https://github.com/fktn-k))
+- Fix validation of insufficiently indented continuation lines in a multiline scalar [\#631](https://github.com/fktn-k/fkYAML/pull/631) ([fktn-k](https://github.com/fktn-k))
+
+##### Flow collections parsing
+
+- Reject an input which leaves a flow collection unclosed [\#573](https://github.com/fktn-k/fkYAML/pull/573) ([sndth](https://github.com/sndth))
+- Support single pair mappings in flow sequences [\#574](https://github.com/fktn-k/fkYAML/pull/574) ([sndth](https://github.com/sndth))
+- Support an omitted value in a flow mapping entry [\#575](https://github.com/fktn-k/fkYAML/pull/575) ([sndth](https://github.com/sndth))
+- Support a line break between a flow mapping key and its value indicator [\#587](https://github.com/fktn-k/fkYAML/pull/587) ([sndth](https://github.com/sndth))
+- Support a flow mapping entry which omits the value indicator [\#597](https://github.com/fktn-k/fkYAML/pull/597) ([sndth](https://github.com/sndth))
+- Support explicit mapping entries in flow collections [\#635](https://github.com/fktn-k/fkYAML/pull/635) ([fktn-k](https://github.com/fktn-k))
+- Fix empty flow sequence entries with node properties [\#643](https://github.com/fktn-k/fkYAML/pull/643) ([sndth](https://github.com/sndth))
+
+##### Block collection parsing
+
+- Reject a block sequence entry within a flow context [\#585](https://github.com/fktn-k/fkYAML/pull/585) ([fktn-k](https://github.com/fktn-k))
+- Treat only a single dash as a prefix for block sequence entries [\#588](https://github.com/fktn-k/fkYAML/pull/588) ([fktn-k](https://github.com/fktn-k))
+- Reject block collection entries on document start lines [\#636](https://github.com/fktn-k/fkYAML/pull/636) ([fktn-k](https://github.com/fktn-k))
+- Reject block sequences on the line of a key or properties [\#637](https://github.com/fktn-k/fkYAML/pull/637) ([sndth](https://github.com/sndth))
+
+##### Mapping key parsing
+
+- Fix trailing spaces in implicit mapping keys [\#622](https://github.com/fktn-k/fkYAML/pull/622) ([sndth](https://github.com/sndth))
+- Fix key separator detection after a json-like key [\#623](https://github.com/fktn-k/fkYAML/pull/623) ([fktn-k](https://github.com/fktn-k))
+- Allow a newline after an explicit key prefix [\#626](https://github.com/fktn-k/fkYAML/pull/626) ([fktn-k](https://github.com/fktn-k))
+- Fix the handling of flow collections used as mapping keys [\#627](https://github.com/fktn-k/fkYAML/pull/627) ([fktn-k](https://github.com/fktn-k))
+- Fix empty mapping keys after omitted values and node properties [\#638](https://github.com/fktn-k/fkYAML/pull/638) ([sndth](https://github.com/sndth))
+
+##### Node properties association in parsing
+
+- Raise a parse error when a collection tag is applied to a scalar [\#577](https://github.com/fktn-k/fkYAML/pull/577) ([sndth](https://github.com/sndth))
+- Bind node properties to the node they precede [\#604](https://github.com/fktn-k/fkYAML/pull/604) ([sndth](https://github.com/sndth))
+- Terminate tags at flow collection delimiters in a flow context [\#607](https://github.com/fktn-k/fkYAML/pull/607) ([fktn-k](https://github.com/fktn-k))
+- Fix errors on tagged empty nodes [\#608](https://github.com/fktn-k/fkYAML/pull/608) ([fktn-k](https://github.com/fktn-k))
+- Fix errors on empty nodes with anchor [\#609](https://github.com/fktn-k/fkYAML/pull/609) ([fktn-k](https://github.com/fktn-k))
+- Fix false duplicate-key detection with anchored explicit keys [\#616](https://github.com/fktn-k/fkYAML/pull/616) ([fktn-k](https://github.com/fktn-k))
+- Fix handling multiline anchors and tags [\#624](https://github.com/fktn-k/fkYAML/pull/624) ([fktn-k](https://github.com/fktn-k))
+- Keep the tag name when a node is anchored [\#625](https://github.com/fktn-k/fkYAML/pull/625) ([sndth](https://github.com/sndth))
+- Ensure tag is valid in a document before application in deserialization [\#630](https://github.com/fktn-k/fkYAML/pull/630) ([fktn-k](https://github.com/fktn-k))
+- Reject node properties which are not indented enough [\#634](https://github.com/fktn-k/fkYAML/pull/634) ([sndth](https://github.com/sndth))
+
+##### Whitespace handling in parsing
+
+- Fix tab used as indentation [\#598](https://github.com/fktn-k/fkYAML/pull/598) ([sndth](https://github.com/sndth))
+
+##### Serialization
+
+- Fix anchor/alias ordering during serialization [\#592](https://github.com/fktn-k/fkYAML/pull/592) ([fktn-k](https://github.com/fktn-k))
+- Serialize unsigned 64-bit integers [\#639](https://github.com/fktn-k/fkYAML/pull/639) ([sndth](https://github.com/sndth))
+
+##### Packaging
+
+- Fix pkg-config failure on Ubuntu/Debian due to no Name field [\#602](https://github.com/fktn-k/fkYAML/pull/602) ([fktn-k](https://github.com/fktn-k))
+
+#### :robot: CI
+
+CI coverage now includes closer YAML test suite integration, expanded sanitizer support, refreshed benchmarks, and more stable compiler workflows.
+
+##### YAML test suite integration
+- Integrate with the YAML test suite [\#562](https://github.com/fktn-k/fkYAML/pull/562) ([fktn-k](https://github.com/fktn-k))
+- Improve yaml test suite workflow [\#567](https://github.com/fktn-k/fkYAML/pull/567) ([fktn-k](https://github.com/fktn-k))
+- Add trace info by running the YAML test suite into the test coverage [\#568](https://github.com/fktn-k/fkYAML/pull/568) ([fktn-k](https://github.com/fktn-k))
+- Skip YAML test suite cases which contain duplicate mapping keys [\#629](https://github.com/fktn-k/fkYAML/pull/629) ([fktn-k](https://github.com/fktn-k))
+- Skip 6CK3 in the YAML test suite runner [\#640](https://github.com/fktn-k/fkYAML/pull/640) ([sndth](https://github.com/sndth))
+
+##### Sanitizers
+- Support Asan/Fuzzer on MSVC [\#571](https://github.com/fktn-k/fkYAML/pull/571) ([sndth](https://github.com/sndth))
+- Make UBSan findings fail the fuzz test [\#572](https://github.com/fktn-k/fkYAML/pull/572) ([sndth](https://github.com/sndth))
+- Add a workflow job to run the unit tests with MSVC sanitizers [\#582](https://github.com/fktn-k/fkYAML/pull/582) ([sndth](https://github.com/sndth))
+
+##### Benchmark
+- Fix the in-place benchmark parsing an empty buffer [\#580](https://github.com/fktn-k/fkYAML/pull/580) ([sndth](https://github.com/sndth))
+- Update the YAML libraries used for the benchmark [\#603](https://github.com/fktn-k/fkYAML/pull/603) ([sndth](https://github.com/sndth))
+- Update Google Benchmark to v1.9.5 [\#606](https://github.com/fktn-k/fkYAML/pull/606) ([sndth](https://github.com/sndth))
+
+##### CI Stabilization
+- Remove installing git and unzip [\#612](https://github.com/fktn-k/fkYAML/pull/612) ([fktn-k](https://github.com/fktn-k))
+- Fix occasional failures in GitHub Actions workflows for clang compilers [\#644](https://github.com/fktn-k/fkYAML/pull/644) ([fktn-k](https://github.com/fktn-k))
+
+#### :memo: Documentation
+
+- Update docs [\#642](https://github.com/fktn-k/fkYAML/pull/642) ([fktn-k](https://github.com/fktn-k))
+
+#### :jigsaw: Miscellaneous
+
+- Remove mistakenly comitted report.md [\#586](https://github.com/fktn-k/fkYAML/pull/586) ([fktn-k](https://github.com/fktn-k))
+
+### Full Changelog
+https://github.com/fktn-k/fkYAML/compare/v0.4.4...v0.5.0
+
+---
+
+## **fkYAML version 0.4.4**
+
+!!! abstract "Release Packages"
+
+    * CMake package of the multiple header version
+        * [fkYAML.zip](https://github.com/fktn-k/fkYAML/releases/download/v0.4.4/fkYAML.zip)
+        * [fkYAML.tgz](https://github.com/fktn-k/fkYAML/releases/download/v0.4.4/fkYAML.tgz)
+    * CMake package of the single header version
+        * [fkYAML_single_header.zip](https://github.com/fktn-k/fkYAML/releases/download/v0.4.4/fkYAML_single_header.zip)
+        * [fkYAML_single_header.tgz](https://github.com/fktn-k/fkYAML/releases/download/v0.4.4/fkYAML_single_header.tgz)
+    * minimum repository contents for CMake
+        * [fkYAML_min.zip](https://github.com/fktn-k/fkYAML/releases/download/v0.4.4/fkYAML_min.zip)
+        * [fkYAML_min.tgz](https://github.com/fktn-k/fkYAML/releases/download/v0.4.4/fkYAML_min.tgz)
+    * single headers
+        * [node.hpp](https://github.com/fktn-k/fkYAML/releases/download/v0.4.4/node.hpp)
+        * [fkyaml_fwd.hpp](https://github.com/fktn-k/fkYAML/releases/download/v0.4.4/fkyaml_fwd.hpp)
+
+### What's Changed
+
+#### :sparkles: New Features
+- Add fuzz test for parsing YAML inputs [\#537](https://github.com/fktn-k/fkYAML/pull/537) ([fktn-k](https://github.com/fktn-k))
+    - Currently, it can only built with a Clang compiler. With GCC or MSVC compilers, the build fails.
+    - You can run the fuzz test with sanitizers enabled by running the following commands.  
+      ```bash
+      $ cd /path/to/fkYAML
+      $ cmake -B build -S . -DFK_YAML_BUILD_TYPE=Debug -DFK_YAML_BUILD_FUZZ_TEST=ON
+      $ cmake --build build --target run_fuzz_test
+        # The results will be output to the `build/tests/fuzz_tests/corpus` directory.
+      ```
+- Add get\_resolved\_tag\_name API to basic\_node [\#559](https://github.com/fktn-k/fkYAML/pull/559) ([fktn-k](https://github.com/fktn-k))
+    - This method returns a resolved tag name by replacing a tag shorthand (`!!` or `!e!`) with the prefix defined in the %TAG directive.
+    - This would be useful if you would like to perform some special operation based on tag properties associated to the target node, given that the pre-existing `get_tag_name` returns an unresolved tag name.
+    - See [the API reference page](https://fktn-k.github.io/fkYAML/api/basic_node/get_resolved_tag_name) for more details.
+
+#### :zap: Improvements
+- Harden input adapter against truncated encoded input [\#533](https://github.com/fktn-k/fkYAML/pull/533) ([sndth](https://github.com/sndth))
+
+#### :bug: Bug Fixes
+Most bug are reported in or related to the issue [\#536](https://github.com/fktn-k/fkYAML/issues/536).
+
+- Fix crashes and memory leaks found during fuzz test [\#538](https://github.com/fktn-k/fkYAML/pull/538) ([fktn-k](https://github.com/fktn-k))
+- Fix more crashes caused by fuzz test [\#540](https://github.com/fktn-k/fkYAML/pull/540) ([fktn-k](https://github.com/fktn-k))
+- Fix out-of-bounds read on an explicit key without a parent context [\#543](https://github.com/fktn-k/fkYAML/pull/543) ([AlexandrKhromov2005](https://github.com/AlexandrKhromov2005))
+- Guard empty context stack in the key-separator and add\_new\_key paths [\#544](https://github.com/fktn-k/fkYAML/pull/544) ([AlexandrKhromov2005](https://github.com/AlexandrKhromov2005))
+- Prevent stack overflow by a self-referential alias [\#549](https://github.com/fktn-k/fkYAML/pull/549) ([fktn-k](https://github.com/fktn-k))
+- Fix out-of-bounds read from a truncated BOM in the char encoding detector [\#545](https://github.com/fktn-k/fkYAML/pull/545) ([AlexandrKhromov2005](https://github.com/AlexandrKhromov2005))
+- Fix four out-of-bounds reads in the lexer and tag URI validation [\#547](https://github.com/fktn-k/fkYAML/pull/547) ([sndth](https://github.com/sndth))
+- Guard the context stack access behind a checked accessor [\#552](https://github.com/fktn-k/fkYAML/pull/552) ([sndth](https://github.com/sndth))
+- Complete explicit mapping keys which are not followed by a value on the same line [\#554](https://github.com/fktn-k/fkYAML/pull/554) ([sndth](https://github.com/sndth))
+- Hold parse context node ownership in a unique\_ptr [\#563](https://github.com/fktn-k/fkYAML/pull/563) ([sndth](https://github.com/sndth))
+
+#### :robot: CI
+- Fix comment posting failures to the PRs from forks [\#555](https://github.com/fktn-k/fkYAML/pull/555) ([fktn-k](https://github.com/fktn-k))
+- Update coverage options for lcov v2.x [\#551](https://github.com/fktn-k/fkYAML/pull/551) ([fktn-k](https://github.com/fktn-k))
+- Migrate to doctest [\#535](https://github.com/fktn-k/fkYAML/pull/535) ([fktn-k](https://github.KLcom/fktn-k))
+- Send coverage report to Coveralls on all commits in main/develop branches [\#541](https://github.com/fktn-k/fkYAML/pull/541) ([fktn-k](https://github.com/fktn-k))
+- Change the way to generate test\_data.hpp for unit tests [\#550](https://github.com/fktn-k/fkYAML/pull/550) ([fktn-k](https://github.com/fktn-k))
+
+#### :jigsaw: Miscellaneous
+- Harden SPDX copyright against duplicate entries [\#534](https://github.com/fktn-k/fkYAML/pull/534) ([sndth](https://github.com/sndth))
+- Remove unused BSL-1.0 license file [\#539](https://github.com/fktn-k/fkYAML/pull/539) ([fktn-k](https://github.com/fktn-k))
+- Update the copyright year in LICENSE.txt [\#542](https://github.com/fktn-k/fkYAML/pull/542) ([fktn-k](https://github.com/fktn-k))
+
+### Full Changelog
+https://github.com/fktn-k/fkYAML/compare/v0.4.3...v0.4.4
+
+---
+
+## **fkYAML version 0.4.3**
+
+!!! abstract "Release Packages"
+
+    * CMake package of the multiple header version
+        * [fkYAML.zip](https://github.com/fktn-k/fkYAML/releases/download/v0.4.3/fkYAML.zip)
+        * [fkYAML.tgz](https://github.com/fktn-k/fkYAML/releases/download/v0.4.3/fkYAML.tgz)
+    * CMake package of the single header version
+        * [fkYAML_single_header.zip](https://github.com/fktn-k/fkYAML/releases/download/v0.4.3/fkYAML_single_header.zip)
+        * [fkYAML_single_header.tgz](https://github.com/fktn-k/fkYAML/releases/download/v0.4.3/fkYAML_single_header.tgz)
+    * minimum repository contents for CMake
+        * [fkYAML_min.zip](https://github.com/fktn-k/fkYAML/releases/download/v0.4.3/fkYAML_min.zip)
+        * [fkYAML_min.tgz](https://github.com/fktn-k/fkYAML/releases/download/v0.4.3/fkYAML_min.tgz)
+    * single headers
+        * [node.hpp](https://github.com/fktn-k/fkYAML/releases/download/v0.4.3/node.hpp)
+        * [fkyaml_fwd.hpp](https://github.com/fktn-k/fkYAML/releases/download/v0.4.3/fkyaml_fwd.hpp)
+
+### What's Changed
+
+#### :sparkles: New Features
+- Replace getters for reference to node values ([\#481](https://github.com/fktn-k/fkYAML/pull/481) by [fktn-k](https://github.com/fktn-k))
+    - The following new APIs replaces the existing `basic_node::get_value_ref` function to get reference to the node value.
+        - [`basic_node::as_seq`](https://fktn-k.github.io/fkYAML/api/basic_node/as_seq/)
+        - [`basic_node::as_map`](https://fktn-k.github.io/fkYAML/api/basic_node/as_map/)
+        - [`basic_node::as_bool`](https://fktn-k.github.io/fkYAML/api/basic_node/as_bool/)
+        - [`basic_node::as_int`](https://fktn-k.github.io/fkYAML/api/basic_node/as_int/)
+        - [`basic_node::as_float`](https://fktn-k.github.io/fkYAML/api/basic_node/as_float/)
+        - [`basic_node::as_str`](https://fktn-k.github.io/fkYAML/api/basic_node/as_str/)
+    - `basic_node::get_value_ref` is now deprecated and will be removed in a future release. See migration guide in [the reference page](https://fktn-k.github.io/fkYAML/api/basic_node/get_value_ref/).
+- Add get\_value\_or\(\) ([\#485](https://github.com/fktn-k/fkYAML/pull/485) by [fktn-k](https://github.com/fktn-k))
+    - `basic_node::get_value_or` returns a given value if conversion fails, unlike the existing `basic_node::get_value` which throws an exception.
+      ```cpp
+      std::string input = R"(
+      params:
+        my_int: 123
+      )";
+      auto config = fkyaml::node::deserialize(input);  
+
+      auto my_int = config["params"]["my_int"].get_value_or<int>(0);
+      auto my_string = config["params"]["my_string"].get_value_or<std::string>("my_sring is missing!"); 
+
+      std::cout << my_int << std::endl;    // output: 123
+      std::cout << my_string << std::endl; // output: my_string is missing!  
+      ```
+    - See [the API reference page](https://fktn-k.github.io/fkYAML/api/basic_node/get_value_or) for more details.
+- Support unsigned 64-bit integers \(uint64\_t\) exceeding INT64\_MAX \(\#501\) ([\#513](https://github.com/fktn-k/fkYAML/pull/513) by [sndth](https://github.com/sndth) and [\#526](https://github.com/fktn-k/fkYAML/pull/526) by [fktn-k](https://github.com/fktn-k))
+    - Supports parsing large positive decimal scalars whose value exceeds `INT64_MAX`, for example:
+      ```yaml
+      # previously parsed as a string scalar,
+      # now correctly parsed as an unsinged integer scalar
+      x: 15745692345339290292
+      ```
+    - Call [`basic_node::is_uint`](https://fktn-k.github.io/fkYAML/api/basic_node/is_uint) to check if the node value is an unsinged integer and [`basic_node::as_uint`](https://fktn-k.github.io/fkYAML/api/basic_node/as_uint) to retrieve the node value as an unsinged integer.
+      ```cpp
+      if (node.is_uint()) {
+        uint64_t value = node.as_uint();
+        // you can do this as well
+        value = node.get_value<uint64_t>();
+      }
+      ```
+- Add `basic_node::erase` method ([\#530](https://github.com/fktn-k/fkYAML/pull/530) by [sndth](https://github.com/sndth) and [flaviu22](https://github.com/flaviu22))
+    - An arbitrary mapping entry can be erased from a `basic_node` using `basic_node::erase`.
+    - See [the API reference page](https://fktn-k.github.io/fkYAML/api/basic_node/erase) for more details and a usage example.
+
+#### :zap: Improvements
+- Relax iterator requirements for deserialization ([\#478](https://github.com/fktn-k/fkYAML/pull/478) by [fktn-k](https://github.com/fktn-k))
+- Refactor node class implementation ([\#483](https://github.com/fktn-k/fkYAML/pull/483) by [fktn-k](https://github.com/fktn-k))
+
+#### :bug: Bug Fixes
+- Fix parsing block mapping entry after an empty block sequence entry ([\#488](https://github.com/fktn-k/fkYAML/pull/488) by [fktn-k](https://github.com/fktn-k))
+- Fix issue with separating comments using tab ([\#496](https://github.com/fktn-k/fkYAML/pull/496) by [sndth](https://github.com/sndth))
+    - reported by [robloh](https://github.com/robloh) in the issue [#494](https://github.com/fktn-k/fkYAML/issues/494)
+- Fix project compilation on GCC compilers ([\#497](https://github.com/fktn-k/fkYAML/pull/497) by [sndth](https://github.com/sndth))
+- Resolve useless-cast & old-style-cast warnings ([\#499](https://github.com/fktn-k/fkYAML/pull/499) by [fktn-k](https://github.com/fktn-k))
+    - reported by [silverclaw](https://github.com/silverclaw) in the issue [#495](https://github.com/fktn-k/fkYAML/issues/495)
+- Fixes natvis path for non VS builds. ([\#512](https://github.com/fktn-k/fkYAML/pull/512) by [rioki](https://github.com/rioki))
+- Fix serialization of strings that are invalid plain scalars ([\#523](https://github.com/fktn-k/fkYAML/pull/523) by [sndth](https://github.com/sndth))
+    - reported by [edmundkrain](https://github.com/edmundkrain) in the issue [#517](https://github.com/fktn-k/fkYAML/issues/517)
+- Fix brace initialization of empty collection nodes ([\#524](https://github.com/fktn-k/fkYAML/pull/524) by [sndth](https://github.com/sndth))
+    - reported by [KristianIvarsson](https://github.com/KristianIvarsson) in the issue [#502](https://github.com/fktn-k/fkYAML/issues/502)
+- Handle empty mapping key separator as parse error ([\#525](https://github.com/fktn-k/fkYAML/pull/525) by [sndth](https://github.com/sndth))
+    - reported by [chemoontheshy](https://github.com/chemoontheshy) in the issue [#514](https://github.com/fktn-k/fkYAML/issues/514)
+- Fix `tool` directory typo and add CMake policy for the benchmark build ([\#527](https://github.com/fktn-k/fkYAML/pull/527) by [sndth](https://github.com/sndth))
+
+#### :robot: CI
+- Embed minimum necessary Catch2 v2.3.10 sources ([\#475](https://github.com/fktn-k/fkYAML/pull/475) by [fktn-k](https://github.com/fktn-k))
+- Update CI workflows for windows ([\#500](https://github.com/fktn-k/fkYAML/pull/500) by [fktn-k](https://github.com/fktn-k))
+- Update GitHub Actions workflows ([\#519](https://github.com/fktn-k/fkYAML/pull/519) by [fktn-k](https://github.com/fktn-k))
+- Update the format/amalgamation check by the GitHub Actions ([\#520](https://github.com/fktn-k/fkYAML/pull/520) by [fktn-k](https://github.com/fktn-k))
+- Fix errors in checking out to a branch in a forked repository ([\#521](https://github.com/fktn-k/fkYAML/pull/521) & [\#522](https://github.com/fktn-k/fkYAML/pull/522) by [fktn-k](https://github.com/fktn-k))
+- Fix bugs in the format\_check and coverage workflows ([\#529](https://github.com/fktn-k/fkYAML/pull/529) by [fktn-k](https://github.com/fktn-k))
+
+#### :memo: Documentation
+- Update README.md ([\#479](https://github.com/fktn-k/fkYAML/pull/479) by [fktn-k](https://github.com/fktn-k))
+- Removing typo, extra `--config` in tutorial bash ([\#490](https://github.com/fktn-k/fkYAML/pull/490), by [mgodf7](https://github.com/mgodf7))
+- Fix typos and pr-template link ([\#493](https://github.com/fktn-k/fkYAML/pull/493) vy[edmundkrain](https://github.com/edmundkrain))
+- Add copilot-instructions.md for GitHub Copilot integrations ([\#518](https://github.com/fktn-k/fkYAML/pull/518) by [fktn-k](https://github.com/fktn-k))
+
+### Full Changelog
+https://github.com/fktn-k/fkYAML/compare/v0.4.2...v0.4.3
+
+---
+
 ## **fkYAML version 0.4.2**
 
 !!! abstract "Release Packages"
@@ -232,7 +589,7 @@ Other changes are related to minor bug fixes in YAML scalar parsing and maintena
     - Suggested by [ARessegetesStery](https://github.com/ARessegetesStery) in the issue [\#366](https://github.com/fktn-k/fkYAML/issues/366)
     - Automatic value conversions among null, boolean, integer and floating-point scalar values inside [fkyaml::basic_node::get_value()](../api/basic_node/get_value.md) API calls
 - Add forward declaration header ([\#422](https://github.com/fktn-k/fkYAML/pull/422), [fktn-k](https://github.com/fktn-k))
-    - Suggested by [abcminiuser](https://github.com/abcminiuser) in the duscussion [\#420](https://github.com/fktn-k/fkYAML/discussions/420)
+    - Suggested by [abcminiuser](https://github.com/abcminiuser) in the discussion [\#420](https://github.com/fktn-k/fkYAML/discussions/420)
     - This new header provides the fkYAML namespace macros and forward declarations of fkYAML API classes.
     - This file is available both in the [include](https://github.com/fktn-k/fkYAML/tree/v0.3.14/include) and [single_include](https://github.com/fktn-k/fkYAML/tree/v0.3.14/single_include) directories.
 
@@ -406,7 +763,7 @@ Furthermore, CI workflow errors when a PR from fork repository tries to acquire 
 ### Summary
 
 This release adds the new support for deserializing/serializing multiple YAML documents by adding new APIs ([`fkyaml::node::deserialize_docs()`](https://fktn-k.github.io/fkYAML/api/basic_node/deserialize_docs/) and [`fkyaml::node::serialize_docs()`](https://fktn-k.github.io/fkYAML/api/basic_node/serialize_docs/) respectively). You can still call the existing APIs for deserializing/serializing a single YAML document. See the linked API document pages for details.  
-In addition, from this version on, Intel icpx compiler is supported and used in the CI processes. Some compiler flags are added in building the unit testing app, but no compiler specific swiches are required for the library itself.  
+In addition, from this version on, Intel icpx compiler is supported and used in the CI processes. Some compiler flags are added in building the unit testing app, but no compiler specific switches are required for the library itself.  
 Moreover, because the GitHub Actions runner image for macOS11 has been deprecated, the CI jobs which uses the runner image and some compiler support which depend on the runner image have been removed.  
 For other changes like bug fixes, see descriptions in each related issues and PRs.  
 
@@ -466,7 +823,7 @@ Moreover, several bugs in deserialization and Windows builds have been fixed.
 #### :bug: Bug Fixes
 
 - fixed parse error on explicit mappings as a block sequence entry by [fktn-k](https://github.com/fktn-k) in [\#353](https://github.com/fktn-k/fkYAML/pull/353)
-- Fix parse error on smal negative integer keys by [fktn-k](https://github.com/fktn-k) in [\#355](https://github.com/fktn-k/fkYAML/pull/355)
+- Fix parse error on small negative integer keys by [fktn-k](https://github.com/fktn-k) in [\#355](https://github.com/fktn-k/fkYAML/pull/355)
 - Fix compile errors on Windows by [fktn-k](https://github.com/fktn-k) in [\#358](https://github.com/fktn-k/fkYAML/pull/358), reported by [Michael-Lafreniere](https://github.com/Michael-Lafreniere) in [\#357](https://github.com/fktn-k/fkYAML/issues/357)
 
 **Full Changelog**: https://github.com/fktn-k/fkYAML/compare/v0.3.8...v0.3.9
@@ -930,7 +1287,7 @@ Furthermore, bugs in the deserialization/serialization features have also been f
 
 #### :bug: Bug Fixes
 
-- \#218 Fixed lacking quotes & escapes during serializtion [\#220](https://github.com/fktn-k/fkYAML/pull/220) ([fktn-k](https://github.com/fktn-k))
+- \#218 Fixed lacking quotes & escapes during serialization [\#220](https://github.com/fktn-k/fkYAML/pull/220) ([fktn-k](https://github.com/fktn-k))
 - \#217 Fix parse errors on strings containing single quotes [\#219](https://github.com/fktn-k/fkYAML/pull/219) ([fktn-k](https://github.com/fktn-k))
 
 **Full Changelog**: https://github.com/fktn-k/fkYAML/compare/v0.2.1...v0.2.2
@@ -1196,7 +1553,7 @@ Furthermore, several tool/service integrations has been incorporated for better 
 ## **fkYAML v0.0.0**
 
 This release provides basic features of the fkYAML library.  
-Major known issues and limitaions are as follows:  
+Major known issues and limitations are as follows:  
 
 - %TAG directives are not supported. (Will surely be implemented.)
 - YAML key must be a string literal. (YAML specification of any version does not restrict YAML keys as such.)

@@ -1,14 +1,16 @@
 //  _______   __ __   __  _____   __  __  __
 // |   __| |_/  |  \_/  |/  _  \ /  \/  \|  |     fkYAML: A C++ header-only YAML library
-// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.4.2
+// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.5.0
 // |__|  |_| \__|  |_|  |_|   |_|___||___|______| https://github.com/fktn-k/fkYAML
 //
-// SPDX-FileCopyrightText: 2023-2025 Kensuke Fukutani <fktn.dev@gmail.com>
+// SPDX-FileCopyrightText: 2023-2026 Kensuke Fukutani <fktn.dev@gmail.com>
 // SPDX-License-Identifier: MIT
 
 #ifndef FK_YAML_DETAIL_CONVERSIONS_TO_NODE_HPP
 #define FK_YAML_DETAIL_CONVERSIONS_TO_NODE_HPP
 
+#include <limits>
+#include <type_traits>
 #include <utility>
 
 #include <fkYAML/detail/macros/define_macros.hpp>
@@ -28,7 +30,7 @@ FK_YAML_DETAIL_NAMESPACE_BEGIN
 /// @brief The external constructor template for basic_node objects.
 /// @note All the non-specialized instantiations results in compilation error since such instantiations are not
 /// supported.
-/// @warning All the specialization must call n.m_node_value.destroy() first in the construct function to avoid
+/// @warning All the specialization must call n.m_value.destroy() first in the construct function to avoid
 /// memory leak.
 /// @tparam node_type The resulting YAML node value type.
 template <typename BasicNodeType>
@@ -36,52 +38,63 @@ struct external_node_constructor {
     template <typename... Args>
     static void sequence(BasicNodeType& n, Args&&... args) {
         destroy(n);
-        n.m_attrs |= node_attr_bits::seq_bit;
-        n.m_node_value.p_sequence = create_object<typename BasicNodeType::sequence_type>(std::forward<Args>(args)...);
+        n.m_attrs.set_value_bit(node_attr_bits::seq_bit);
+        n.m_value.p_seq = create_object<typename BasicNodeType::sequence_type>(std::forward<Args>(args)...);
     }
 
     template <typename... Args>
     static void mapping(BasicNodeType& n, Args&&... args) {
         destroy(n);
-        n.m_attrs |= node_attr_bits::map_bit;
-        n.m_node_value.p_mapping = create_object<typename BasicNodeType::mapping_type>(std::forward<Args>(args)...);
+        n.m_attrs.set_value_bit(node_attr_bits::map_bit);
+        n.m_value.p_map = create_object<typename BasicNodeType::mapping_type>(std::forward<Args>(args)...);
     }
 
     static void null_scalar(BasicNodeType& n, std::nullptr_t) {
         destroy(n);
-        n.m_attrs |= node_attr_bits::null_bit;
-        n.m_node_value.p_mapping = nullptr;
+        n.m_attrs.set_value_bit(node_attr_bits::null_bit);
+        n.m_value.p_map = nullptr;
     }
 
     static void boolean_scalar(BasicNodeType& n, const typename BasicNodeType::boolean_type b) {
         destroy(n);
-        n.m_attrs |= node_attr_bits::bool_bit;
-        n.m_node_value.boolean = b;
+        n.m_attrs.set_value_bit(node_attr_bits::bool_bit);
+        n.m_value.boolean = b;
     }
 
     static void integer_scalar(BasicNodeType& n, const typename BasicNodeType::integer_type i) {
         destroy(n);
-        n.m_attrs |= node_attr_bits::int_bit;
-        n.m_node_value.integer = i;
+        n.m_attrs.set_value_bit(node_attr_bits::int_bit);
+        n.m_value.integer = i;
+    }
+
+    /// @brief Constructs an INTEGER node from a uint64_t value that exceeds the signed range.
+    /// The raw bit pattern is stored in the integer field and the uint_bit flag is set so that
+    /// get_value<uint64_t>() / as_uint() can recover the original unsigned value.
+    static void unsigned_integer_scalar(BasicNodeType& n, const typename BasicNodeType::integer_type i) {
+        destroy(n);
+        n.m_attrs.set_value_bit(node_attr_bits::int_bit | node_attr_bits::uint_bit);
+        n.m_value.integer = i;
     }
 
     static void float_scalar(BasicNodeType& n, const typename BasicNodeType::float_number_type f) {
         destroy(n);
-        n.m_attrs |= node_attr_bits::float_bit;
-        n.m_node_value.float_val = f;
+        n.m_attrs.set_value_bit(node_attr_bits::float_bit);
+        n.m_value.float_val = f;
     }
 
     template <typename... Args>
     static void string_scalar(BasicNodeType& n, Args&&... args) {
         destroy(n);
-        n.m_attrs |= node_attr_bits::string_bit;
-        n.m_node_value.p_string = create_object<typename BasicNodeType::string_type>(std::forward<Args>(args)...);
+        n.m_attrs.set_value_bit(node_attr_bits::string_bit);
+        n.m_value.p_str = create_object<typename BasicNodeType::string_type>(std::forward<Args>(args)...);
     }
 
 private:
     static void destroy(BasicNodeType& n) {
-        n.m_node_value.destroy(n.m_attrs & node_attr_mask::value);
-        n.m_attrs &= ~node_attr_mask::value;
+        n.m_value.destroy(n.m_attrs.get_value_bits());
+        // Clear both the value-type bits and the uint_bit style flag so that any
+        // subsequent reassignment starts from a clean state.
+        n.m_attrs.unset(node_attr_mask::value | node_attr_bits::uint_bit);
     }
 };
 
@@ -120,7 +133,7 @@ template <
         conjunction<
             is_basic_node<BasicNodeType>,
             negation<std::is_same<typename BasicNodeType::sequence_type, remove_cvref_t<CompatSeqType>>>,
-            negation<is_basic_node<remove_cvref_t<CompatSeqType>>>, detect::has_begin_end<CompatSeqType>,
+            negation<is_basic_node<CompatSeqType>>, detect::has_begin_end<CompatSeqType>,
             negation<conjunction<detect::has_key_type<CompatSeqType>, detect::has_mapped_type<CompatSeqType>>>,
             negation<std::is_constructible<typename BasicNodeType::string_type, CompatSeqType>>>::value,
         int> = 0>
@@ -202,14 +215,14 @@ template <
     typename BasicNodeType, typename CompatMapType,
     enable_if_t<
         conjunction<
-            is_basic_node<BasicNodeType>, negation<is_basic_node<remove_cvref_t<CompatMapType>>>,
+            is_basic_node<BasicNodeType>, negation<is_basic_node<CompatMapType>>,
             negation<std::is_same<typename BasicNodeType::mapping_type, remove_cvref_t<CompatMapType>>>,
             detect::has_begin_end<CompatMapType>, detect::has_key_type<CompatMapType>,
             detect::has_mapped_type<CompatMapType>>::value,
         int> = 0>
 inline void to_node(BasicNodeType& n, CompatMapType&& m) {
     external_node_constructor<BasicNodeType>::mapping(n);
-    auto& map = n.template get_value_ref<typename BasicNodeType::mapping_type&>();
+    auto& map = n.as_map();
     for (const auto& pair : std::forward<CompatMapType>(m)) {
         map.emplace(pair.first, pair.second);
     }
@@ -233,6 +246,33 @@ inline void to_node(BasicNodeType& n, typename BasicNodeType::boolean_type b) no
     external_node_constructor<BasicNodeType>::boolean_scalar(n, b);
 }
 
+/// @brief Constructs an integer node from a value which fits in the integer type of the node.
+/// @tparam BasicNodeType A basic_node template instance type.
+/// @tparam T An integer type.
+/// @param n A basic_node object.
+/// @param i An integer object.
+template <typename BasicNodeType, typename T>
+inline void integer_to_node(BasicNodeType& n, T i, std::false_type /*unused*/) noexcept {
+    external_node_constructor<BasicNodeType>::integer_scalar(n, static_cast<typename BasicNodeType::integer_type>(i));
+}
+
+/// @brief Constructs an integer node from an unsigned value which may exceed the range of the integer type of the node.
+/// @note A value beyond the range keeps its bit pattern and is flagged as unsigned so that as_uint() can recover it.
+/// @tparam BasicNodeType A basic_node template instance type.
+/// @tparam T An unsigned integer type.
+/// @param n A basic_node object.
+/// @param i An unsigned integer object.
+template <typename BasicNodeType, typename T>
+inline void integer_to_node(BasicNodeType& n, T i, std::true_type /*unused*/) noexcept {
+    using integer_type = typename BasicNodeType::integer_type;
+    if (i > static_cast<T>((std::numeric_limits<integer_type>::max)())) {
+        external_node_constructor<BasicNodeType>::unsigned_integer_scalar(n, static_cast<integer_type>(i));
+    }
+    else {
+        external_node_constructor<BasicNodeType>::integer_scalar(n, static_cast<integer_type>(i));
+    }
+}
+
 /// @brief to_node function for integers.
 /// @tparam BasicNodeType A basic_node template instance type.
 /// @tparam T An integer type.
@@ -242,7 +282,12 @@ template <
     typename BasicNodeType, typename T,
     enable_if_t<conjunction<is_basic_node<BasicNodeType>, is_non_bool_integral<T>>::value, int> = 0>
 inline void to_node(BasicNodeType& n, T i) noexcept {
-    external_node_constructor<BasicNodeType>::integer_scalar(n, i);
+    using integer_type = typename BasicNodeType::integer_type;
+    // Only an unsigned integer as wide as the signed integer type can exceed its range.
+    using may_exceed_integer_type = std::integral_constant<
+        bool,
+        std::is_unsigned<T>::value && std::is_signed<integer_type>::value && sizeof(T) >= sizeof(integer_type)>;
+    integer_to_node(n, i, may_exceed_integer_type {});
 }
 
 /// @brief to_node function for floating point numbers.

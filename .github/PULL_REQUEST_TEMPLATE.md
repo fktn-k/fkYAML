@@ -4,7 +4,7 @@
 
 ## Pull Request Checklist
 
-Read the [CONTRIBUTING.md](https://github.com/fktn-k/fkYAML/blob/develop/CONTRIBUTING.md) file for detailed information.  
+Read the [CONTRIBUTING.md](https://github.com/fktn-k/fkYAML/blob/develop/.github/CONTRIBUTING.md) file for detailed information.  
 
 - [ ] Changes are described in the pull request or in a referenced [issue](https://github.com/fktn-k/fkYAML/issues).
 - [ ] The test suite compiles and runs without any error.

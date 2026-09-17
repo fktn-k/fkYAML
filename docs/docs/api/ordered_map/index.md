@@ -5,12 +5,12 @@
 ```cpp
 template<
     typename Key, typename Value, typename IgnoredCompare = std::less<Key>,
-    typename Allocator = std::allocator<std::pair<const Key, Value>>>
-class ordered_map : public std::vector<std::pair<const Key, Value>>;
+    typename Allocator = std::allocator<std::pair<Key, Value>>>
+class ordered_map : public std::vector<std::pair<Key, Value>>;
 ```
 
 A minimal map-like container which preserves insertion order.  
-This documentation only describes APIs which are not of the parent class [`std::vector<std::pair<const Key, Value>>`](https://en.cppreference.com/w/cpp/container/vector).  
+This documentation only describes APIs which are not of the parent class [`std::vector<std::pair<Key, Value>>`](https://en.cppreference.com/w/cpp/container/vector).  
 
 !!! Question annotate "How is this class useful?"
 

@@ -1,20 +1,21 @@
 //  _______   __ __   __  _____   __  __  __
 // |   __| |_/  |  \_/  |/  _  \ /  \/  \|  |     fkYAML: A C++ header-only YAML library
-// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.4.2
+// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.5.0
 // |__|  |_| \__|  |_|  |_|   |_|___||___|______| https://github.com/fktn-k/fkYAML
 //
-// SPDX-FileCopyrightText: 2023-2025 Kensuke Fukutani <fktn.dev@gmail.com>
+// SPDX-FileCopyrightText: 2023-2026 Kensuke Fukutani <fktn.dev@gmail.com>
 // SPDX-License-Identifier: MIT
 
 #ifndef FK_YAML_DETAIL_INPUT_LEXICAL_ANALYZER_HPP
 #define FK_YAML_DETAIL_INPUT_LEXICAL_ANALYZER_HPP
 
 #include <algorithm>
-#include <cctype>
 #include <cstdlib>
+#include <deque>
 
 #include <fkYAML/detail/macros/define_macros.hpp>
 #include <fkYAML/detail/assert.hpp>
+#include <fkYAML/detail/char_class.hpp>
 #include <fkYAML/detail/encodings/uri_encoding.hpp>
 #include <fkYAML/detail/encodings/utf_encodings.hpp>
 #include <fkYAML/detail/input/block_scalar_header.hpp>
@@ -53,6 +54,13 @@ struct lexical_token {
 
 /// @brief A class which lexically analyzes YAML formatted inputs.
 class lexical_analyzer {
+    struct token_info {
+        lexical_token token;
+        uint32_t begin_pos {0};
+        uint32_t begin_line {0};
+        const char* begin_itr {nullptr};
+    };
+
     // whether the current context is flow(1) or block(0)
     static constexpr uint32_t flow_context_bit = 1u << 0u;
     // whether the current document part is directive(1) or content(0)
@@ -64,210 +72,55 @@ public:
     explicit lexical_analyzer(str_view input_buffer) noexcept
         : m_begin_itr(input_buffer.begin()),
           m_cur_itr(input_buffer.begin()),
-          m_end_itr(input_buffer.end()) {
+          m_end_itr(input_buffer.end()),
+          m_last_token_begin_itr(input_buffer.begin()) {
         m_pos_tracker.set_target_buffer(input_buffer);
     }
 
     /// @brief Get the next lexical token by scanning the left of the input buffer.
     /// @return lexical_token The next lexical token.
     lexical_token get_next_token() {
-        skip_white_spaces_and_newline_codes();
-
-        m_token_begin_itr = m_cur_itr;
-        m_pos_tracker.update_position(m_cur_itr);
-        m_last_token_begin_pos = m_pos_tracker.get_cur_pos_in_line();
-        m_last_token_begin_line = m_pos_tracker.get_lines_read();
-
-        if (m_cur_itr == m_end_itr) {
-            return {lexical_token_t::END_OF_BUFFER};
+        token_info info {};
+        if (!m_pending_token_queue.empty()) {
+            info = m_pending_token_queue.front();
+            m_pending_token_queue.pop_front();
+        }
+        else {
+            info = process_token();
         }
 
-        switch (*m_cur_itr) {
-        case '?':
-            if (++m_cur_itr == m_end_itr) {
-                return {lexical_token_t::PLAIN_SCALAR, {m_token_begin_itr, 1}};
-            }
+        m_last_token_begin_pos = info.begin_pos;
+        m_last_token_begin_line = info.begin_line;
+        m_last_token_begin_itr = info.begin_itr;
+        m_last_token_type = info.token.type;
+        return info.token;
+    }
 
-            if (*m_cur_itr == ' ') {
-                return {lexical_token_t::EXPLICIT_KEY_PREFIX};
-            }
-            break;
-        case ':': // key separator
-            if (++m_cur_itr == m_end_itr) {
-                return {lexical_token_t::KEY_SEPARATOR};
-            }
-
-            switch (*m_cur_itr) {
-            case ' ':
-            case '\t':
-            case '\n':
-                return {lexical_token_t::KEY_SEPARATOR};
-            default:
-                if ((m_state & flow_context_bit) == 0) {
-                    // in a block context
-                    break;
-                }
-
-                switch (*m_cur_itr) {
-                case ',':
-                case '[':
-                case ']':
-                case '{':
-                case '}':
-                    // Flow indicators are not "safe" to be followed in a flow context.
-                    // See https://yaml.org/spec/1.2.2/#733-plain-style for more details.
-                    return {lexical_token_t::KEY_SEPARATOR};
-                default:
-                    // At least '{' or '[' must precedes this token.
-                    FK_YAML_ASSERT(m_token_begin_itr != m_begin_itr);
-
-                    // if a key inside a flow mapping is JSON-like (surrounded by indicators, see below), YAML allows
-                    // the following value to be specified adjacent to the ":" mapping value indicator.
-                    // ```yaml
-                    // # the following flow mapping entries are all valid.
-                    // {
-                    //   "foo":true,
-                    //   'bar':false,          # 'bar' is actually not JSON but allowed in YAML
-                    //                         # since its surrounded by the single quotes.
-                    //   {[1,2,3]:null}:"baz"
-                    // }
-                    // ```
-                    switch (*(m_token_begin_itr - 1)) {
-                    case '\'':
-                    case '\"':
-                    case ']':
-                    case '}':
-                        return {lexical_token_t::KEY_SEPARATOR};
-                    default:
-                        break;
-                    }
-                    break;
-                }
-                break;
-            }
-            break;
-        case ',': // value separator
-            ++m_cur_itr;
-            return {lexical_token_t::VALUE_SEPARATOR};
-        case '&': // anchor prefix
-            return {lexical_token_t::ANCHOR_PREFIX, extract_anchor_name()};
-        case '*': // alias prefix
-            return {lexical_token_t::ALIAS_PREFIX, extract_anchor_name()};
-        case '!': // tag prefix
-            return {lexical_token_t::TAG_PREFIX, extract_tag_name()};
-        case '#': // comment prefix
-            scan_comment();
-            return get_next_token();
-        case '%': // directive prefix
-            if (m_state & document_directive_bit) {
-                return {scan_directive()};
-            }
-            // The '%' character can be safely used as the first character in document contents.
-            // See https://yaml.org/spec/1.2.2/#912-document-markers for more details.
-            break;
-        case '-': {
-            switch (*(m_cur_itr + 1)) {
-            case ' ':
-            case '\t':
-            case '\n':
-                // Move a cursor to the beginning of the next token.
-                m_cur_itr += 2;
-                return {lexical_token_t::SEQUENCE_BLOCK_PREFIX};
-            default:
-                break;
-            }
-
-            if (m_pos_tracker.get_cur_pos_in_line() == 0) {
-                if ((m_end_itr - m_cur_itr) > 2) {
-                    const bool is_dir_end = std::equal(m_token_begin_itr, m_cur_itr + 3, "---");
-                    if (is_dir_end) {
-                        m_cur_itr += 3;
-                        return {lexical_token_t::END_OF_DIRECTIVES};
-                    }
-                }
-            }
-
-            break;
+    /// @brief Peek the next lexical token without consuming it.
+    /// @return lexical_token The next lexical token.
+    lexical_token peek_next_token() {
+        if (!m_pending_token_queue.empty()) {
+            return m_pending_token_queue.front().token;
         }
-        case '[': // sequence flow begin
-            ++m_cur_itr;
-            return {lexical_token_t::SEQUENCE_FLOW_BEGIN};
-        case ']': // sequence flow end
-            ++m_cur_itr;
-            return {lexical_token_t::SEQUENCE_FLOW_END};
-        case '{': // mapping flow begin
-            ++m_cur_itr;
-            return {lexical_token_t::MAPPING_FLOW_BEGIN};
-        case '}': // mapping flow end
-            ++m_cur_itr;
-            return {lexical_token_t::MAPPING_FLOW_END};
-        case '@':
-            emit_error("Any token cannot start with at(@). It is a reserved indicator for YAML.");
-        case '`':
-            emit_error("Any token cannot start with grave accent(`). It is a reserved indicator for YAML.");
-        case '\"':
-            ++m_token_begin_itr;
-            return {lexical_token_t::DOUBLE_QUOTED_SCALAR, determine_double_quoted_scalar_range()};
-        case '\'':
-            ++m_token_begin_itr;
-            return {lexical_token_t::SINGLE_QUOTED_SCALAR, determine_single_quoted_scalar_range()};
-        case '.': {
-            if (m_pos_tracker.get_cur_pos_in_line() == 0) {
-                const auto rem_size = m_end_itr - m_cur_itr;
-                if FK_YAML_LIKELY (rem_size > 2) {
-                    const bool is_doc_end = std::equal(m_cur_itr, m_cur_itr + 3, "...");
-                    if (is_doc_end) {
-                        if (rem_size > 3) {
-                            switch (*(m_cur_itr + 3)) {
-                            case ' ':
-                            case '\t':
-                            case '\n':
-                                m_cur_itr += 4;
-                                break;
-                            default:
-                                // See https://yaml.org/spec/1.2.2/#912-document-markers for more details.
-                                emit_error("The document end marker \"...\" must not be followed by non-ws char.");
-                            }
-                        }
-                        else {
-                            m_cur_itr += 3;
-                        }
-                        return {lexical_token_t::END_OF_DOCUMENT};
-                    }
-                }
-            }
-            break;
-        }
-        case '|':
-        case '>': {
-            const str_view sv {m_token_begin_itr, m_end_itr};
-            const std::size_t header_end_pos = sv.find('\n');
-            FK_YAML_ASSERT(header_end_pos != str_view::npos);
-            const uint32_t base_indent = get_current_indent_level(&sv[header_end_pos]);
-
-            const lexical_token_t type = *m_token_begin_itr == '|' ? lexical_token_t::BLOCK_LITERAL_SCALAR
-                                                                   : lexical_token_t::BLOCK_FOLDED_SCALAR;
-            const str_view header_line = sv.substr(1, header_end_pos - 1);
-            m_block_scalar_header = convert_to_block_scalar_header(header_line);
-
-            m_token_begin_itr = sv.begin() + (header_end_pos + 1);
-
-            return {
-                type,
-                determine_block_scalar_content_range(
-                    base_indent, m_block_scalar_header.indent, m_block_scalar_header.indent)};
-        }
-        default:
-            break;
-        }
-
-        return {lexical_token_t::PLAIN_SCALAR, determine_plain_scalar_range()};
+        const token_info info = process_token();
+        m_pending_token_queue.push_back(info);
+        return info.token;
     }
 
     /// @brief Get the beginning position of a last token.
     /// @return uint32_t The beginning position of a last token.
     uint32_t get_last_token_begin_pos() const noexcept {
         return m_last_token_begin_pos;
+    }
+
+    /// @brief Check whether a tab character is used within the indentation of the last token line.
+    /// @note Indentation must consist of spaces only, so a tab which appears before the given width
+    /// cannot be part of it. A tab which follows the indentation is valid separation white space.
+    /// https://yaml.org/spec/1.2.2/#61-indentation-spaces
+    /// @param indent The indentation width required at the beginning of the last token line.
+    /// @return true if a tab appears before the required indentation, false otherwise.
+    bool has_tab_in_indentation(uint32_t indent) const noexcept {
+        return has_tab_before(m_last_token_begin_itr, indent);
     }
 
     /// @brief Get the number of lines already processed.
@@ -306,6 +159,9 @@ public:
         m_state &= ~flow_context_bit;
         if (is_flow_context) {
             m_state |= flow_context_bit;
+            // The outermost flow collection owns the indentation which its lines must have. Only that
+            // one reaches here, since the deserializer enters the flow context from the block one alone.
+            m_flow_required_indent = get_required_continuation_indent();
         }
     }
 
@@ -319,6 +175,350 @@ public:
     }
 
 private:
+    token_info process_token() {
+        skip_white_spaces_and_newline_codes();
+
+        m_token_begin_itr = m_cur_itr;
+        m_pos_tracker.update_position(m_cur_itr);
+        token_info info {};
+        info.begin_pos = m_pos_tracker.get_cur_pos_in_line();
+        info.begin_line = m_pos_tracker.get_lines_read();
+        info.begin_itr = m_token_begin_itr;
+
+        if (m_cur_itr == m_end_itr) {
+            info.token.type = lexical_token_t::END_OF_BUFFER;
+            return info;
+        }
+
+        const bool continues_flow_line = (m_state & flow_context_bit) != 0 && info.begin_line > m_last_token_begin_line;
+        if FK_YAML_UNLIKELY (continues_flow_line && has_tab_before(m_token_begin_itr, m_flow_required_indent)) {
+            emit_error("A tab character cannot be used as indentation.");
+        }
+
+        switch (*m_cur_itr) {
+        case '?':
+            if (++m_cur_itr == m_end_itr) {
+                info.token = {lexical_token_t::PLAIN_SCALAR, {m_token_begin_itr, 1}};
+                return info;
+            }
+
+            switch (*m_cur_itr) {
+            case ' ':
+            case '\t':
+            case '\n':
+                // Any separation white space may follow the explicit key indicator, just like the block
+                // sequence entry indicator. https://yaml.org/spec/1.2.2/#rule-c-l-block-map-explicit-key
+                info.token.type = lexical_token_t::EXPLICIT_KEY_PREFIX;
+                return info;
+            case '{':
+            case '}':
+            case '[':
+            case ']':
+            case ',':
+                if (m_state & flow_context_bit) {
+                    info.token.type = lexical_token_t::EXPLICIT_KEY_PREFIX;
+                    return info;
+                }
+                break;
+            default:
+                break;
+            }
+            break;
+        case ':': // key separator
+            if (++m_cur_itr == m_end_itr) {
+                info.token.type = lexical_token_t::KEY_SEPARATOR;
+                return info;
+            }
+
+            switch (*m_cur_itr) {
+            case ' ':
+            case '\t':
+            case '\n':
+                info.token.type = lexical_token_t::KEY_SEPARATOR;
+                return info;
+            default:
+                if ((m_state & flow_context_bit) == 0) {
+                    // in a block context
+                    break;
+                }
+
+                switch (*m_cur_itr) {
+                case ',':
+                case '[':
+                case ']':
+                case '{':
+                case '}':
+                    // Flow indicators are not "safe" to be followed in a flow context.
+                    // See https://yaml.org/spec/1.2.2/#733-plain-style for more details.
+                    info.token.type = lexical_token_t::KEY_SEPARATOR;
+                    return info;
+                default:
+                    // if a key inside a flow mapping is JSON-like (surrounded by indicators, see below), YAML allows
+                    // the following value to be specified adjacent to the ":" mapping value indicator.
+                    // ```yaml
+                    // # the following flow mapping entries are all valid.
+                    // {
+                    //   "foo":true,
+                    //   'bar':false,          # 'bar' is actually not JSON but allowed in YAML
+                    //                         # since its surrounded by the single quotes.
+                    //   {[1,2,3]:null}:"baz"
+                    // }
+                    // ```
+                    switch (m_last_token_type) {
+                    case lexical_token_t::SINGLE_QUOTED_SCALAR:
+                    case lexical_token_t::DOUBLE_QUOTED_SCALAR:
+                    case lexical_token_t::SEQUENCE_FLOW_END:
+                    case lexical_token_t::MAPPING_FLOW_END:
+                        info.token.type = lexical_token_t::KEY_SEPARATOR;
+                        return info;
+                    default:
+                        break;
+                    }
+                    break;
+                }
+                break;
+            }
+            break;
+        case ',': // value separator
+            ++m_cur_itr;
+            info.token.type = lexical_token_t::VALUE_SEPARATOR;
+            return info;
+        case '&': // anchor prefix
+            info.token = {lexical_token_t::ANCHOR_PREFIX, extract_anchor_name()};
+            return info;
+        case '*': // alias prefix
+            info.token = {lexical_token_t::ALIAS_PREFIX, extract_anchor_name()};
+            return info;
+        case '!': // tag prefix
+            info.token = {lexical_token_t::TAG_PREFIX, extract_tag_name()};
+            return info;
+        case '#': // comment prefix
+            scan_comment();
+            return process_token();
+        case '%': // directive prefix
+            if (m_state & document_directive_bit) {
+                info.token.type = scan_directive();
+                return info;
+            }
+            // The '%' character can be safely used as the first character in document contents.
+            // See https://yaml.org/spec/1.2.2/#912-document-markers for more details.
+            break;
+        case '-': {
+            if (m_cur_itr + 1 == m_end_itr) {
+                ++m_cur_itr;
+                info.token.type = lexical_token_t::SEQUENCE_BLOCK_PREFIX;
+                return info;
+            }
+            switch (*(m_cur_itr + 1)) {
+            case ' ':
+            case '\t':
+            case '\n':
+                // Move a cursor to the beginning of the next token.
+                m_cur_itr += 2;
+                info.token.type = lexical_token_t::SEQUENCE_BLOCK_PREFIX;
+                return info;
+            case '{':
+            case '}':
+            case '[':
+            case ']':
+            case ',':
+                // "-" cannot start a plain scalar if it is followed by a flow indicator in a flow context.
+                // See https://yaml.org/spec/1.2.2/#733-plain-style for more details.
+                if (m_state & flow_context_bit) {
+                    ++m_cur_itr;
+                    info.token.type = lexical_token_t::SEQUENCE_BLOCK_PREFIX;
+                    return info;
+                }
+                break;
+            default:
+                break;
+            }
+
+            if (m_pos_tracker.get_cur_pos_in_line() == 0) {
+                const str_view sv {m_cur_itr, m_end_itr};
+                const bool is_dir_end =
+                    sv.size() >= 3 && sv.compare(0, 3, "---") == 0 && is_followed_by_white_space(sv, 3);
+                if (is_dir_end) {
+                    m_cur_itr += 3;
+                    info.token.type = lexical_token_t::END_OF_DIRECTIVES;
+                    return info;
+                }
+            }
+
+            break;
+        }
+        case '[': // sequence flow begin
+            ++m_cur_itr;
+            info.token.type = lexical_token_t::SEQUENCE_FLOW_BEGIN;
+            return info;
+        case ']': // sequence flow end
+            ++m_cur_itr;
+            info.token.type = lexical_token_t::SEQUENCE_FLOW_END;
+            return info;
+        case '{': // mapping flow begin
+            ++m_cur_itr;
+            info.token.type = lexical_token_t::MAPPING_FLOW_BEGIN;
+            return info;
+        case '}': // mapping flow end
+            ++m_cur_itr;
+            info.token.type = lexical_token_t::MAPPING_FLOW_END;
+            return info;
+        case '@':
+            emit_error("Any token cannot start with at(@). It is a reserved indicator for YAML.");
+        case '`':
+            emit_error("Any token cannot start with grave accent(`). It is a reserved indicator for YAML.");
+        case '\"':
+            ++m_token_begin_itr;
+            info.token = {lexical_token_t::DOUBLE_QUOTED_SCALAR, determine_double_quoted_scalar_range()};
+            return info;
+        case '\'':
+            ++m_token_begin_itr;
+            info.token = {lexical_token_t::SINGLE_QUOTED_SCALAR, determine_single_quoted_scalar_range()};
+            return info;
+        case '.': {
+            if (m_pos_tracker.get_cur_pos_in_line() == 0) {
+                const auto rem_size = m_end_itr - m_cur_itr;
+                if FK_YAML_LIKELY (rem_size > 2) {
+                    const bool is_doc_end = std::equal(m_cur_itr, m_cur_itr + 3, "...");
+                    if (is_doc_end) {
+                        const char* cur_itr = m_cur_itr + 3;
+                        while (cur_itr != m_end_itr && (*cur_itr == ' ' || *cur_itr == '\t')) {
+                            ++cur_itr;
+                        }
+                        if FK_YAML_UNLIKELY (cur_itr != m_end_itr && *cur_itr != '\n' && *cur_itr != '#') {
+                            // See https://yaml.org/spec/1.2.2/#912-document-markers for more details.
+                            emit_error("The document end marker \"...\" must not be followed by non-ws char.");
+                        }
+                        m_cur_itr = cur_itr;
+                        info.token.type = lexical_token_t::END_OF_DOCUMENT;
+                        return info;
+                    }
+                }
+            }
+            break;
+        }
+        case '|':
+        case '>': {
+            const lexical_token_t type = *m_token_begin_itr == '|' ? lexical_token_t::BLOCK_LITERAL_SCALAR
+                                                                   : lexical_token_t::BLOCK_FOLDED_SCALAR;
+            const str_view sv {m_token_begin_itr, m_end_itr};
+            const std::size_t header_end_pos = sv.find('\n');
+
+            if FK_YAML_UNLIKELY (header_end_pos == str_view::npos) {
+                m_block_scalar_header = convert_to_block_scalar_header(sv.substr(1));
+                // If the block scalar header is not followed by a newline code, its content is empty.
+                m_cur_itr = m_token_begin_itr = m_end_itr;
+                info.token = {type, {m_token_begin_itr, 0}};
+                return info;
+            }
+
+            const uint32_t base_indent =
+                get_current_indent_level(find_block_scalar_base_line_end(m_token_begin_itr, &sv[header_end_pos]));
+            // Must be checked before m_token_begin_itr is moved to the beginning of the contents below.
+            const bool is_document_root = begins_document_level_node();
+
+            const str_view header_line = sv.substr(1, header_end_pos - 1);
+            m_block_scalar_header = convert_to_block_scalar_header(header_line);
+
+            m_token_begin_itr = sv.begin() + (header_end_pos + 1);
+
+            info.token = {
+                type,
+                determine_block_scalar_content_range(
+                    base_indent, m_block_scalar_header.indent, is_document_root, m_block_scalar_header.indent)};
+            return info;
+        }
+        default:
+            break;
+        }
+
+        info.token = {lexical_token_t::PLAIN_SCALAR, determine_plain_scalar_range()};
+        return info;
+    }
+
+    /// @brief Checks if the token which begins at m_token_begin_itr is the root node of a document.
+    /// @note Such a node has no parent, so its contents may begin at the first column.
+    /// @return true if nothing but a document start marker precedes the token on its line, false otherwise.
+    bool begins_document_level_node() const {
+        const char* p_line_begin = m_token_begin_itr;
+        while (p_line_begin != m_begin_itr && *(p_line_begin - 1) != '\n') {
+            --p_line_begin;
+        }
+
+        if (p_line_begin == m_token_begin_itr) {
+            return true;
+        }
+
+        const char* cur_itr = p_line_begin;
+        if (m_token_begin_itr - cur_itr < 3 || !std::equal(cur_itr, cur_itr + 3, "---")) {
+            return false;
+        }
+
+        for (cur_itr += 3; cur_itr != m_token_begin_itr; ++cur_itr) {
+            if (*cur_itr != ' ') {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    /// @brief Checks if the given position is a white space, a line break or the end of the buffer.
+    /// @note Tabs count as white space here, as in the definition of c-forbidden.
+    /// https://yaml.org/spec/1.2.2/#912-document-markers
+    /// @param sv The buffer contents being scanned.
+    /// @param pos The position to inspect.
+    /// @return true if nothing, a white space or a line break follows, false otherwise.
+    static bool is_followed_by_white_space(str_view sv, std::size_t pos) noexcept {
+        return (pos == sv.size()) || (sv[pos] == ' ') || (sv[pos] == '\t') || (sv[pos] == '\n');
+    }
+
+    /// @brief Checks if the given position begins something a plain scalar cannot continue into.
+    /// @note Must not be static, as flow indicators only end a plain scalar within a flow context.
+    /// @param sv The buffer contents being scanned.
+    /// @param pos The position of the first non-space character in a line.
+    /// @param is_first_column Whether the position is at the beginning of its line.
+    /// @return true if a document marker or a block structure indicator begins there.
+    bool begins_non_scalar_content(str_view sv, std::size_t pos, bool is_first_column) const noexcept {
+        switch (sv[pos]) {
+        case ':':
+        case '?':
+            // These can never appear in a plain scalar, whatever their indentation. Others such as
+            // "- " can, when they are indented deeply enough to be content.
+            // See https://yaml.org/spec/1.2.2/#733-plain-style for more details.
+            return is_followed_by_white_space(sv, pos + 1);
+        case '[':
+        case ']':
+        case '{':
+        case '}':
+            // A flow collection beginning a line starts a node of its own.
+            return true;
+        case ',':
+            // A separator beginning a line ends the preceding entry of a flow collection, while in a
+            // block context it is just an ordinary plain scalar character.
+            return (m_state & flow_context_bit) != 0;
+        case '#':
+            return true;
+        default:
+            break;
+        }
+
+        // Document markers are only recognized at the beginning of a line.
+        if (!is_first_column) {
+            return false;
+        }
+
+        return begins_document_marker(sv, pos);
+    }
+
+    /// @brief Checks if the given position begins a document marker (`---` or `...`).
+    /// @param sv The buffer contents being scanned.
+    /// @param pos The position to inspect.
+    /// @return true if a document marker begins at the given position.
+    static bool begins_document_marker(str_view sv, std::size_t pos) noexcept {
+        const bool begins_marker = (sv.compare(pos, 3, "---") == 0) || (sv.compare(pos, 3, "...") == 0);
+        return begins_marker && is_followed_by_white_space(sv, pos + 3);
+    }
+
     uint32_t get_current_indent_level(const char* p_line_end) {
         // get the beginning position of the current line.
         std::size_t line_begin_pos = str_view(m_begin_itr, p_line_end - 1).find_last_of('\n');
@@ -411,6 +611,70 @@ private:
         }
 
         return indent;
+    }
+
+    /// @brief Finds the end of the line which the base indentation of a block scalar is taken from.
+    /// @note A block scalar header which has nothing but node properties before it on its line tells nothing
+    /// about the indentation of the parent node, so the lines above it are searched instead, skipping the ones
+    /// with nothing but node properties or comments.
+    /// ```yaml
+    /// folded:
+    ///    !foo
+    ///   >1
+    ///  value
+    /// ```
+    /// @param p_header_begin The beginning of the block scalar header.
+    /// @param p_header_line_end The end of the line which the block scalar header sits on.
+    /// @return The end of the line which the base indentation is taken from.
+    const char* find_block_scalar_base_line_end(const char* p_header_begin, const char* p_header_line_end) const {
+        const char* p_content_end = p_header_begin;
+        for (;;) {
+            const char* p_line_begin = p_content_end;
+            while (p_line_begin != m_begin_itr && *(p_line_begin - 1) != '\n') {
+                --p_line_begin;
+            }
+
+            if (!has_only_node_properties(p_line_begin, p_content_end)) {
+                return p_content_end == p_header_begin ? p_header_line_end : p_content_end;
+            }
+
+            if (p_line_begin == m_begin_itr) {
+                return p_header_line_end;
+            }
+
+            p_content_end = p_line_begin - 1;
+        }
+    }
+
+    /// @brief Checks if the given range has nothing but node properties, white spaces and a comment.
+    /// @param p_begin The beginning of the range.
+    /// @param p_end The end of the range.
+    /// @return true if the range has nothing but node properties, white spaces and a comment, false otherwise.
+    static bool has_only_node_properties(const char* p_begin, const char* p_end) noexcept {
+        bool is_separated = true;
+        for (const char* itr = p_begin; itr != p_end; ++itr) {
+            switch (*itr) {
+            case ' ':
+            case '\t':
+                is_separated = true;
+                break;
+            case '#':
+                if (is_separated) {
+                    return true;
+                }
+                break;
+            case '!':
+            case '&':
+                is_separated = false;
+                break;
+            default:
+                if (is_separated) {
+                    return false;
+                }
+                break;
+            }
+        }
+        return true;
     }
 
     /// @brief Skip until a newline code or a null character is found.
@@ -527,7 +791,7 @@ private:
                 case '-':
                     break;
                 default:
-                    if FK_YAML_UNLIKELY (!isalnum(*m_cur_itr)) {
+                    if FK_YAML_UNLIKELY (!is_alnum(*m_cur_itr)) {
                         // See https://yaml.org/spec/1.2.2/#rule-c-named-tag-handle for more details.
                         emit_error("named handle can contain only numbers(0-9), alphabets(A-Z,a-z) and hyphens(-).");
                     }
@@ -549,6 +813,11 @@ private:
         //
         // extract a tag prefix.
         //
+
+        // skip_white_spaces() above may have consumed the rest of the input buffer.
+        if FK_YAML_UNLIKELY (m_cur_itr == m_end_itr) {
+            emit_error("invalid TAG directive is found.");
+        }
 
         m_token_begin_itr = m_cur_itr;
         const char* p_tag_prefix_begin = m_cur_itr;
@@ -611,8 +880,13 @@ private:
 
         m_yaml_version = str_view {m_token_begin_itr, m_cur_itr};
 
-        if FK_YAML_UNLIKELY (m_yaml_version.compare("1.1") != 0 && m_yaml_version.compare("1.2") != 0) {
-            emit_error("Only 1.1 and 1.2 can be specified as the YAML version.");
+        // A YAML processor must reject a different major version, but should only warn about a minor
+        // version it does not know and keep parsing the document.
+        // See https://yaml.org/spec/1.2.2/#681-yaml-directives for more details.
+        const bool is_yaml_1_x = m_yaml_version.size() > 2 && m_yaml_version.substr(0, 2).compare("1.") == 0 &&
+                                 m_yaml_version.find_first_not_of("0123456789", 2) == str_view::npos;
+        if FK_YAML_UNLIKELY (!is_yaml_1_x) {
+            emit_error("Only the 1.x versions can be specified as the YAML version.");
         }
 
         return lexical_token_t::YAML_VER_DIRECTIVE;
@@ -674,13 +948,22 @@ private:
         case '\n':
             // Just "!" is a non-specific tag.
             return {m_token_begin_itr, m_cur_itr};
+        case '}':
+        case ']':
+        case ',':
+            if ((m_state & flow_context_bit) != 0) {
+                return {m_token_begin_itr, m_cur_itr};
+            }
+            break;
         case '!':
             // Secondary tag handles (!!suffix)
             break;
         case '<':
             // Verbatim tags (!<TAG>)
             is_verbatim = true;
-            ++m_cur_itr;
+            if FK_YAML_UNLIKELY (++m_cur_itr == m_end_itr) {
+                emit_error("verbatim tag (!<TAG>) must be ended with \'>\'.");
+            }
             break;
         default:
             // Either local tags (!suffix) or named handles (!tag!suffix)
@@ -689,6 +972,7 @@ private:
         }
 
         bool is_named_handle = false;
+        bool is_in_verbatim_uri = is_verbatim;
         bool ends_loop = false;
         do {
             if (++m_cur_itr == m_end_itr) {
@@ -702,6 +986,10 @@ private:
             case '\n':
                 ends_loop = true;
                 break;
+            case '>':
+                // End of a verbatim tag (!<TAG>)
+                is_in_verbatim_uri = false;
+                break;
             case '!':
                 if FK_YAML_UNLIKELY (!allows_another_tag_prefix) {
                     emit_error("invalid tag prefix (!) is found.");
@@ -710,6 +998,16 @@ private:
                 is_named_handle = true;
                 // tag prefix must not appear three times.
                 allows_another_tag_prefix = false;
+                break;
+            case '}':
+            case ']':
+            case ',':
+                // Since these indicators can terminate a flow collection or its entry in a flow context,
+                // the trailing part is cut off so that the tag only includes the part before the flow indicator.
+                // ```yaml
+                // {foo: !!str, bar: !<tag:yaml.org,2002:str>}
+                // ```
+                ends_loop = !is_in_verbatim_uri && (m_state & flow_context_bit) != 0;
                 break;
             default:
                 break;
@@ -768,26 +1066,120 @@ private:
         return tag_name;
     }
 
+    /// @brief Check that the continuation lines of a multi-line token are indented with spaces.
+    /// @note A node continues on lines which are indented at least as deep as itself, and indentation
+    /// consists of spaces only. A tab which follows that indentation is valid separation white space,
+    /// and a line which holds nothing but white space is empty.
+    /// https://yaml.org/spec/1.2.2/#rule-s-flow-line-prefix
+    /// @param content The token contents, which may span multiple lines.
+    void check_continuation_indent(str_view content) {
+        const uint32_t required = get_required_continuation_indent();
+
+        for (std::size_t pos = content.find('\n'); pos != str_view::npos; pos = content.find('\n', pos + 1)) {
+            const std::size_t line_begin_pos = pos + 1;
+            const std::size_t content_pos = content.find_first_not_of(" \t", line_begin_pos);
+            const bool is_empty_line = (content_pos == str_view::npos) || content[content_pos] == '\n';
+            if (is_empty_line) {
+                continue;
+            }
+
+            if FK_YAML_UNLIKELY (content_pos - line_begin_pos < required) {
+                m_cur_itr = content.begin() + content_pos;
+                emit_error("A continuation line must be indented sufficiently.");
+            }
+
+            const std::size_t tab_pos = content.find('\t', line_begin_pos);
+            if FK_YAML_UNLIKELY (tab_pos < content_pos && tab_pos - line_begin_pos < required) {
+                m_cur_itr = content.begin() + content_pos;
+                emit_error("A tab character cannot be used as indentation.");
+            }
+        }
+    }
+
+    /// @brief Get the indentation which the continuation lines of the current token must have.
+    /// @note A token which begins a line is the node at that indentation, so its continuation lines only
+    /// need the same one. A token preceded by something else on its line, a mapping value for instance,
+    /// belongs to a collection which owns that indentation, so its own contents must be indented deeper.
+    /// ```yaml
+    /// "1st          # the scalar is the node at column 0, so 0 is required
+    /// 2nd"
+    /// foo: "1st     # the scalar belongs to a mapping at column 0, so 1 is required
+    ///  2nd"
+    /// ```
+    /// @return uint32_t The indentation width required for the continuation lines.
+    uint32_t get_required_continuation_indent() const noexcept {
+        const char* p_line_begin = find_line_begin(m_token_begin_itr);
+
+        // The token begins after the opening quotation mark. When that mark follows a document
+        // start marker, the scalar is still the document root and owns the first column.
+        if (m_token_begin_itr - p_line_begin > 4 &&
+            (*(m_token_begin_itr - 1) == '\'' || *(m_token_begin_itr - 1) == '"') &&
+            std::equal(p_line_begin, p_line_begin + 3, "---")) {
+            return 0;
+        }
+
+        uint32_t indent = 0;
+        while (p_line_begin + indent < m_token_begin_itr && p_line_begin[indent] == ' ') {
+            ++indent;
+        }
+
+        // The token of a quoted scalar begins just after its opening quotation mark, which is the real
+        // beginning of the node, so one extra column still counts as beginning the line.
+        const bool begins_the_line = (m_token_begin_itr <= p_line_begin + indent + 1);
+        return begins_the_line ? indent : indent + 1;
+    }
+
+    /// @brief Check whether a tab appears before the given column on the line of `p_token_begin`.
+    /// @param p_token_begin The beginning of the token whose line is inspected.
+    /// @param indent The indentation width required at the beginning of that line.
+    /// @return true if a tab appears before the required indentation, false otherwise.
+    bool has_tab_before(const char* p_token_begin, uint32_t indent) const noexcept {
+        const char* p_line_begin = find_line_begin(p_token_begin);
+        const str_view line_head {p_line_begin, static_cast<std::size_t>(p_token_begin - p_line_begin)};
+        return line_head.find('\t') < indent;
+    }
+
+    /// @brief Get the beginning of the line which contains the given position.
+    /// @param p The position to start from.
+    /// @return const char* The beginning of its line.
+    const char* find_line_begin(const char* p) const noexcept {
+        while (p != m_begin_itr && *(p - 1) != '\n') {
+            --p;
+        }
+        return p;
+    }
+
     /// @brief Determines the range of single quoted scalar by scanning remaining input buffer contents.
     /// @return A single quoted scalar.
     str_view determine_single_quoted_scalar_range() {
         const str_view sv {m_token_begin_itr, m_end_itr};
 
-        std::size_t pos = sv.find('\'');
+        const str_view filter {"\'\n"};
+        std::size_t pos = sv.find_first_of(filter);
         while (pos != str_view::npos) {
             FK_YAML_ASSERT(pos < sv.size());
+            if (sv[pos] == '\n') {
+                if FK_YAML_UNLIKELY (begins_document_marker(sv, pos + 1)) {
+                    m_cur_itr = &sv[pos + 1];
+                    emit_error("Document marker found in the scalar content.");
+                }
+                pos = sv.find_first_of(filter, pos + 1);
+                continue;
+            }
+
             if FK_YAML_LIKELY (pos == sv.size() - 1 || sv[pos + 1] != '\'') {
                 // closing single quote is found.
                 m_cur_itr = m_token_begin_itr + (pos + 1);
                 str_view single_quoted_scalar {m_token_begin_itr, pos};
                 check_scalar_content(single_quoted_scalar);
+                check_continuation_indent(single_quoted_scalar);
                 return single_quoted_scalar;
             }
 
             // If single quotation marks are repeated twice in a single quoted scalar, they are considered as an
             // escaped single quotation mark. Skip the second one which would otherwise be detected as a closing
             // single quotation mark in the next loop.
-            pos = sv.find('\'', pos + 2);
+            pos = sv.find_first_of(filter, pos + 2);
         }
 
         m_cur_itr = m_end_itr; // update for error information
@@ -799,9 +1191,19 @@ private:
     str_view determine_double_quoted_scalar_range() {
         const str_view sv {m_token_begin_itr, m_end_itr};
 
-        std::size_t pos = sv.find('\"');
+        const str_view filter {"\"\n"};
+        std::size_t pos = sv.find_first_of(filter);
         while (pos != str_view::npos) {
             FK_YAML_ASSERT(pos < sv.size());
+
+            if (sv[pos] == '\n') {
+                if FK_YAML_UNLIKELY (begins_document_marker(sv, pos + 1)) {
+                    m_cur_itr = &sv[pos + 1];
+                    emit_error("Document marker found in the scalar content.");
+                }
+                pos = sv.find_first_of(filter, pos + 1);
+                continue;
+            }
 
             bool is_closed = true;
             if FK_YAML_LIKELY (pos > 0) {
@@ -812,24 +1214,31 @@ private:
                 // * even number of backslashes -> double quotation mark IS NOT escaped (e.g., "\\"")
                 uint32_t backslash_counts = 0;
                 const char* p = m_token_begin_itr + (pos - 1);
-                do {
-                    if (*p-- != '\\') {
+                for (;;) {
+                    if (*p != '\\') {
                         break;
                     }
                     ++backslash_counts;
-                } while (p != m_token_begin_itr);
+                    if (p == m_token_begin_itr) {
+                        // the first character of the token has just been counted. Stopping here
+                        // also keeps `p` from being decremented past the beginning of the token.
+                        break;
+                    }
+                    --p;
+                }
                 is_closed = ((backslash_counts & 1u) == 0); // true: even, false: odd
             }
 
             if (is_closed) {
                 // closing double quote is found.
                 m_cur_itr = m_token_begin_itr + (pos + 1);
-                str_view double_quoted_salar {m_token_begin_itr, pos};
-                check_scalar_content(double_quoted_salar);
-                return double_quoted_salar;
+                str_view double_quoted_scalar {m_token_begin_itr, pos};
+                check_scalar_content(double_quoted_scalar);
+                check_continuation_indent(double_quoted_scalar);
+                return double_quoted_scalar;
             }
 
-            pos = sv.find('\"', pos + 1);
+            pos = sv.find_first_of(filter, pos + 1);
         }
 
         m_cur_itr = m_end_itr; // update for error information
@@ -842,7 +1251,7 @@ private:
         const str_view sv {m_token_begin_itr, m_end_itr};
 
         // flow indicators are checked only within a flow context.
-        const str_view filter = (m_state & flow_context_bit) ? "\n :{}[]," : "\n :";
+        const str_view filter = (m_state & flow_context_bit) ? "\t\n :{}[]," : "\t\n :";
         std::size_t pos = sv.find_first_of(filter);
         if FK_YAML_UNLIKELY (pos == str_view::npos) {
             check_scalar_content(sv);
@@ -852,12 +1261,19 @@ private:
 
         bool ends_loop = false;
         uint32_t indent = std::numeric_limits<uint32_t>::max();
+        bool begins_own_line = false;
+        std::size_t trailing_white_space_pos = str_view::npos;
         do {
             FK_YAML_ASSERT(pos < sv.size());
             switch (sv[pos]) {
             case '\n': {
                 if (indent == std::numeric_limits<uint32_t>::max()) {
                     indent = get_current_indent_level(&sv[pos]);
+                    // The scalar begins a line of its own if its column is the indentation of that line.
+                    // Only meaningful in a block context: in a flow context the surrounding collection
+                    // determines the required indentation of continuation lines.
+                    begins_own_line =
+                        ((m_state & flow_context_bit) == 0) && (m_pos_tracker.get_cur_pos_in_line() == indent);
                 }
 
                 constexpr str_view space_filter {" \t\n"};
@@ -865,47 +1281,108 @@ private:
                 const std::size_t last_newline_pos = sv.find_last_of('\n', non_space_pos);
                 FK_YAML_ASSERT(last_newline_pos != str_view::npos);
 
-                if (non_space_pos == str_view::npos || non_space_pos - last_newline_pos - 1 <= indent) {
+                // A plain scalar which begins a line of its own can be continued by lines at the same
+                // indentation, since nothing else on that line owns it:
+                // ```yaml
+                // foo:
+                //   first line
+                //   second line
+                // ```
+                // One which follows a key on the same line must be continued by more indented lines,
+                // because a line at the key's indentation belongs to the parent mapping instead.
+                uint32_t min_continuation_indent = 0;
+                if (m_state & flow_context_bit) {
+                    min_continuation_indent = m_flow_required_indent;
+                }
+                else {
+                    min_continuation_indent = begins_own_line ? indent : indent + 1;
+                }
+
+                if (non_space_pos == str_view::npos) {
+                    if (trailing_white_space_pos != str_view::npos) {
+                        pos = trailing_white_space_pos;
+                    }
                     ends_loop = true;
                     break;
                 }
 
+                const std::size_t cur_line_indent = non_space_pos - last_newline_pos - 1;
+                const bool ends_scalar = begins_non_scalar_content(sv, non_space_pos, cur_line_indent == 0);
+                if (cur_line_indent < min_continuation_indent || ends_scalar) {
+                    if (trailing_white_space_pos != str_view::npos) {
+                        pos = trailing_white_space_pos;
+                    }
+                    ends_loop = true;
+                    break;
+                }
+
+                trailing_white_space_pos = str_view::npos;
                 pos = non_space_pos;
                 break;
             }
             case ' ':
-                if FK_YAML_UNLIKELY (pos == sv.size() - 1) {
-                    // trim trailing space.
+            case '\t': {
+                // Any number of white spaces may separate the characters of a plain scalar, so the whole
+                // run of them belongs to it and what follows the run decides whether it ends.
+                // See https://yaml.org/spec/1.2.2/#733-plain-style for more details.
+                const std::size_t next_pos = sv.find_first_not_of(" \t", pos + 1);
+                if FK_YAML_UNLIKELY (next_pos == str_view::npos) {
+                    // trim trailing white space.
                     ends_loop = true;
                     break;
                 }
 
-                // Allow a space in a plain scalar only if the space is surrounded by non-space characters, but not
-                // followed by the comment prefix " #".
-                // Also, flow indicators are not allowed to be followed after a space in a flow context.
-                // See https://yaml.org/spec/1.2.2/#733-plain-style for more details.
-                switch (sv[pos + 1]) {
-                case ' ':
-                case '\t':
+                // White space is not allowed to be followed by the comment prefix " #", and flow
+                // indicators are not allowed to follow it in a flow context.
+                switch (sv[next_pos]) {
                 case '\n':
+                    // The following line decides whether these white spaces are trailing or precede
+                    // a continuation line. Let the newline handler make that decision.
+                    trailing_white_space_pos = pos;
+                    pos = next_pos;
+                    continue;
                 case '#':
                     ends_loop = true;
                     break;
-                case ':':
-                    // " :" is permitted in a plain style string token, but not when followed by a space.
-                    ends_loop = (pos < sv.size() - 2) && (sv[pos + 2] == ' ');
+                case ':': {
+                    // " :" is permitted in a plain style string token, but not when the ":" is a mapping
+                    // value indicator, that is, when it is followed by a white space, a line break or the
+                    // end of the input. In a flow context, a flow indicator is not safe to follow it either.
+                    if (next_pos + 1 == sv.size()) {
+                        ends_loop = true;
+                        break;
+                    }
+
+                    switch (sv[next_pos + 1]) {
+                    case ' ':
+                    case '\t':
+                    case '\n':
+                        ends_loop = true;
+                        break;
+                    case ',':
+                    case '[':
+                    case ']':
+                    case '{':
+                    case '}':
+                        ends_loop = ((m_state & flow_context_bit) != 0);
+                        break;
+                    default:
+                        break;
+                    }
                     break;
+                }
                 case '{':
                 case '}':
                 case '[':
                 case ']':
                 case ',':
-                    ends_loop = (m_state & flow_context_bit);
+                    ends_loop = ((m_state & flow_context_bit) != 0);
                     break;
                 default:
                     break;
                 }
                 break;
+            }
             case ':':
                 if FK_YAML_LIKELY (pos + 1 < sv.size()) {
                     switch (sv[pos + 1]) {
@@ -913,6 +1390,16 @@ private:
                     case '\t':
                     case '\n':
                         ends_loop = true;
+                        break;
+                    case ',':
+                    case '[':
+                    case ']':
+                    case '{':
+                    case '}':
+                        // A flow indicator is not "safe" to follow a ":" in a flow context, so the ":" ends
+                        // the plain scalar and becomes a mapping value indicator instead.
+                        // See https://yaml.org/spec/1.2.2/#733-plain-style for more details.
+                        ends_loop = ((m_state & flow_context_bit) != 0);
                         break;
                     default:
                         break;
@@ -947,10 +1434,11 @@ private:
     /// @brief Scan a block style string token either in the literal or folded style.
     /// @param base_indent The base indent level of the block scalar.
     /// @param indicated_indent The indicated indent level in the block scalar header. 0 means it's not indicated.
+    /// @param is_document_root Whether the block scalar is the root node of a document.
     /// @param token Storage for the scanned block scalar range.
     /// @return The content indentation level of the block scalar.
     str_view determine_block_scalar_content_range(
-        uint32_t base_indent, uint32_t indicated_indent, uint32_t& content_indent) {
+        uint32_t base_indent, uint32_t indicated_indent, bool is_document_root, uint32_t& content_indent) {
         const str_view sv {m_token_begin_itr, m_end_itr};
         const std::size_t remain_input_len = sv.size();
 
@@ -973,6 +1461,9 @@ private:
                 stop_increment = true;
                 continue;
             case '\n':
+                if FK_YAML_UNLIKELY (!is_document_root && stop_increment && cur_indent <= base_indent) {
+                    emit_error("A tab character cannot be used as indentation.");
+                }
                 max_leading_indent = std::max(cur_indent, max_leading_indent);
                 cur_indent = 0;
                 stop_increment = false;
@@ -996,20 +1487,35 @@ private:
             return sv;
         }
 
+        // A non-empty line at or below the parent indentation ends an otherwise empty block scalar.
+        if (!is_document_root && cur_indent <= base_indent) {
+            const auto content_end_pos = static_cast<std::size_t>(cur_itr - m_token_begin_itr - 1);
+            m_cur_itr = m_token_begin_itr + content_end_pos;
+            content_indent = indicated_indent == 0 ? max_leading_indent : base_indent + indicated_indent;
+            return sv.substr(0, content_end_pos);
+        }
+
         // Any leading empty line must not contain more spaces than the first non-empty line.
         if FK_YAML_UNLIKELY (cur_indent < max_leading_indent) {
             emit_error("Any leading empty line must not be more indented than the first non-empty line.");
         }
 
         if (indicated_indent == 0) {
-            FK_YAML_ASSERT(base_indent < cur_indent);
+            // A block scalar which is the root node of a document has no parent node to be more indented than, so
+            // its contents may begin at the first column.
+            // ```yaml
+            // --- >
+            // line1
+            // ```
             indicated_indent = cur_indent - base_indent;
         }
         else if FK_YAML_UNLIKELY (cur_indent < base_indent + indicated_indent) {
             emit_error("The first non-empty line in the block scalar is less indented.");
         }
 
-        std::size_t last_newline_pos = sv.find('\n', cur_itr - m_token_begin_itr + 1);
+        // cur_itr already points past the first character of the first non-empty line, so the newline
+        // which ends that line is at that very position when the line holds a single character.
+        std::size_t last_newline_pos = sv.find('\n', cur_itr - m_token_begin_itr);
         if (last_newline_pos == str_view::npos) {
             last_newline_pos = remain_input_len;
         }
@@ -1029,8 +1535,26 @@ private:
 
             FK_YAML_ASSERT(last_newline_pos < cur_line_content_begin_pos);
             cur_indent = static_cast<uint32_t>(cur_line_content_begin_pos - last_newline_pos - 1);
+
+            const bool line_starts_with_document_marker =
+                is_document_root && cur_indent == 0 && begins_document_marker(sv, cur_line_content_begin_pos);
+            if (line_starts_with_document_marker) {
+                // The content lines are forbidden to begin with document markers (`---` or `...`).
+                // https://yaml.org/spec/1.2.2/#912-document-markers
+                break;
+            }
+
             if (cur_indent < content_indent && sv[cur_line_content_begin_pos] != '\n') {
-                if FK_YAML_UNLIKELY (cur_indent > base_indent) {
+                // Trailing comments may be less indented than the contents, so they end the block scalar
+                // instead of being part of it.
+                // ```yaml
+                // foo: |
+                //   text
+                //  # comment
+                // ```
+                // https://yaml.org/spec/1.2.2/#8112-block-chomping-indicator
+                const bool begins_comment = sv[cur_line_content_begin_pos] == '#';
+                if FK_YAML_UNLIKELY (!begins_comment && cur_indent > base_indent) {
                     // This path assumes an input like the following:
                     // ```yaml
                     // foo: |
@@ -1259,12 +1783,20 @@ private:
     str_view m_tag_prefix;
     /// The last block scalar header.
     block_scalar_header m_block_scalar_header {};
+    /// The beginning of the last lexical token, used to inspect the indentation of its line.
+    const char* m_last_token_begin_itr;
+    /// The indentation which the lines of the current flow collection must have.
+    uint32_t m_flow_required_indent {0};
     /// The beginning position of the last lexical token. (zero origin)
     uint32_t m_last_token_begin_pos {0};
     /// The beginning line of the last lexical token. (zero origin)
     uint32_t m_last_token_begin_line {0};
+    /// The type of the last lexical token.
+    lexical_token_t m_last_token_type {lexical_token_t::END_OF_BUFFER};
     /// The current depth of flow context.
     uint32_t m_state {0};
+    /// The queue of pending tokens.
+    std::deque<token_info> m_pending_token_queue;
 };
 
 FK_YAML_DETAIL_NAMESPACE_END

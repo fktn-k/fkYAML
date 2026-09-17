@@ -1,17 +1,17 @@
 //  _______   __ __   __  _____   __  __  __
 // |   __| |_/  |  \_/  |/  _  \ /  \/  \|  |     fkYAML: A C++ header-only YAML library (supporting code)
-// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.4.2
+// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.5.0
 // |__|  |_| \__|  |_|  |_|   |_|___||___|______| https://github.com/fktn-k/fkYAML
 //
-// SPDX-FileCopyrightText: 2023-2025 Kensuke Fukutani <fktn.dev@gmail.com>
+// SPDX-FileCopyrightText: 2023-2026 Kensuke Fukutani <fktn.dev@gmail.com>
 // SPDX-License-Identifier: MIT
 
-#include <catch2/catch.hpp>
+#include <doctest/doctest.h>
 
 #include <fkYAML/node.hpp>
 
 TEST_CASE("URIEncoding_Validate") {
-    SECTION("valid URI characters") {
+    SUBCASE("valid URI characters") {
         auto input = GENERATE(
             std::string(""),
             std::string("%00%99%AF%af"),
@@ -24,7 +24,7 @@ TEST_CASE("URIEncoding_Validate") {
         REQUIRE(fkyaml::detail::uri_encoding::validate(input.c_str(), input.c_str() + input.size()));
     }
 
-    SECTION("invalid URI characters") {
+    SUBCASE("invalid URI characters") {
         auto input = GENERATE(
             std::string("%//"),
             std::string("%::"),
@@ -75,7 +75,15 @@ TEST_CASE("URIEncoding_Validate") {
             std::string("^"),
             std::string("`"),
             std::string("|"),
-            std::string("\x7F"));
+            std::string("\x7F"),
+            // Bytes outside the ASCII range, i.e. any byte of a multi-byte UTF-8 sequence. These are a
+            // negative char where char is signed, which used to be passed to <cctype> functions.
+            std::string("\x80"),
+            std::string("\xC3"),
+            std::string("\xC3\xA9"),
+            std::string("\xFF"),
+            std::string("%\xC3\xA9"),
+            std::string("%0\xC3"));
         REQUIRE_FALSE(fkyaml::detail::uri_encoding::validate(input.c_str(), input.c_str() + input.size()));
     }
 }

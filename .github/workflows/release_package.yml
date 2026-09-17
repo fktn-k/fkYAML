@@ -20,7 +20,7 @@ jobs:
             single_header: "ON"
 
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v7
 
     - name: install zip
       run: sudo apt-get install zip
@@ -40,13 +40,13 @@ jobs:
         zip -r '${{matrix.artifact_name}}.zip' ./${{matrix.artifact_name}}
 
     - name: Upload Artifacts (tgz)
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@v7
       with:
         name: '${{matrix.artifact_name}}.tgz'
         path: '${{github.workspace}}/build/${{matrix.artifact_name}}.tgz'
 
     - name: Upload Artifacts (zip)
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@v7
       with:
         name: '${{matrix.artifact_name}}.zip'
         path: '${{github.workspace}}/build/${{matrix.artifact_name}}.zip'
@@ -56,7 +56,7 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v7
 
     - name: install zip
       run: sudo apt-get install zip
@@ -71,13 +71,13 @@ jobs:
         rm -rf ./fkYAML_min
 
     - name: Upload the minimum archive (tgz)
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@v7
       with:
         name: fkYAML_min.tgz
         path: '${{github.workspace}}/fkYAML_min.tgz'
 
     - name: Upload the minimum archive (zip)
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@v7
       with:
         name: fkYAML_min.zip
         path: '${{github.workspace}}/fkYAML_min.zip'

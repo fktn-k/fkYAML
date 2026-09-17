@@ -1,15 +1,15 @@
 # Benchmark
 
-This tool runs benchmarking of deserialization performance with [the Google Benchmark library](https://github.com/google/benchmark/) (tag: [v1.8.4](https://github.com/google/benchmark/releases/tag/v1.8.4), the latest version supporting C++11) against fkYAML and some C++ YAML library.  
+This tool runs benchmarking of deserialization performance with [the Google Benchmark library](https://github.com/google/benchmark/) (tag: [v1.9.5](https://github.com/google/benchmark/releases/tag/v1.9.5), which requires C++17 to build although it can be used from C++11 code) against fkYAML and some C++ YAML library.  
 
 ## Used YAML library for Comparison
 
 Currently, the following C++ YAML libraries tagged with the specified versions respectively:  
-* [libfyaml](https://github.com/pantoniou/libfyaml) ([v0.9](https://github.com/pantoniou/libfyaml/releases/tag/v0.9))
-* [rapidyaml](https://github.com/biojppm/rapidyaml) ([v0.7.2](https://github.com/biojppm/rapidyaml/releases/tag/v0.7.2))
-* [yaml-cpp](https://github.com/jbeder/yaml-cpp) ([0.8.0](https://github.com/jbeder/yaml-cpp/releases/tag/0.8.0))
+* [libfyaml](https://github.com/pantoniou/libfyaml) ([v1.0.0-beta1](https://github.com/pantoniou/libfyaml/releases/tag/v1.0.0-beta1))
+* [rapidyaml](https://github.com/biojppm/rapidyaml) ([v0.16.0](https://github.com/biojppm/rapidyaml/releases/tag/v0.16.0))
+* [yaml-cpp](https://github.com/jbeder/yaml-cpp) ([0.9.0](https://github.com/jbeder/yaml-cpp/releases/tag/yaml-cpp-0.9.0))
 
-Currently, the following files are located in the [tool/benchmark/cases](https://github.com/fktn-k/fkYAML/tree/develop/tool/benchmark/cases) directory for benchmarking:  
+Currently, the following files are located in the [tools/benchmark/cases](https://github.com/fktn-k/fkYAML/tree/develop/tools/benchmark/cases) directory for benchmarking:  
 
 * ubuntu.yml
   * a copy from the [.github/workflows](https://github.com/fktn-k/fkYAML/tree/develop/.github/workflows) directory at the point of the commit [7092059](https://github.com/fktn-k/fkYAML/commit/709205948966a8415b76aa8a87371133a04fd675)
@@ -33,7 +33,7 @@ $ cmake -S . -B build -DCMAKE_BUILD_TYPE={Debug|Release} -DFK_YAML_RUN_BENCHMARK
 $ cmake --build build --config {Debug|Release}
 
 # You can specify an arbitrary input file such as /foo/bar/sample.yml or /foo/bar/sample.json
-$ ./build/tool/benchmark/benchmarker ./tool/benchmark/macos.yml
+$ ./build/tools/benchmark/benchmarker ./tools/benchmark/macos.yml
 ```
 
 Then, you should see a console ouput from the Google Benchmark library in the following format.  
@@ -46,4 +46,4 @@ bm_fkyaml_parse                 xxxxx ns        xxxxx ns        xxxxx bytes_per_
 ...
 ```
 
-Visit [the user guide](https://github.com/google/benchmark/blob/v1.8.4/docs/user_guide.md) in the Google Benchmark repository for more information on the output format.  
+Visit [the user guide](https://github.com/google/benchmark/blob/v1.9.5/docs/user_guide.md) in the Google Benchmark repository for more information on the output format.  

@@ -6,7 +6,7 @@ cmake_minimum_required(VERSION 3.8...3.10)
 
 project(
   fkYAML
-  VERSION 0.4.2
+  VERSION 0.5.0
   LANGUAGES CXX)
 
 #############################################################
@@ -18,35 +18,41 @@ if(CMAKE_CURRENT_SOURCE_DIR STREQUAL CMAKE_SOURCE_DIR)
   set(FK_YAML_INSTALL ON)
 endif()
 
-if(FK_YAML_CODE_COVERAGE OR FK_YAML_RUN_VALGRIND OR FK_YAML_RUN_CLANG_SANITIZERS)
+if(FK_YAML_CODE_COVERAGE OR FK_YAML_RUN_VALGRIND OR FK_YAML_RUN_CLANG_SANITIZERS OR FK_YAML_RUN_MSVC_SANITIZERS)
   if(FK_YAML_RUN_VALGRIND AND FK_YAML_RUN_CLANG_SANITIZERS)
     message(FATAL_ERROR "FK_YAML_RUN_VALGRIND and FK_YAML_RUN_CLANG_SANITIZERS are mutually exclusive options.")
+  endif()
+
+  if(FK_YAML_RUN_CLANG_SANITIZERS AND FK_YAML_RUN_MSVC_SANITIZERS)
+    message(FATAL_ERROR "FK_YAML_RUN_CLANG_SANITIZERS and FK_YAML_RUN_MSVC_SANITIZERS are mutually exclusive options.")
   endif()
 
   if(FK_YAML_RUN_CLANG_SANITIZERS AND NOT("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang"))
     message(FATAL_ERROR "Compiler must be clang when FK_YAML_RUN_CLANG_SANITIZERS is enabled.")
   endif()
 
-  # Generating code coverage depends on the unit test app. So force build it.
-  set(FK_YAML_BUILD_TEST ON)
-endif()
-
-if(FK_YAML_BUILD_TEST OR FK_YAML_BUILD_ALL_TEST)
-  set(CATCH2_ROOT_DIR "${CMAKE_CURRENT_SOURCE_DIR}/thirdparty/catch2")
-
-  if(NOT EXISTS ${CATCH2_ROOT_DIR}/CMakeLists.txt)
-    find_package(Git REQUIRED)
-    message(STATUS "Fetching git submodule: Catch2")
-    execute_process(
-      COMMAND ${GIT_EXECUTABLE} submodule update --init --recursive -- ${CATCH2_ROOT_DIR}
-      WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
-      RESULT_VARIABLE GIT_SUBMOD_RET)
-    if(NOT GIT_SUBMOD_RET EQUAL "0")
-      message(FATAL_ERROR "Failed to fetch Catch2 as a git submodule.")
-    endif()
+  if(FK_YAML_RUN_MSVC_SANITIZERS AND NOT MSVC)
+    message(FATAL_ERROR "Compiler must be MSVC when FK_YAML_RUN_MSVC_SANITIZERS is enabled.")
   endif()
 
-  list(APPEND CMAKE_MODULE_PATH "${CATCH2_ROOT_DIR}/contrib")
+  # Generating code coverage depends on the unit tests and the YAML test suite.
+  # So force build them.
+  if(FK_YAML_CODE_COVERAGE)
+    set(FK_YAML_BUILD_TEST ON)
+    set(FK_YAML_USE_YAML_TEST_SUITE ON)
+  endif()
+endif()
+
+if(FK_YAML_BUILD_ALL_TEST)
+  set(FK_YAML_BUILD_TEST ON)
+  if(CMAKE_CXX_COMPILER_ID MATCHES "Clang|MSVC")
+    set(FK_YAML_BUILD_FUZZ_TEST ON)
+  else()
+    message(WARNING "FK_YAML_BUILD_FUZZ_TEST is only supported with Clang and MSVC. It will be disabled.")
+    set(FK_YAML_BUILD_FUZZ_TEST OFF)
+  endif()
+  set(FK_YAML_USE_YAML_TEST_SUITE ON)
+  set(FK_YAML_BUILD_CMAKE_INTEGRATION_TEST ON)
 endif()
 
 ###########################################
@@ -97,11 +103,12 @@ target_include_directories(
 if(MSVC)
   set(FK_YAML_INSTALL_NATVIS ON)
   set(FK_YAML_NATVIS_FILE ${FK_YAML_TARGET_NAME}.natvis)
+  set(FK_YAML_NATVIS_INSTALL_DIR "${CMAKE_INSTALL_DATADIR}/${PROJECT_NAME}")
   target_sources(
     ${FK_YAML_TARGET_NAME}
     INTERFACE
       $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/${FK_YAML_NATVIS_FILE}>
-      $<INSTALL_INTERFACE:${FK_YAML_NATVIS_FILE}>
+      $<INSTALL_INTERFACE:${FK_YAML_NATVIS_INSTALL_DIR}/${FK_YAML_NATVIS_FILE}>
 )
 endif()
 
@@ -127,20 +134,19 @@ if(FK_YAML_RUN_IWYU)
   add_subdirectory(tools/iwyu)
 endif()
 
+if(FK_YAML_RUN_BENCHMARK AND (NOT DEFINED CMAKE_POLICY_VERSION_MINIMUM OR CMAKE_POLICY_VERSION_MINIMUM VERSION_LESS 3.5))
+  set(CMAKE_POLICY_VERSION_MINIMUM 3.5)
+endif()
+
 if(FK_YAML_RUN_BENCHMARK)
   add_subdirectory(tools/benchmark)
 endif()
-
-#################################
-#   Install a pkg-config file   #
-#################################
 
 ###########################
 #   Build the test apps   #
 ###########################
 
-if(FK_YAML_BUILD_TEST OR FK_YAML_BUILD_ALL_TEST)
-  add_subdirectory(${CATCH2_ROOT_DIR})
+if(FK_YAML_BUILD_TEST OR FK_YAML_BUILD_FUZZ_TEST OR FK_YAML_USE_YAML_TEST_SUITE OR FK_YAML_BUILD_ALL_TEST OR FK_YAML_BUILD_CMAKE_INTEGRATION_TEST)
   include(CTest)
   enable_testing()
   add_subdirectory(tests)
@@ -190,7 +196,7 @@ if(FK_YAML_INSTALL)
   if(FK_YAML_INSTALL_NATVIS)
     install(
       FILES ${FK_YAML_NATVIS_FILE}
-      DESTINATION .
+      DESTINATION "${FK_YAML_NATVIS_INSTALL_DIR}"
     )
   endif()
 

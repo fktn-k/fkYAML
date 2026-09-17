@@ -28,7 +28,7 @@ So, if you use the same key multiple times, for example, in a for loop, consider
 Furthermore, unlike the [`operator[]`](operator[].md), this function executes one of the following checks depending on the target node value type.  
 
 * For sequence nodes  
-    * Whether `key` is of an integeral type (e.g., `int`, `size_t`) or an integer node.  
+    * Whether `key` is of an integral type (e.g., `int`, `size_t`) or an integer node.  
       If not, a [`fkyaml::type_error`](../exception/type_error.md) will be thrown.
     * Whether the value of `key` is more than or equal to the size of the queried sequence.  
       If not, a [`fkyaml::out_of_range`](../exception/out_of_range.md) will be thrown.

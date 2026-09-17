@@ -1,9 +1,9 @@
 //  _______   __ __   __  _____   __  __  __
 // |   __| |_/  |  \_/  |/  _  \ /  \/  \|  |     fkYAML: A C++ header-only YAML library
-// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.4.2
+// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.5.0
 // |__|  |_| \__|  |_|  |_|   |_|___||___|______| https://github.com/fktn-k/fkYAML
 //
-// SPDX-FileCopyrightText: 2023-2025 Kensuke Fukutani <fktn.dev@gmail.com>
+// SPDX-FileCopyrightText: 2023-2026 Kensuke Fukutani <fktn.dev@gmail.com>
 // SPDX-License-Identifier: MIT
 
 #ifndef FK_YAML_ORDERED_MAP_HPP
@@ -29,8 +29,8 @@ FK_YAML_NAMESPACE_BEGIN
 /// @sa https://fktn-k.github.io/fkYAML/api/ordered_map/
 template <
     typename Key, typename Value, typename IgnoredCompare = std::less<Key>,
-    typename Allocator = std::allocator<std::pair<const Key, Value>>>
-class ordered_map : public std::vector<std::pair<const Key, Value>, Allocator> {
+    typename Allocator = std::allocator<std::pair<Key, Value>>>
+class ordered_map : public std::vector<std::pair<Key, Value>, Allocator> {
 public:
     /// @brief A type for keys.
     /// @sa https://fktn-k.github.io/fkYAML/api/ordered_map/
@@ -42,7 +42,7 @@ public:
 
     /// @brief A type for internal key-value containers.
     /// @sa https://fktn-k.github.io/fkYAML/api/ordered_map/
-    using Container = std::vector<std::pair<const Key, Value>, Allocator>;
+    using Container = std::vector<std::pair<Key, Value>, Allocator>;
 
     /// @brief A type for key-value pairs.
     /// @sa https://fktn-k.github.io/fkYAML/api/ordered_map/

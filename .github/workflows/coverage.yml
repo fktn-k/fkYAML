@@ -3,17 +3,13 @@ name: Coverage
 on:
   push:
     branches:
+      # Run coverage workflows on all the commits pushed to the following branches
+      # following the recommended CI configurations for Coveralls.
+      # https://docs.coveralls.io/build-types#recommended-ci-configurations
       - develop
       - main
-    paths:
-      - .github/workflows/coverage.yml
-      - cmake/**
-      - include/**
-      - tests/**
-      - CMakeLists.txt
-      - Makefile
-  # to grant pull-requests write permission to fork repos as well
-  pull_request_target:
+  # Run on pull requests from both branches and forks.
+  pull_request:
     paths:
       - .github/workflows/coverage.yml
       - cmake/**
@@ -26,21 +22,22 @@ on:
 jobs:
   coverage:
     timeout-minutes: 10
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-24.04
     permissions:
-      pull-requests: write
+      contents: read
 
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v7
       with:
-        ref: ${{github.head_ref}}
-        submodules: recursive
+        repository: ${{github.event.pull_request.head.repo.full_name || github.repository}}
+        ref: ${{github.event.pull_request.head.sha || github.sha}}
+        persist-credentials: false
 
     - name: Install lcov
       run: |
         sudo apt-get update
         sudo apt-get install -y lcov
-        lcov -v
+        lcov --version
 
     - name: Generate coverage
       run: make html-coverage
@@ -54,7 +51,6 @@ jobs:
 
     - name: Decide the artifact name
       id: create_zip
-      if: github.event_name == 'pull_request_target'
       env:
         PR_NUMBER: ${{github.event.number}}
       run: |
@@ -64,7 +60,7 @@ jobs:
     - name: Upload coverage as an artifact
       id: upload_artifact_step
       if: steps.create_zip.conclusion == 'success'
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@v7
       with:
         name: ${{steps.create_zip.outputs.artifact_name}}
         path: |
@@ -72,17 +68,3 @@ jobs:
           ${{github.workspace}}/build_coverage/html/**
         overwrite: true
 
-    - name: Notify the artifact URL
-      if: steps.upload_artifact_step.conclusion == 'success'
-      uses: thollander/actions-comment-pull-request@v2
-      with:
-        message: |
-          ## :octocat: Upload Coverage Event Notification
-          Coverage data has been uploaded for the commit [${{github.event.pull_request.head.sha}}](https://github.com/${{github.repository}}/commit/${{github.event.pull_request.head.sha}}).
-          You can download the artifact which contains the same file uploaded to the Coveralls and its HTML version.
-
-          | Name | ${{steps.create_zip.outputs.artifact_name}}.zip      |
-          |:-----|:-----------------------------------------------------|
-          | ID   | ${{steps.upload_artifact_step.outputs.artifact-id}}  |
-          | URL  | ${{steps.upload_artifact_step.outputs.artifact-url}} |
-        comment_tag: notification

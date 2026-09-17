@@ -1,9 +1,9 @@
 //  _______   __ __   __  _____   __  __  __
 // |   __| |_/  |  \_/  |/  _  \ /  \/  \|  |     fkYAML: A C++ header-only YAML library (supporting code)
-// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.4.2
+// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.5.0
 // |__|  |_| \__|  |_|  |_|   |_|___||___|______| https://github.com/fktn-k/fkYAML
 //
-// SPDX-FileCopyrightText: 2023-2025 Kensuke Fukutani <fktn.dev@gmail.com>
+// SPDX-FileCopyrightText: 2023-2026 Kensuke Fukutani <fktn.dev@gmail.com>
 // SPDX-License-Identifier: MIT
 
 #include <map>
@@ -11,7 +11,7 @@
 #include <unordered_map>
 #include <vector>
 
-#include <catch2/catch.hpp>
+#include <doctest/doctest.h>
 
 #include <fkYAML/node.hpp>
 
@@ -24,10 +24,11 @@ struct novel {
 };
 
 void from_node(const fkyaml::node& node, novel& novel) {
-    novel.title = node["title"].get_value_ref<const std::string&>();
-    novel.author = node["author"].get_value_ref<const std::string&>();
+    novel.title = node["title"].as_str();
+    novel.author = node["author"].as_str();
     novel.year = node["year"].get_value<int>();
 }
+
 struct color {
     int value;
 };
@@ -58,6 +59,25 @@ void from_node(const fkyaml::node& node, rgb& rgb) {
     rgb.r = node["r"].get_value<int>();
     rgb.g = node["g"].get_value<int>();
     rgb.b = node["b"].get_value<int>();
+}
+
+// These << operators are for doctest output formatting only.
+// They are not used by fkYAML serialization.
+// See https://github.com/doctest/doctest/blob/master/doc/markdown/stringification.md.
+
+std::ostream& operator<<(std::ostream& os, const novel& novel) {
+    os << "novel{title: " << novel.title << ", author: " << novel.author << ", year: " << novel.year << "}";
+    return os;
+}
+
+std::ostream& operator<<(std::ostream& os, const color& color) {
+    os << "color{value: " << color.value << "}";
+    return os;
+}
+
+std::ostream& operator<<(std::ostream& os, const rgb& rgb) {
+    os << "rgb{r: " << rgb.r << ", g: " << rgb.g << ", b: " << rgb.b << "}";
+    return os;
 }
 
 } // namespace test

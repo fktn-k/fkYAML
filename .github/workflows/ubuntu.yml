@@ -46,9 +46,7 @@ jobs:
         use_single_header: ["ON", "OFF"]
 
     steps:
-    - uses: actions/checkout@v4
-      with:
-        submodules: recursive
+    - uses: actions/checkout@v7
 
     - name: Configure CMake
       run: cmake -B ${{github.workspace}}/build_${{matrix.build_type}} -DCMAKE_BUILD_TYPE=${{matrix.build_type}} -DFK_YAML_BUILD_TEST=ON -DFK_YAML_USE_SINGLE_HEADER=${{matrix.use_single_header}}
@@ -65,9 +63,7 @@ jobs:
     runs-on: ubuntu-24.04
 
     steps:
-    - uses: actions/checkout@v4
-      with:
-        submodules: recursive
+    - uses: actions/checkout@v7
 
     - name: Run Clang-Tidy
       run: make clang-tidy
@@ -77,9 +73,7 @@ jobs:
     runs-on: ubuntu-24.04
 
     steps:
-    - uses: actions/checkout@v4
-      with:
-        submodules: recursive
+    - uses: actions/checkout@v7
 
     - name: Install include-what-you-use
       run: |
@@ -94,9 +88,7 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - uses: actions/checkout@v4
-      with:
-        submodules: recursive
+    - uses: actions/checkout@v7
 
     - name: Install Valgrind
       run: |
@@ -119,9 +111,7 @@ jobs:
           apt-get install -y git unzip
           git --version
 
-      - uses: actions/checkout@v4
-        with:
-          submodules: recursive
+      - uses: actions/checkout@v7
 
       - name: Get latest CMake
         uses: lukka/get-cmake@latest
@@ -133,9 +123,7 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v4
-        with:
-          submodules: recursive
+      - uses: actions/checkout@v7
 
       - name: Build examples
         run: make examples
@@ -156,9 +144,7 @@ jobs:
         apt-get install -y git unzip
         git --version
 
-    - uses: actions/checkout@v4
-      with:
-        submodules: recursive
+    - uses: actions/checkout@v7
 
     - name: Get latest CMake
       uses: lukka/get-cmake@latest
@@ -170,7 +156,7 @@ jobs:
         rm -rf ${{github.workspace}}/build_for_package
 
     - name: Configure CMake
-      run: cmake -B ${{github.workspace}}/build -DCMAKE_BUILD_TYPE=${{matrix.build_type}} -DFK_YAML_BUILD_ALL_TEST=ON -DFK_YAML_TEST_TARGET_CXX_STANDARD=${{matrix.cxx_standard}}
+      run: cmake -B ${{github.workspace}}/build -DCMAKE_BUILD_TYPE=${{matrix.build_type}} -DFK_YAML_BUILD_TEST=ON -DFK_YAML_BUILD_CMAKE_INTEGRATION_TEST=ON -DFK_YAML_TEST_TARGET_CXX_STANDARD=${{matrix.cxx_standard}}
 
     - name: Build & Test
       run: |
@@ -188,9 +174,7 @@ jobs:
         build_type: [ Debug, Release ]
 
     steps:
-    - uses: actions/checkout@v4
-      with:
-        submodules: recursive
+    - uses: actions/checkout@v7
 
     - name: Get latest CMake
       uses: lukka/get-cmake@latest
@@ -202,7 +186,7 @@ jobs:
         rm -rf ${{github.workspace}}/build_for_package
 
     - name: Configure CMake and Ninja
-      run: cmake -B ${{github.workspace}}/build -DCMAKE_BUILD_TYPE=${{matrix.build_type}} -DFK_YAML_BUILD_ALL_TEST=ON -DFK_YAML_TEST_TARGET_CXX_STANDARD=${{matrix.cxx_standard}}
+      run: cmake -B ${{github.workspace}}/build -DCMAKE_BUILD_TYPE=${{matrix.build_type}} -DFK_YAML_BUILD_TEST=ON -DFK_YAML_BUILD_CMAKE_INTEGRATION_TEST=ON -DFK_YAML_TEST_TARGET_CXX_STANDARD=${{matrix.cxx_standard}}
 
     - name: Build & Test
       run: |
@@ -215,20 +199,43 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        compiler: [ "3.4", "3.5", "3.6", "3.7", "3.8", "3.9", "4", "5", "6", "7", "8", "9", "10", "11", "12", "13", "14", "15", "16", "17", "18", "19" ]
+        compiler: [ "3.4", "3.5", "3.6", "3.7", "3.8", "3.9", "4", "5", "6", "7", "8", "9", "10", "11", "12", "13", "14", "15", "16", "17", "18", "19", "20", "21" ]
         build_type: [ Debug, Release ]
     container: silkeh/clang:${{matrix.compiler}}
 
     steps:
-    - name: Install git and unzip
+    - name: Edit repository URLs for old Debian releases.
       run: |
-        apt-get update
-        apt-get install -y git unzip
+        . /etc/os-release
+        case "${VERSION_CODENAME:-}" in
+          jessie|stretch|buster)
+            sed -i s/deb.debian.org/archive.debian.org/g /etc/apt/sources.list
+            sed -i s/security.debian.org/archive.debian.org/g /etc/apt/sources.list
+            ;;
+          bullseye)
+            find /etc/apt -type f \( -name '*.list' -o -name '*.sources' \) -exec sed -i \
+              -e 's#deb.debian.org/debian-security#snapshot.debian.org/archive/debian-security/20260824T000000Z#' \
+              -e 's#deb.debian.org/debian#snapshot.debian.org/archive/debian/20260824T000000Z#' {} +
+            ;;
+        esac
+
+    - name: install git
+      if: ${{ matrix.compiler > 6 }}
+      run: |
+        . /etc/os-release
+        case "${VERSION_CODENAME:-}" in
+          jessie|stretch|buster|bullseye)
+            apt-get -o Acquire::Check-Valid-Until=false update
+            apt-get -o Acquire::Check-Valid-Until=false install -y git
+            ;;
+          *)
+            apt-get update
+            apt-get install -y git
+            ;;
+        esac
         git --version
 
-    - uses: actions/checkout@v4
-      with:
-        submodules: recursive
+    - uses: actions/checkout@v7
 
     - name: Get latest CMake and Ninja
       uses: lukka/get-cmake@latest
@@ -240,7 +247,7 @@ jobs:
         rm -rf ${{github.workspace}}/build_for_package
 
     - name: Configure CMake
-      run: cmake -B ${{github.workspace}}/build -DCMAKE_BUILD_TYPE=${{matrix.build_type}} -DFK_YAML_BUILD_ALL_TEST=ON
+      run: cmake -B ${{github.workspace}}/build -DCMAKE_BUILD_TYPE=${{matrix.build_type}} -DFK_YAML_BUILD_TEST=ON
 
     - name: Build & Test
       run: |
@@ -253,20 +260,18 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        compiler: [ "7", "8", "9", "10", "11", "12", "13", "14", latest ]
+        compiler: [ "7", "8", "9", "10", "11", "12", "13", "14", "15", "16" ]
         build_type: [ Debug, Release ]
     container: gcc:${{matrix.compiler}}
 
     steps:
-    - name: Install git and unzip
+    - name: Edit repository URLs for old ubuntu releases.
       run: |
-        apt-get update
-        apt-get install -y git unzip
-        git --version
+        sed -i s/deb.debian.org/archive.debian.org/g /etc/apt/sources.list
+        sed -i s/security.debian.org/archive.debian.org/g /etc/apt/sources.list
+      if: ${{ matrix.compiler == '7' || matrix.compiler == '8' }}
 
-    - uses: actions/checkout@v4
-      with:
-        submodules: recursive
+    - uses: actions/checkout@v7
 
     - name: Get latest CMake and Ninja
       uses: lukka/get-cmake@latest
@@ -278,7 +283,7 @@ jobs:
         rm -rf ${{github.workspace}}/build_for_package
 
     - name: Configure CMake
-      run: cmake -B ${{github.workspace}}/build -DCMAKE_BUILD_TYPE=${{matrix.build_type}} -DFK_YAML_BUILD_ALL_TEST=ON
+      run: cmake -B ${{github.workspace}}/build -DCMAKE_BUILD_TYPE=${{matrix.build_type}} -DFK_YAML_BUILD_TEST=ON
 
     - name: Build & Test
       run: |
@@ -292,12 +297,10 @@ jobs:
       fail-fast: false
       matrix:
         build_type: [ Debug, Release ]
-        gcc_ver: [ '4.8', '5', '6' ]
+        gcc_ver: [ '5', '6' ]
 
     steps:
-    - uses: actions/checkout@v4
-      with:
-        submodules: recursive
+    - uses: actions/checkout@v7
 
     - name: add repository commonly needed to install GCC
       run: |
@@ -305,18 +308,18 @@ jobs:
         sudo add-apt-repository -y ppa:ubuntu-toolchain-r/test
         sudo apt-get update
 
-    - name: add repository for GCC 4.8 or 5
+    - name: add repository for GCC 5
       run: |
         sudo apt-key adv --keyserver keyserver.ubuntu.com --recv-keys 40976EAF437D05B5
         sudo apt-key adv --keyserver keyserver.ubuntu.com --recv-keys 3B4FE6ACC0B21F32
         sudo apt-get update
 
-        # for g++-4.8, g++-5
+        # for g++-5
         sudo apt-add-repository 'deb http://archive.ubuntu.com/ubuntu/ xenial main'
         sudo apt-add-repository 'deb http://archive.ubuntu.com/ubuntu/ xenial universe'
 
         sudo apt-get update
-      if: ${{ matrix.gcc_ver == '4.8' || matrix.gcc_ver == '5' }}
+      if: ${{ matrix.gcc_ver == '5' }}
 
     - name: add repository for GCC 6
       run: |
@@ -350,9 +353,7 @@ jobs:
         build_type: [ Debug, Release ]
 
     steps:
-    - uses: actions/checkout@v4
-      with:
-        submodules: recursive
+    - uses: actions/checkout@v7
 
     - name: Install Intel oneAPI Base Toolkit
       run: | # from the official document: https://www.intel.com/content/www/us/en/docs/oneapi/installation-guide-linux/2024-1/apt.html

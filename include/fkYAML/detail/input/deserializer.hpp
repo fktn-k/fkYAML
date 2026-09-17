@@ -1,9 +1,9 @@
 //  _______   __ __   __  _____   __  __  __
 // |   __| |_/  |  \_/  |/  _  \ /  \/  \|  |     fkYAML: A C++ header-only YAML library
-// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.4.2
+// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.5.0
 // |__|  |_| \__|  |_|  |_|   |_|___||___|______| https://github.com/fktn-k/fkYAML
 //
-// SPDX-FileCopyrightText: 2023-2025 Kensuke Fukutani <fktn.dev@gmail.com>
+// SPDX-FileCopyrightText: 2023-2026 Kensuke Fukutani <fktn.dev@gmail.com>
 // SPDX-License-Identifier: MIT
 
 #ifndef FK_YAML_DETAIL_INPUT_DESERIALIZER_HPP
@@ -11,6 +11,7 @@
 
 #include <algorithm>
 #include <deque>
+#include <memory>
 #include <vector>
 
 #include <fkYAML/detail/macros/define_macros.hpp>
@@ -61,14 +62,19 @@ class basic_deserializer {
         FLOW_SEQUENCE_KEY,            //!< The underlying node is a flow sequence as a key.
         FLOW_MAPPING,                 //!< The underlying node is a flow mapping.
         FLOW_MAPPING_KEY,             //!< The underlying node is a flow mapping as a key.
+        FLOW_MAPPING_EXPLICIT_KEY,    //!< The underlying node is an explicit key in a flow collection.
     };
 
     /// @brief Context information set for parsing.
+    /// @note
+    /// A context either borrows a node which the result tree already owns, or owns a node of its own until that
+    /// node is grafted into the tree. Ownership is held by the owned_node member rather than derived from the
+    /// state member, which the parsing code rewrites while a node is still owned.
     struct parse_context {
         /// @brief Construct a new parse_context object.
         parse_context() = default;
 
-        /// @brief Construct a new parse_context object with non-default values for each parameter.
+        /// @brief Construct a new parse_context object which borrows a node owned by the result tree.
         /// @param line The current line. (count from zero)
         /// @param indent The indentation width in the current line. (count from zero)
         /// @param state The parse context type.
@@ -77,26 +83,35 @@ class basic_deserializer {
             : line(line),
               indent(indent),
               state(state),
-              p_node(p_node) {
+              p_node(p_node),
+              is_explicit_key(
+                  state == context_state_t::BLOCK_MAPPING_EXPLICIT_KEY ||
+                  state == context_state_t::FLOW_MAPPING_EXPLICIT_KEY) {
         }
 
-        parse_context(const parse_context&) noexcept = default;
-        parse_context& operator=(const parse_context&) noexcept = default;
+        /// @brief Construct a new parse_context object which owns its node.
+        /// @param line The current line. (count from zero)
+        /// @param indent The indentation width in the current line. (count from zero)
+        /// @param state The parse context type.
+        /// @param node The node owned by this context.
+        parse_context(
+            uint32_t line, uint32_t indent, context_state_t state, std::unique_ptr<basic_node_type> node) noexcept
+            : line(line),
+              indent(indent),
+              state(state),
+              p_node(node.get()),
+              owned_node(std::move(node)),
+              is_explicit_key(
+                  state == context_state_t::BLOCK_MAPPING_EXPLICIT_KEY ||
+                  state == context_state_t::FLOW_MAPPING_EXPLICIT_KEY) {
+        }
+
+        // Parse contexts are move-only so that the ownership of an owned node cannot be duplicated.
+        parse_context(const parse_context&) = delete;
+        parse_context& operator=(const parse_context&) = delete;
         parse_context(parse_context&&) noexcept = default;
         parse_context& operator=(parse_context&&) noexcept = default;
-
-        ~parse_context() {
-            switch (state) {
-            case context_state_t::BLOCK_MAPPING_EXPLICIT_KEY:
-            case context_state_t::FLOW_SEQUENCE_KEY:
-            case context_state_t::FLOW_MAPPING_KEY:
-                delete p_node;
-                p_node = nullptr;
-                break;
-            default:
-                break;
-            }
-        }
+        ~parse_context() = default;
 
         /// The current line. (count from zero)
         uint32_t line {0};
@@ -106,6 +121,10 @@ class basic_deserializer {
         context_state_t state {context_state_t::BLOCK_MAPPING};
         /// The pointer to the associated node to this context.
         basic_node_type* p_node {nullptr};
+        /// The node owned by this context, if any. Empty if p_node is owned by the result tree.
+        std::unique_ptr<basic_node_type> owned_node {};
+        /// Whether this context originated as an explicit mapping key.
+        bool is_explicit_key {false};
     };
 
     /// @brief Definitions of state types for expected flow token hints.
@@ -148,9 +167,31 @@ public:
 
         std::vector<basic_node_type> nodes {};
         lexical_token_t type {lexical_token_t::END_OF_BUFFER};
+        bool begun_by_marker = false;
 
         do {
-            nodes.emplace_back(deserialize_document(lexer, type));
+            basic_node_type doc = deserialize_document(lexer, type);
+            if (m_has_document || begun_by_marker) {
+                nodes.emplace_back(std::move(doc));
+            }
+            // A "---" which ends a document begins the next one, even if that one is empty.
+            begun_by_marker = (type == lexical_token_t::END_OF_DIRECTIVES);
+            // Break the loop if the last end-of-document marker is followed by the end-of-buffer token,
+            // which indicates that there are no more documents to parse.
+            // ```yaml
+            // foo: bar
+            // ... # the last end-of-document marker
+            // # no more documents after this line
+            // ```
+            if (type == lexical_token_t::END_OF_DOCUMENT) {
+                // A next document may start from the directive part. Ensure '%' is lexed as a directive token
+                // during the lookahead; otherwise it can be cached as a plain scalar and break parsing.
+                lexer.set_document_state(true);
+                const lexical_token_t next_type = lexer.peek_next_token().type;
+                if (next_type == lexical_token_t::END_OF_BUFFER) {
+                    break;
+                }
+            }
         } while (type != lexical_token_t::END_OF_BUFFER);
 
         return nodes;
@@ -164,9 +205,15 @@ private:
     basic_node_type deserialize_document(lexer_type& lexer, lexical_token_t& last_type) {
         lexical_token token {};
 
+        m_has_document = false;
+        m_expects_root_flow_key_separator = false;
+        m_has_explicit_document_start = last_type == lexical_token_t::END_OF_DIRECTIVES;
+
         basic_node_type root;
         mp_current_node = &root;
-        mp_meta = root.mp_meta;
+        // One metainfo object is created per document and shared by all of its nodes.
+        mp_meta = std::make_shared<doc_metainfo_type>();
+        root.mp_meta = mp_meta;
 
         // parse directives first.
         deserialize_directives(lexer, token);
@@ -176,25 +223,45 @@ private:
         uint32_t indent = lexer.get_last_token_begin_pos();
         const bool found_props = deserialize_node_properties(lexer, token, line, indent);
 
+        // A stream which only holds comments, white spaces or a bare "..." contains no document. Node
+        // properties on their own, however, do make up one: they belong to an empty scalar.
+        // ```yaml
+        // !
+        // # -> one document holding an empty scalar tagged with the non-specific tag
+        // ```
+        const bool has_contents =
+            token.type != lexical_token_t::END_OF_BUFFER && token.type != lexical_token_t::END_OF_DOCUMENT;
+        if (has_contents || found_props) {
+            m_has_document = true;
+        }
+
         switch (token.type) {
         case lexical_token_t::SEQUENCE_BLOCK_PREFIX: {
+            if FK_YAML_UNLIKELY (
+                m_has_explicit_document_start && m_explicit_document_start_line == lexer.get_lines_processed()) {
+                throw parse_error("A block sequence entry cannot be on the document start line.", line, indent);
+            }
+            if FK_YAML_UNLIKELY (found_props && line == lexer.get_lines_processed()) {
+                throw parse_error(
+                    "Node properties cannot precede a block sequence entry on the same line.", line, indent);
+            }
+            check_tab_in_indentation(lexer, lexer.get_lines_processed(), lexer.get_last_token_begin_pos());
             root = basic_node_type::sequence({basic_node_type()});
             apply_directive_set(root);
             if (found_props) {
                 // If node properties are found before the block sequence entry prefix, the properties belong to the
                 // root sequence node.
+                apply_deferred_properties(root);
                 apply_node_properties(root);
             }
 
-            parse_context context(
-                lexer.get_lines_processed(), lexer.get_last_token_begin_pos(), context_state_t::BLOCK_SEQUENCE, &root);
-            m_context_stack.emplace_back(context);
+            const uint32_t seq_line = lexer.get_lines_processed();
+            const uint32_t seq_indent = lexer.get_last_token_begin_pos();
+            m_context_stack.emplace_back(seq_line, seq_indent, context_state_t::BLOCK_SEQUENCE, &root);
 
-            mp_current_node = &(root.template get_value_ref<sequence_type&>().back());
+            mp_current_node = &(root.as_seq().back());
             apply_directive_set(*mp_current_node);
-            context.state = context_state_t::BLOCK_SEQUENCE_ENTRY;
-            context.p_node = mp_current_node;
-            m_context_stack.emplace_back(std::move(context));
+            m_context_stack.emplace_back(seq_line, seq_indent, context_state_t::BLOCK_SEQUENCE_ENTRY, mp_current_node);
 
             token = lexer.get_next_token();
             line = lexer.get_lines_processed();
@@ -206,6 +273,7 @@ private:
             lexer.set_context_state(true);
             root = basic_node_type::sequence();
             apply_directive_set(root);
+            apply_deferred_properties(root);
             apply_node_properties(root);
             m_context_stack.emplace_back(
                 lexer.get_lines_processed(), lexer.get_last_token_begin_pos(), context_state_t::FLOW_SEQUENCE, &root);
@@ -218,6 +286,7 @@ private:
             lexer.set_context_state(true);
             root = basic_node_type::mapping();
             apply_directive_set(root);
+            apply_deferred_properties(root);
             apply_node_properties(root);
             m_context_stack.emplace_back(
                 lexer.get_lines_processed(), lexer.get_last_token_begin_pos(), context_state_t::FLOW_MAPPING, &root);
@@ -231,6 +300,7 @@ private:
             // No get_next_token() call here to handle the token event in the deserialize_node() function.
             root = basic_node_type::mapping();
             apply_directive_set(root);
+            apply_deferred_properties(root);
             apply_node_properties(root);
             parse_context context(
                 lexer.get_lines_processed(), lexer.get_last_token_begin_pos(), context_state_t::BLOCK_MAPPING, &root);
@@ -239,6 +309,14 @@ private:
             indent = lexer.get_last_token_begin_pos();
             break;
         }
+        case lexical_token_t::KEY_SEPARATOR:
+            root = basic_node_type::mapping();
+            apply_directive_set(root);
+            apply_deferred_properties(root);
+            // apply_node_properties(root);
+            m_context_stack.emplace_back(line, indent, context_state_t::BLOCK_MAPPING, &root);
+            add_empty_key_entry(lexer, token, line, indent);
+            break;
         case lexical_token_t::BLOCK_LITERAL_SCALAR:
         case lexical_token_t::BLOCK_FOLDED_SCALAR:
             // If a block scalar token is detected here, current document contains single scalar.
@@ -248,23 +326,14 @@ private:
         case lexical_token_t::SINGLE_QUOTED_SCALAR:
         case lexical_token_t::DOUBLE_QUOTED_SCALAR:
         case lexical_token_t::ALIAS_PREFIX:
+        case lexical_token_t::ANCHOR_PREFIX:
+        case lexical_token_t::TAG_PREFIX:
             // Defer handling the above token events until the next call on the deserialize_scalar() function since the
             // meaning depends on subsequent events.
             if (found_props && line < lexer.get_lines_processed()) {
-                // If node properties and a followed node are on the different line, the properties belong to the root
-                // node.
-                if (m_needs_anchor_impl) {
-                    m_root_anchor_name = m_anchor_name;
-                    m_needs_anchor_impl = false;
-                    m_anchor_name = {};
-                }
-
-                if (m_needs_tag_impl) {
-                    m_root_tag_name = m_tag_name;
-                    m_needs_tag_impl = false;
-                    m_tag_name = {};
-                }
-
+                // If node properties and a followed node are on different lines, defer the properties until the root
+                // node type is known.
+                defer_node_properties();
                 line = lexer.get_lines_processed();
                 indent = lexer.get_last_token_begin_pos();
             }
@@ -280,12 +349,43 @@ private:
             last_type == lexical_token_t::END_OF_BUFFER || last_type == lexical_token_t::END_OF_DIRECTIVES ||
             last_type == lexical_token_t::END_OF_DOCUMENT);
 
+        if (m_needs_tag_impl) {
+            const tag_t tag_type = resolve_scalar_tag(line, indent);
+            materialize_tagged_empty_node(*mp_current_node, tag_type, line, indent);
+        }
+        if (m_defers_tag) {
+            const tag_t tag_type = tag_resolver_type::resolve_tag(m_deferred_tag_name, mp_meta);
+            ensure_scalar_tag(tag_type, line, indent);
+            materialize_tagged_empty_node(*mp_current_node, tag_type, line, indent);
+        }
+        // The current node may be an empty node which never received the document metainfo. An anchor
+        // name must be registered in the shared metainfo, or aliases cannot resolve it.
+        apply_directive_set(*mp_current_node);
+        apply_node_properties(*mp_current_node);
+        apply_deferred_properties(*mp_current_node);
+
+        // An explicit key at the end of a document has no value either. Its own contents may have left
+        // more contexts on the stack, so those are unwound first.
+        // ```yaml
+        // ? foo
+        // ? bar: baz
+        // # -> {foo: null, {bar: baz}: null}
+        // ```
+        while (!m_context_stack.empty()) {
+            if (m_context_stack.back().state == context_state_t::BLOCK_MAPPING_EXPLICIT_KEY) {
+                add_explicit_key_with_null_value();
+                continue;
+            }
+            m_context_stack.pop_back();
+        }
+
         // reset parameters for the next call.
         mp_current_node = nullptr;
         mp_meta.reset();
         m_needs_tag_impl = false;
         m_needs_anchor_impl = false;
         m_flow_context_depth = 0;
+        m_flow_base_indent = -1;
         m_flow_token_state = flow_token_state_t::NEEDS_VALUE_OR_SUFFIX;
         m_context_stack.clear();
 
@@ -366,7 +466,24 @@ private:
                 // TODO: should output a warning log. Currently just ignore this case.
                 break;
             case lexical_token_t::END_OF_DIRECTIVES:
+                if (m_has_document) {
+                    // A "---" which follows another one ends the document that one began and begins the
+                    // next, even though the document it ends holds no node at all.
+                    // ```yaml
+                    // ---
+                    // ---
+                    // # -> two documents, both empty
+                    // ```
+                    m_explicit_document_start_line = lexer.get_lines_processed();
+                    last_token = token;
+                    lexer.set_document_state(false);
+                    return;
+                }
+
                 lacks_end_of_directives_marker = false;
+                m_has_document = true;
+                m_has_explicit_document_start = true;
+                m_explicit_document_start_line = lexer.get_lines_processed();
                 break;
             default:
                 if FK_YAML_UNLIKELY (lacks_end_of_directives_marker) {
@@ -395,8 +512,52 @@ private:
         uint32_t indent = first_indent;
 
         do {
+            if (m_flow_base_indent >= 0) {
+                // The contents of a flow context nested in a block context must be more indented than the block
+                // context it belongs to.
+                // ```yaml
+                // foo: [bar,
+                // baz]
+                // # ^ this line is not indented enough.
+                // ```
+                const auto token_indent = static_cast<int32_t>(lexer.get_last_token_begin_pos());
+                if FK_YAML_UNLIKELY (token_indent <= m_flow_base_indent) {
+                    throw parse_error(
+                        "Contents of a flow context must be more indented than its parent block context.",
+                        lexer.get_lines_processed(),
+                        lexer.get_last_token_begin_pos());
+                }
+            }
+
             switch (token.type) {
             case lexical_token_t::EXPLICIT_KEY_PREFIX: {
+                if FK_YAML_UNLIKELY (m_context_stack.empty()) {
+                    throw parse_error("An explicit key is not allowed in this context.", line, indent);
+                }
+
+                if (m_flow_context_depth > 0) {
+                    if FK_YAML_UNLIKELY (m_flow_token_state == flow_token_state_t::NEEDS_SEPARATOR_OR_SUFFIX) {
+                        throw parse_error("An explicit key is found without separated with a comma.", line, indent);
+                    }
+
+                    token = lexer.get_next_token();
+                    m_context_stack.emplace_back(
+                        line,
+                        indent,
+                        context_state_t::FLOW_MAPPING_EXPLICIT_KEY,
+                        std::unique_ptr<basic_node_type>(new basic_node_type()));
+                    mp_current_node = m_context_stack.back().p_node;
+                    apply_directive_set(*mp_current_node);
+                    indent = lexer.get_last_token_begin_pos();
+                    line = lexer.get_lines_processed();
+                    continue;
+                }
+
+                if (indent == m_context_stack.back().indent) {
+                    // The preceding explicit key, if any, has no value at this point.
+                    add_explicit_key_with_null_value();
+                }
+
                 const bool needs_to_move_back = indent == 0 || indent < m_context_stack.back().indent;
                 if (needs_to_move_back) {
                     pop_to_parent_node(line, indent, [indent](const parse_context& c) {
@@ -428,31 +589,34 @@ private:
 
                 token = lexer.get_next_token();
                 if (token.type == lexical_token_t::SEQUENCE_BLOCK_PREFIX) {
-                    // heap-allocated node will be freed in handling the corresponding KEY_SEPARATOR event
-                    auto* p_node = new basic_node_type(node_type::SEQUENCE);
-                    m_context_stack.emplace_back(line, indent, context_state_t::BLOCK_MAPPING_EXPLICIT_KEY, p_node);
+                    check_tab_in_indentation(lexer, lexer.get_lines_processed(), lexer.get_last_token_begin_pos());
+
+                    // The key node is owned by its context until the corresponding KEY_SEPARATOR event.
+                    std::unique_ptr<basic_node_type> key_node(new basic_node_type(node_type::SEQUENCE));
+                    basic_node_type* p_node = key_node.get();
+                    m_context_stack.emplace_back(
+                        line, indent, context_state_t::BLOCK_MAPPING_EXPLICIT_KEY, std::move(key_node));
 
                     apply_directive_set(*p_node);
-                    parse_context context(
-                        lexer.get_lines_processed(),
-                        lexer.get_last_token_begin_pos(),
-                        context_state_t::BLOCK_SEQUENCE,
-                        p_node);
-                    m_context_stack.emplace_back(context);
+                    const uint32_t seq_line = lexer.get_lines_processed();
+                    const uint32_t seq_indent = lexer.get_last_token_begin_pos();
+                    m_context_stack.emplace_back(seq_line, seq_indent, context_state_t::BLOCK_SEQUENCE, p_node);
 
-                    p_node->template get_value_ref<sequence_type&>().emplace_back(basic_node_type());
-                    mp_current_node = &(p_node->template get_value_ref<sequence_type&>().back());
+                    p_node->as_seq().emplace_back(basic_node_type());
+                    mp_current_node = &(p_node->as_seq().back());
                     apply_directive_set(*mp_current_node);
-                    context.state = context_state_t::BLOCK_SEQUENCE_ENTRY;
-                    context.p_node = mp_current_node;
-                    m_context_stack.emplace_back(std::move(context));
+                    m_context_stack.emplace_back(
+                        seq_line, seq_indent, context_state_t::BLOCK_SEQUENCE_ENTRY, mp_current_node);
 
                     break;
                 }
 
-                // heap-allocated node will be freed in handling the corresponding KEY_SEPARATOR event
+                // The key node is owned by its context until the corresponding KEY_SEPARATOR event.
                 m_context_stack.emplace_back(
-                    line, indent, context_state_t::BLOCK_MAPPING_EXPLICIT_KEY, new basic_node_type());
+                    line,
+                    indent,
+                    context_state_t::BLOCK_MAPPING_EXPLICIT_KEY,
+                    std::unique_ptr<basic_node_type>(new basic_node_type()));
                 mp_current_node = m_context_stack.back().p_node;
                 apply_directive_set(*mp_current_node);
                 indent = lexer.get_last_token_begin_pos();
@@ -461,16 +625,103 @@ private:
                 continue;
             }
             case lexical_token_t::KEY_SEPARATOR: {
-                FK_YAML_ASSERT(!m_context_stack.empty());
-                if FK_YAML_UNLIKELY (m_context_stack.back().state == context_state_t::BLOCK_SEQUENCE_ENTRY) {
-                    // empty mapping keys are not supported.
+                if FK_YAML_UNLIKELY (m_context_stack.empty()) {
+                    throw parse_error("A key separator is not allowed in this context.", line, indent);
+                }
+                if (m_context_stack.back().state == context_state_t::FLOW_MAPPING_EXPLICIT_KEY) {
+                    add_explicit_flow_key(line, indent);
+                    break;
+                }
+                {
+                    // A key separator after node properties on a line of their own begins an entry whose empty key
+                    // the properties are for.
+                    const parse_context& last_context = m_context_stack.back();
+                    const bool begins_entry_with_empty_key =
+                        m_flow_context_depth == 0 && (m_needs_tag_impl || m_needs_anchor_impl) &&
+                        last_context.line < line &&
+                        (last_context.state == context_state_t::BLOCK_MAPPING ||
+                         last_context.state == context_state_t::MAPPING_VALUE ||
+                         last_context.state == context_state_t::BLOCK_SEQUENCE_ENTRY) &&
+                        !has_explicit_key_context_at(indent);
+                    if (begins_entry_with_empty_key && indent <= last_context.indent) {
+                        // ```yaml
+                        // foo: 1
+                        // &anchor : bar
+                        // # -> {foo: 1, &anchor null: bar}
+                        // ```
+                        pop_to_parent_node(line, indent, [indent](const parse_context& c) {
+                            return c.state == context_state_t::BLOCK_MAPPING && indent == c.indent;
+                        });
+                        add_empty_key_entry(lexer, token, line, indent);
+                        continue;
+                    }
+                    if (begins_entry_with_empty_key && last_context.state == context_state_t::MAPPING_VALUE) {
+                        // The mapping value is a mapping whose first key is empty.
+                        // ```yaml
+                        // foo:
+                        //   &anchor : bar
+                        // # -> {foo: {&anchor null: bar}}
+                        // ```
+                        *mp_current_node = basic_node_type::mapping();
+                        apply_directive_set(*mp_current_node);
+                        apply_deferred_properties(*mp_current_node);
+                        m_context_stack.emplace_back(line, indent, context_state_t::BLOCK_MAPPING, mp_current_node);
+                        add_empty_key_entry(lexer, token, line, indent);
+                        continue;
+                    }
+                }
+
+                if (m_context_stack.back().state == context_state_t::BLOCK_SEQUENCE_ENTRY) {
+                    // The entry is a mapping whose first key is empty.
                     // ```yaml
                     // - : foo
+                    // # -> [{null: foo}]
                     // ```
-                    throw parse_error("sequence key should not be empty.", line, indent);
+                    *mp_current_node = basic_node_type::mapping();
+                    apply_directive_set(*mp_current_node);
+                    m_context_stack.emplace_back(line, indent, context_state_t::BLOCK_MAPPING, mp_current_node);
+                    add_empty_key_entry(lexer, token, line, indent);
+                    continue;
+                }
+
+                if (m_context_stack.back().state == context_state_t::BLOCK_MAPPING_EXPLICIT_VALUE) {
+                    *mp_current_node = basic_node_type::mapping();
+                    apply_directive_set(*mp_current_node);
+                    m_context_stack.emplace_back(line, indent, context_state_t::BLOCK_MAPPING, mp_current_node);
+                    add_empty_key_entry(lexer, token, line, indent);
+                    continue;
+                }
+
+                {
+                    const parse_context& cur_context = m_context_stack.back();
+                    const bool is_explicit_key_content =
+                        cur_context.state == context_state_t::BLOCK_MAPPING_EXPLICIT_KEY && cur_context.line == line;
+                    if (is_explicit_key_content) {
+                        // The contents of an explicit key begin with a key separator, so the key is a mapping
+                        // whose first entry has an empty key. Whether that entry has a value, and whether the
+                        // explicit key itself has one, is not known yet.
+                        // ```yaml
+                        // ? : foo
+                        // #  ^ this key separator begins the contents of the explicit key
+                        // ```
+                        *mp_current_node = basic_node_type::mapping();
+                        apply_directive_set(*mp_current_node);
+                        m_context_stack.emplace_back(line, indent, context_state_t::BLOCK_MAPPING, mp_current_node);
+                        add_empty_key_entry(lexer, token, line, indent);
+                        continue;
+                    }
                 }
 
                 if (m_flow_context_depth > 0) {
+                    if (m_context_stack.back().state != context_state_t::MAPPING_VALUE) {
+                        // No key precedes this separator, so the entry has an empty key.
+                        // ```yaml
+                        // { : foo }
+                        // # -> {null: foo}
+                        // ```
+                        add_empty_key_entry(lexer, token, line, indent);
+                        continue;
+                    }
                     break;
                 }
 
@@ -483,8 +734,42 @@ private:
                 indent = lexer.get_last_token_begin_pos();
 
                 const bool found_props = deserialize_node_properties(lexer, token, line, indent);
-                if (found_props && line == lexer.get_lines_processed()) {
+                if (found_props && line == lexer.get_lines_processed() &&
+                    token.type != lexical_token_t::KEY_SEPARATOR) {
+                    settle_explicit_key_value_with_props(old_line, old_indent);
                     // defer applying node properties for the subsequent node on the same line.
+                    continue;
+                }
+                if (found_props && line > old_line && line == lexer.get_lines_processed()) {
+                    // The properties are followed by a key separator on their line (any other token is handled
+                    // above), so they are for the empty key of an entry which begins there, and the key separator
+                    // is handled at the position of the properties.
+                    // ```yaml
+                    // foo:
+                    // &anchor : bar
+                    // ```
+                    continue;
+                }
+
+                const bool has_explicit_key_context = has_explicit_key_context_at(old_indent);
+
+                if (found_props && line < lexer.get_lines_processed() && !has_explicit_key_context) {
+                    // The properties belong to whatever begins on the following line, which the token
+                    // after it decides.
+                    // ```yaml
+                    // foo: &anchor
+                    //   bar: baz   # the anchor is for the mapping, not for the "bar" key.
+                    // foo: &anchor
+                    // : bar        # the anchor is for the empty value of "foo", not for the empty key.
+                    // ```
+                    defer_node_properties();
+                }
+
+                if (found_props && has_explicit_key_context) {
+                    // The properties follow the separator of an explicit key, so they belong to its
+                    // value. They must not be deferred here, or they would overwrite the properties
+                    // of the key which are already deferred.
+                    settle_explicit_key_value_with_props(old_line, old_indent);
                     continue;
                 }
 
@@ -495,46 +780,42 @@ private:
                     (line == old_line) && (m_context_stack.empty() || old_indent > m_context_stack.back().indent);
                 if (is_implicit_same_line) {
                     // a key separator for an implicit key with its value on the same line.
+                    if FK_YAML_UNLIKELY (token.type == lexical_token_t::SEQUENCE_BLOCK_PREFIX) {
+                        // ```yaml
+                        // foo: - bar   # error: a block sequence cannot begin on the line of its mapping key.
+                        // ```
+                        throw parse_error("A block sequence cannot begin on the line of a mapping key.", line, indent);
+                    }
                     continue;
                 }
 
                 if (line > old_line) {
-                    if (m_needs_tag_impl) {
-                        const tag_t tag_type = tag_resolver_type::resolve_tag(m_tag_name, mp_meta);
-                        if (tag_type == tag_t::MAPPING || tag_type == tag_t::CUSTOM_TAG) {
-                            // set YAML node properties here to distinguish them from those for the first key node
-                            // as shown in the following snippet:
-                            //
-                            // ```yaml
-                            // foo: !!map
-                            //   !!str 123: true
-                            //   ^
-                            //   this !!str tag overwrites the preceding !!map tag.
-                            // ```
-                            *mp_current_node = basic_node_type::mapping();
-                            apply_directive_set(*mp_current_node);
-                            apply_node_properties(*mp_current_node);
-                            m_context_stack.emplace_back(line, indent, context_state_t::BLOCK_MAPPING, mp_current_node);
-                            continue;
-                        }
+                    const bool is_explicit_value_begin =
+                        m_context_stack.back().state == context_state_t::BLOCK_MAPPING_EXPLICIT_KEY &&
+                        (token.type == lexical_token_t::SEQUENCE_BLOCK_PREFIX ||
+                         indent > m_context_stack.back().indent);
+                    if (is_explicit_value_begin) {
+                        // The value of an explicit key can begin on a line after its key separator.
+                        // ```yaml
+                        // ? foo
+                        // :
+                        //   bar
+                        // # -> {foo: bar}
+                        // ```
+                        add_explicit_key_with_empty_value(old_line, old_indent);
                     }
 
                     if (token.type == lexical_token_t::SEQUENCE_BLOCK_PREFIX) {
-                        // a key separator preceding block sequence entries
-                        *mp_current_node = basic_node_type::sequence({basic_node_type()});
-                        apply_directive_set(*mp_current_node);
-                        apply_node_properties(*mp_current_node);
-                        auto& cur_context = m_context_stack.back();
-                        cur_context.line = line;
-                        cur_context.indent = indent;
-                        cur_context.state = context_state_t::BLOCK_SEQUENCE;
+                        if (m_context_stack.back().state == context_state_t::MAPPING_VALUE && defers_props() &&
+                            indent < m_context_stack.back().indent) {
+                            pop_to_parent_node(line, indent, [indent](const parse_context& c) {
+                                return c.state == context_state_t::BLOCK_SEQUENCE && indent == c.indent;
+                            });
+                            continue;
+                        }
 
-                        mp_current_node = &(mp_current_node->template get_value_ref<sequence_type&>().back());
-                        apply_directive_set(*mp_current_node);
-                        parse_context entry_context = cur_context;
-                        entry_context.state = context_state_t::BLOCK_SEQUENCE_ENTRY;
-                        entry_context.p_node = mp_current_node;
-                        m_context_stack.emplace_back(std::move(entry_context));
+                        // a key separator preceding block sequence entries
+                        initialize_block_sequence_value(line, indent, true);
 
                         token = lexer.get_next_token();
                         line = lexer.get_lines_processed();
@@ -564,26 +845,104 @@ private:
                             m_context_stack.emplace_back(
                                 line_after_props, indent, context_state_t::BLOCK_MAPPING, mp_current_node);
                             apply_directive_set(*mp_current_node);
+                            apply_deferred_properties(*mp_current_node);
                             apply_node_properties(*mp_current_node);
                         }
 
                         continue;
                     }
 
-                    if (indent <= m_context_stack.back().indent) {
-                        FK_YAML_ASSERT(m_context_stack.back().state == context_state_t::MAPPING_VALUE);
+                    // A key separator on a following line may be the value separator of an explicit
+                    // key whose contents were mapping entries, rather than a separator in the current
+                    // mapping:
+                    // ```yaml
+                    // ? foo: !!str # the tag belongs to this omitted value
+                    // : foo: !!str # this separator begins the explicit key's value
+                    // ```
+                    // Defer the properties of the omitted value and leave the separator to the next
+                    // iteration, which closes the explicit key and applies them.
+                    if (token.type == lexical_token_t::KEY_SEPARATOR) {
+                        const auto is_explicit_key_at_indent = [indent](const parse_context& c) {
+                            return c.state == context_state_t::BLOCK_MAPPING_EXPLICIT_KEY && indent == c.indent;
+                        };
+                        const bool closes_explicit_key =
+                            indent < m_context_stack.back().indent &&
+                            std::any_of(m_context_stack.rbegin(), m_context_stack.rend(), is_explicit_key_at_indent);
+                        if (closes_explicit_key) {
+                            defer_node_properties();
+                            continue;
+                        }
 
-                        // Mapping values can be omitted and are considered to be null.
+                        const bool begins_entry_with_empty_key =
+                            m_context_stack.back().state == context_state_t::MAPPING_VALUE &&
+                            !has_explicit_key_context_at(indent);
+                        if (begins_entry_with_empty_key) {
+                            // Nothing but properties, if any, is between this key separator and the one of the
+                            // preceding key, so the preceding value is omitted and this separator begins an entry
+                            // with an empty key. The deferred properties are for the omitted value.
+                            if (indent <= m_context_stack.back().indent) {
+                                // ```yaml
+                                // foo: &anchor
+                                // : bar
+                                // # -> {foo: &anchor null, null: bar}
+                                // ```
+                                pop_to_parent_node(line, indent, [indent](const parse_context& c) {
+                                    return c.state == context_state_t::BLOCK_MAPPING && indent == c.indent;
+                                });
+                            }
+                            else {
+                                // ```yaml
+                                // foo: &anchor
+                                //   : bar
+                                // # -> {foo: &anchor {null: bar}}
+                                // ```
+                                *mp_current_node = basic_node_type::mapping();
+                                apply_directive_set(*mp_current_node);
+                                apply_deferred_properties(*mp_current_node);
+                                m_context_stack.emplace_back(
+                                    line, indent, context_state_t::BLOCK_MAPPING, mp_current_node);
+                            }
+                            add_empty_key_entry(lexer, token, line, indent);
+                            continue;
+                        }
+                    }
+
+                    const bool is_omitted_mapping_value_without_properties =
+                        (token.type != lexical_token_t::KEY_SEPARATOR || !defers_props()) &&
+                        indent <= m_context_stack.back().indent;
+                    if (is_omitted_mapping_value_without_properties) {
+                        // An explicit key can omit its value as well, in which case the entry must still be
+                        // added to the parent mapping.
                         // ```yaml
-                        // foo:
-                        // bar:
-                        //   baz:
-                        // qux:
-                        // # -> {foo: null, bar: {baz: null}, qux: null}
+                        // ? foo
+                        // :
+                        // bar: baz
+                        // # -> {foo: null, bar: baz}
                         // ```
-                        pop_to_parent_node(line, indent, [indent](const parse_context& c) {
-                            return (c.state == context_state_t::BLOCK_MAPPING) && (indent == c.indent);
-                        });
+                        const bool is_entry_added = add_explicit_key_with_null_value();
+                        if (!is_entry_added) {
+                            if FK_YAML_UNLIKELY (m_context_stack.back().state != context_state_t::MAPPING_VALUE) {
+                                // The key separator does not follow a mapping key, for example:
+                                // ```yaml
+                                // ? foo
+                                // :
+                                // :
+                                // ```
+                                throw parse_error("A key separator is not allowed in this context.", line, indent);
+                            }
+
+                            // Mapping values can be omitted and are considered to be null.
+                            // ```yaml
+                            // foo:
+                            // bar:
+                            //   baz:
+                            // qux:
+                            // # -> {foo: null, bar: {baz: null}, qux: null}
+                            // ```
+                            pop_to_parent_node(line, indent, [indent](const parse_context& c) {
+                                return (c.state == context_state_t::BLOCK_MAPPING) && (indent == c.indent);
+                            });
+                        }
                     }
 
                     // defer checking the existence of a key separator after the following scalar until the next
@@ -592,35 +951,55 @@ private:
                 }
 
                 // handle explicit mapping key separators.
-                FK_YAML_ASSERT(m_context_stack.back().state == context_state_t::BLOCK_MAPPING_EXPLICIT_KEY);
+                if (m_context_stack.back().state != context_state_t::BLOCK_MAPPING_EXPLICIT_KEY) {
+                    // The contents of the explicit key may have left their own contexts on the stack.
+                    // ```yaml
+                    // ? :
+                    // : v
+                    // # -> {{null: null}: v}
+                    // ```
+                    // old_indent is the position of this key separator, while indent already refers to the
+                    // token which follows it.
+                    const auto is_key_context = [old_indent](const parse_context& c) {
+                        return c.state == context_state_t::BLOCK_MAPPING_EXPLICIT_KEY && old_indent == c.indent;
+                    };
+                    const bool has_key_context =
+                        std::any_of(m_context_stack.rbegin(), m_context_stack.rend(), is_key_context);
+                    if FK_YAML_UNLIKELY (!has_key_context) {
+                        throw parse_error("Unexpected explicit mapping key separator is found.", line, indent);
+                    }
 
-                basic_node_type key_node = std::move(*m_context_stack.back().p_node);
-                m_context_stack.pop_back();
-                m_context_stack.back().p_node->template get_value_ref<mapping_type&>().emplace(
-                    key_node, basic_node_type());
-                mp_current_node = &(m_context_stack.back().p_node->operator[](std::move(key_node)));
-                m_context_stack.emplace_back(
-                    old_line, old_indent, context_state_t::BLOCK_MAPPING_EXPLICIT_VALUE, mp_current_node);
+                    pop_to_parent_node(old_line, old_indent, is_key_context);
+                }
+
+                add_explicit_key_with_empty_value(old_line, old_indent);
 
                 if (token.type == lexical_token_t::SEQUENCE_BLOCK_PREFIX) {
-                    *mp_current_node = basic_node_type::sequence({basic_node_type()});
-                    apply_directive_set(*mp_current_node);
-                    apply_node_properties(*mp_current_node);
-                    m_context_stack.emplace_back(line, indent, context_state_t::BLOCK_SEQUENCE, mp_current_node);
-
-                    mp_current_node = &(mp_current_node->template get_value_ref<sequence_type&>().back());
-                    parse_context entry_context = m_context_stack.back();
-                    entry_context.state = context_state_t::BLOCK_SEQUENCE_ENTRY;
-                    entry_context.p_node = mp_current_node;
-                    m_context_stack.emplace_back(std::move(entry_context));
+                    initialize_block_sequence_value(line, indent, false);
                     break;
                 }
 
                 continue;
             }
             case lexical_token_t::ANCHOR_PREFIX:
-            case lexical_token_t::TAG_PREFIX:
+            case lexical_token_t::TAG_PREFIX: {
+                const uint32_t props_line = lexer.get_lines_processed();
                 deserialize_node_properties(lexer, token, line, indent);
+
+                if (m_flow_context_depth == 0 && lexer.get_lines_processed() > props_line) {
+                    // The properties belong to whatever begins on the following line. Which node that
+                    // is depends on the token after it, so the binding waits until that is known.
+                    // In the flow context, line breaks do not change the node which properties belong to.
+                    // ```yaml
+                    // - !circle
+                    //   center: 1   # the tag is for the mapping, not for the "center" key.
+                    // ```
+                    defer_node_properties();
+                    line = lexer.get_lines_processed();
+                    indent = lexer.get_last_token_begin_pos();
+                    continue;
+                }
+
                 // Skip updating the current indent to avoid stacking a wrong indentation.
                 // Note that node properties for block sequences as a mapping value are processed when a
                 // `lexical_token_t::KEY_SEPARATOR` token is processed.
@@ -631,8 +1010,26 @@ private:
                 // the correct indent width for the "bar" node key.
                 // ```
                 continue;
+            }
             case lexical_token_t::SEQUENCE_BLOCK_PREFIX: {
-                FK_YAML_ASSERT(!m_context_stack.empty());
+                check_tab_in_indentation(lexer, lexer.get_lines_processed(), lexer.get_last_token_begin_pos());
+                if FK_YAML_UNLIKELY (m_flow_context_depth > 0) {
+                    throw parse_error("A block sequence entry is not allowed in the flow context.", line, indent);
+                }
+
+                if FK_YAML_UNLIKELY (m_context_stack.empty()) {
+                    throw parse_error("invalid block sequence entry is found.", line, indent);
+                }
+
+                // A block sequence cannot begin on the line of its node properties.
+                // ```yaml
+                // foo: &anchor - bar   # error
+                // ```
+                if FK_YAML_UNLIKELY (m_needs_anchor_impl || m_needs_tag_impl) {
+                    throw parse_error(
+                        "Node properties cannot precede a block sequence entry on the same line.", line, indent);
+                }
+
                 const uint32_t parent_indent = m_context_stack.back().indent;
                 if (indent == parent_indent) {
                     // If the previous block sequence entry is empty, just move to the parent context.
@@ -666,10 +1063,11 @@ private:
                     *mp_current_node = basic_node_type::sequence();
                     m_context_stack.emplace_back(line, indent, context_state_t::BLOCK_SEQUENCE, mp_current_node);
                     apply_directive_set(*mp_current_node);
+                    apply_deferred_properties(*mp_current_node);
                     apply_node_properties(*mp_current_node);
                 }
 
-                auto& seq = mp_current_node->template get_value_ref<sequence_type&>();
+                auto& seq = mp_current_node->as_seq();
                 seq.emplace_back(basic_node_type());
                 mp_current_node = &(seq.back());
                 apply_directive_set(*mp_current_node);
@@ -679,6 +1077,17 @@ private:
             case lexical_token_t::SEQUENCE_FLOW_BEGIN:
                 if (m_flow_context_depth == 0) {
                     lexer.set_context_state(true);
+
+                    if FK_YAML_UNLIKELY (m_context_stack.empty()) {
+                        if (!defers_props()) {
+                            throw parse_error("invalid flow sequence beginning is found.", line, indent);
+                        }
+                        *mp_current_node = basic_node_type::mapping();
+                        apply_directive_set(*mp_current_node);
+                        apply_deferred_properties(*mp_current_node);
+                        m_context_stack.emplace_back(line, indent, context_state_t::BLOCK_MAPPING, mp_current_node);
+                        m_expects_root_flow_key_separator = true;
+                    }
 
                     if (indent <= m_context_stack.back().indent) {
                         pop_to_parent_node(line, indent, [indent](const parse_context& c) {
@@ -691,6 +1100,8 @@ private:
                             }
                         });
                     }
+
+                    m_flow_base_indent = static_cast<int32_t>(current_context(line, indent).indent);
                 }
                 else if FK_YAML_UNLIKELY (m_flow_token_state == flow_token_state_t::NEEDS_SEPARATOR_OR_SUFFIX) {
                     throw parse_error("Flow sequence beginning is found without separated with a comma.", line, indent);
@@ -698,18 +1109,21 @@ private:
 
                 ++m_flow_context_depth;
 
-                switch (m_context_stack.back().state) {
+                switch (current_context(line, indent).state) {
                 case context_state_t::BLOCK_SEQUENCE:
                 case context_state_t::FLOW_SEQUENCE:
-                    mp_current_node->template get_value_ref<sequence_type&>().emplace_back(basic_node_type::sequence());
-                    mp_current_node = &(mp_current_node->template get_value_ref<sequence_type&>().back());
+                    mp_current_node->as_seq().emplace_back(basic_node_type::sequence());
+                    mp_current_node = &(mp_current_node->as_seq().back());
                     m_context_stack.emplace_back(line, indent, context_state_t::FLOW_SEQUENCE, mp_current_node);
                     break;
                 case context_state_t::BLOCK_MAPPING:
                 case context_state_t::FLOW_MAPPING:
-                    // heap-allocated node will be freed in handling the corresponding SEQUENCE_FLOW_END event.
+                    // The key node is owned by its context until the corresponding SEQUENCE_FLOW_END event.
                     m_context_stack.emplace_back(
-                        line, indent, context_state_t::FLOW_SEQUENCE_KEY, new basic_node_type(node_type::SEQUENCE));
+                        line,
+                        indent,
+                        context_state_t::FLOW_SEQUENCE_KEY,
+                        std::unique_ptr<basic_node_type>(new basic_node_type(node_type::SEQUENCE)));
                     mp_current_node = m_context_stack.back().p_node;
                     break;
                 default: {
@@ -723,6 +1137,7 @@ private:
                 }
 
                 apply_directive_set(*mp_current_node);
+                apply_deferred_properties(*mp_current_node);
                 apply_node_properties(*mp_current_node);
 
                 m_flow_token_state = flow_token_state_t::NEEDS_VALUE_OR_SUFFIX;
@@ -732,42 +1147,73 @@ private:
                     throw parse_error("Flow sequence ending is found outside the flow context.", line, indent);
                 }
 
-                if (--m_flow_context_depth == 0) {
-                    lexer.set_context_state(false);
+                const bool is_flow_explicit_key =
+                    !m_context_stack.empty() &&
+                    m_context_stack.back().state == context_state_t::FLOW_MAPPING_EXPLICIT_KEY;
+                if (is_flow_explicit_key) {
+                    add_explicit_flow_key(line, indent);
                 }
 
-                // find the corresponding flow sequence beginning.
-                auto itr = std::find_if( // LCOV_EXCL_LINE
-                    m_context_stack.rbegin(),
-                    m_context_stack.rend(),
-                    [](const parse_context& c) {
-                        switch (c.state) {
-                        case context_state_t::FLOW_SEQUENCE_KEY:
-                        case context_state_t::FLOW_SEQUENCE:
-                            return true;
-                        default:
-                            return false;
-                        }
-                    });
+                if (--m_flow_context_depth == 0) {
+                    lexer.set_context_state(false);
+                    m_flow_base_indent = -1;
+                }
 
-                const bool is_valid = itr != m_context_stack.rend();
-                if FK_YAML_UNLIKELY (!is_valid) {
+                close_empty_flow_sequence_entry(line, indent);
+                close_omitted_mapping_value(line, indent);
+                close_single_pair_mapping(line, indent);
+
+                const bool has_valid_beginning =
+                    !m_context_stack.empty() && (m_context_stack.back().state == context_state_t::FLOW_SEQUENCE ||
+                                                 m_context_stack.back().state == context_state_t::FLOW_SEQUENCE_KEY);
+                if FK_YAML_UNLIKELY (!has_valid_beginning) {
                     throw parse_error("No corresponding flow sequence beginning is found.", line, indent);
                 }
 
                 // keep the last state for later processing.
                 parse_context& last_context = m_context_stack.back();
                 mp_current_node = last_context.p_node;
-                last_context.p_node = nullptr;
-                indent = last_context.indent;
-                const context_state_t state = last_context.state;
+                const uint32_t collection_begin_line = last_context.line;
+                const uint32_t collection_begin_indent = last_context.indent;
+                indent = collection_begin_indent;
+                const bool is_multiline_collection = collection_begin_line != lexer.get_lines_processed();
+                const bool is_explicit_key = last_context.is_explicit_key;
+                // The node stays alive until its value is either moved into the tree below or dropped here.
+                std::unique_ptr<basic_node_type> owned_node = std::move(last_context.owned_node);
                 m_context_stack.pop_back();
 
-                // handle cases where the flow sequence is a mapping key node.
+                // handle cases where the flow sequence is a mapping key node. A context owns its node only
+                // while that node is a key which has not been added to its parent mapping yet.
 
-                if (!m_context_stack.empty() && state == context_state_t::FLOW_SEQUENCE_KEY) {
-                    basic_node_type key_node = std::move(*mp_current_node);
-                    delete mp_current_node;
+                if (!m_context_stack.empty() && owned_node != nullptr) {
+                    if (is_explicit_key) {
+                        restore_explicit_flow_collection_key(
+                            lexer,
+                            std::move(owned_node),
+                            collection_begin_line,
+                            collection_begin_indent,
+                            is_multiline_collection,
+                            token,
+                            line,
+                            indent);
+                        continue;
+                    }
+                    if FK_YAML_UNLIKELY (is_multiline_collection) {
+                        throw parse_error(
+                            "An implicit mapping key cannot span multiple lines.",
+                            lexer.get_lines_processed(),
+                            lexer.get_last_token_begin_pos());
+                    }
+                    if (m_expects_root_flow_key_separator) {
+                        const lexical_token_t next_type = lexer.peek_next_token().type;
+                        if FK_YAML_UNLIKELY (next_type != lexical_token_t::KEY_SEPARATOR) {
+                            throw parse_error(
+                                "A flow collection key must be followed by a key separator.", line, indent);
+                        }
+                        m_expects_root_flow_key_separator = false;
+                    }
+                    basic_node_type key_node = std::move(*owned_node);
+                    owned_node.reset();
                     mp_current_node = m_context_stack.back().p_node;
                     m_flow_token_state = flow_token_state_t::NEEDS_VALUE_OR_SUFFIX;
 
@@ -777,6 +1223,12 @@ private:
 
                 token = lexer.get_next_token();
                 if (token.type == lexical_token_t::KEY_SEPARATOR) {
+                    if FK_YAML_UNLIKELY (is_multiline_collection) {
+                        throw parse_error(
+                            "An implicit mapping key cannot span multiple lines.",
+                            lexer.get_lines_processed(),
+                            lexer.get_last_token_begin_pos());
+                    }
                     basic_node_type key_node = basic_node_type::mapping();
                     apply_directive_set(key_node);
                     mp_current_node->swap(key_node);
@@ -803,6 +1255,17 @@ private:
                 if (m_flow_context_depth == 0) {
                     lexer.set_context_state(true);
 
+                    if FK_YAML_UNLIKELY (m_context_stack.empty()) {
+                        if (!defers_props()) {
+                            throw parse_error("invalid flow mapping beginning is found.", line, indent);
+                        }
+                        *mp_current_node = basic_node_type::mapping();
+                        apply_directive_set(*mp_current_node);
+                        apply_deferred_properties(*mp_current_node);
+                        m_context_stack.emplace_back(line, indent, context_state_t::BLOCK_MAPPING, mp_current_node);
+                        m_expects_root_flow_key_separator = true;
+                    }
+
                     if (indent <= m_context_stack.back().indent) {
                         pop_to_parent_node(line, indent, [indent](const parse_context& c) {
                             switch (c.state) {
@@ -814,6 +1277,8 @@ private:
                             }
                         });
                     }
+
+                    m_flow_base_indent = static_cast<int32_t>(current_context(line, indent).indent);
                 }
                 else if FK_YAML_UNLIKELY (m_flow_token_state == flow_token_state_t::NEEDS_SEPARATOR_OR_SUFFIX) {
                     throw parse_error("Flow mapping beginning is found without separated with a comma.", line, indent);
@@ -821,18 +1286,21 @@ private:
 
                 ++m_flow_context_depth;
 
-                switch (m_context_stack.back().state) {
+                switch (current_context(line, indent).state) {
                 case context_state_t::BLOCK_SEQUENCE:
                 case context_state_t::FLOW_SEQUENCE:
-                    mp_current_node->template get_value_ref<sequence_type&>().emplace_back(basic_node_type::mapping());
-                    mp_current_node = &(mp_current_node->template get_value_ref<sequence_type&>().back());
+                    mp_current_node->as_seq().emplace_back(basic_node_type::mapping());
+                    mp_current_node = &(mp_current_node->as_seq().back());
                     m_context_stack.emplace_back(line, indent, context_state_t::FLOW_MAPPING, mp_current_node);
                     break;
                 case context_state_t::BLOCK_MAPPING:
                 case context_state_t::FLOW_MAPPING:
-                    // heap-allocated node will be freed in handling the corresponding MAPPING_FLOW_END event.
+                    // The key node is owned by its context until the corresponding MAPPING_FLOW_END event.
                     m_context_stack.emplace_back(
-                        line, indent, context_state_t::FLOW_MAPPING_KEY, new basic_node_type(node_type::MAPPING));
+                        line,
+                        indent,
+                        context_state_t::FLOW_MAPPING_KEY,
+                        std::unique_ptr<basic_node_type>(new basic_node_type(node_type::MAPPING)));
                     mp_current_node = m_context_stack.back().p_node;
                     break;
                 default: {
@@ -846,6 +1314,7 @@ private:
                 }
 
                 apply_directive_set(*mp_current_node);
+                apply_deferred_properties(*mp_current_node);
                 apply_node_properties(*mp_current_node);
 
                 line = lexer.get_lines_processed();
@@ -858,42 +1327,71 @@ private:
                     throw parse_error("Flow mapping ending is found outside the flow context.", line, indent);
                 }
 
-                if (--m_flow_context_depth == 0) {
-                    lexer.set_context_state(false);
+                const bool is_flow_explicit_key =
+                    !m_context_stack.empty() &&
+                    m_context_stack.back().state == context_state_t::FLOW_MAPPING_EXPLICIT_KEY;
+                if (is_flow_explicit_key) {
+                    add_explicit_flow_key(line, indent);
                 }
 
-                // find the corresponding flow mapping beginning.
-                auto itr = std::find_if( // LCOV_EXCL_LINE
-                    m_context_stack.rbegin(),
-                    m_context_stack.rend(),
-                    [](const parse_context& c) {
-                        switch (c.state) {
-                        case context_state_t::FLOW_MAPPING_KEY:
-                        case context_state_t::FLOW_MAPPING:
-                            return true;
-                        default:
-                            return false;
-                        }
-                    });
+                if (--m_flow_context_depth == 0) {
+                    lexer.set_context_state(false);
+                    m_flow_base_indent = -1;
+                }
 
-                const bool is_valid = itr != m_context_stack.rend();
-                if FK_YAML_UNLIKELY (!is_valid) {
+                close_omitted_mapping_value(line, indent);
+
+                const bool has_valid_beginning =
+                    !m_context_stack.empty() && (m_context_stack.back().state == context_state_t::FLOW_MAPPING ||
+                                                 m_context_stack.back().state == context_state_t::FLOW_MAPPING_KEY);
+                if FK_YAML_UNLIKELY (!has_valid_beginning) {
                     throw parse_error("No corresponding flow mapping beginning is found.", line, indent);
                 }
 
                 // keep the last state for later processing.
                 parse_context& last_context = m_context_stack.back();
                 mp_current_node = last_context.p_node;
-                last_context.p_node = nullptr;
-                indent = last_context.indent;
-                const context_state_t state = last_context.state;
+                const uint32_t collection_begin_line = last_context.line;
+                const uint32_t collection_begin_indent = last_context.indent;
+                indent = collection_begin_indent;
+                const bool is_multiline_collection = collection_begin_line != lexer.get_lines_processed();
+                const bool is_explicit_key = last_context.is_explicit_key;
+                // The node stays alive until its value is either moved into the tree below or dropped here.
+                std::unique_ptr<basic_node_type> owned_node = std::move(last_context.owned_node);
                 m_context_stack.pop_back();
 
-                // handle cases where the flow mapping is a mapping key node.
+                // handle cases where the flow mapping is a mapping key node. A context owns its node only
+                // while that node is a key which has not been added to its parent mapping yet.
 
-                if (!m_context_stack.empty() && state == context_state_t::FLOW_MAPPING_KEY) {
-                    basic_node_type key_node = std::move(*mp_current_node);
-                    delete mp_current_node;
+                if (!m_context_stack.empty() && owned_node != nullptr) {
+                    if (is_explicit_key) {
+                        restore_explicit_flow_collection_key(
+                            lexer,
+                            std::move(owned_node),
+                            collection_begin_line,
+                            collection_begin_indent,
+                            is_multiline_collection,
+                            token,
+                            line,
+                            indent);
+                        continue;
+                    }
+                    if FK_YAML_UNLIKELY (is_multiline_collection) {
+                        throw parse_error(
+                            "An implicit mapping key cannot span multiple lines.",
+                            lexer.get_lines_processed(),
+                            lexer.get_last_token_begin_pos());
+                    }
+                    if (m_expects_root_flow_key_separator) {
+                        const lexical_token_t next_type = lexer.peek_next_token().type;
+                        if FK_YAML_UNLIKELY (next_type != lexical_token_t::KEY_SEPARATOR) {
+                            throw parse_error(
+                                "A flow collection key must be followed by a key separator.", line, indent);
+                        }
+                        m_expects_root_flow_key_separator = false;
+                    }
+                    basic_node_type key_node = std::move(*owned_node);
+                    owned_node.reset();
                     mp_current_node = m_context_stack.back().p_node;
                     m_flow_token_state = flow_token_state_t::NEEDS_VALUE_OR_SUFFIX;
 
@@ -903,6 +1401,12 @@ private:
 
                 token = lexer.get_next_token();
                 if (token.type == lexical_token_t::KEY_SEPARATOR) {
+                    if FK_YAML_UNLIKELY (is_multiline_collection) {
+                        throw parse_error(
+                            "An implicit mapping key cannot span multiple lines.",
+                            lexer.get_lines_processed(),
+                            lexer.get_last_token_begin_pos());
+                    }
                     basic_node_type key_node = basic_node_type::mapping();
                     apply_directive_set(key_node);
                     mp_current_node->swap(key_node);
@@ -926,14 +1430,24 @@ private:
                 continue;
             }
             case lexical_token_t::VALUE_SEPARATOR:
-                FK_YAML_ASSERT(m_flow_context_depth > 0);
+                if FK_YAML_UNLIKELY (m_flow_context_depth == 0) {
+                    throw parse_error("invalid value separator is found.", line, indent);
+                }
+                if (!m_context_stack.empty() &&
+                    m_context_stack.back().state == context_state_t::FLOW_MAPPING_EXPLICIT_KEY) {
+                    add_explicit_flow_key(line, indent);
+                }
+                close_empty_flow_sequence_entry(line, indent);
+                close_omitted_mapping_value(line, indent);
                 if FK_YAML_UNLIKELY (m_flow_token_state != flow_token_state_t::NEEDS_SEPARATOR_OR_SUFFIX) {
                     throw parse_error("invalid value separator is found.", line, indent);
                 }
+                close_single_pair_mapping(line, indent);
                 m_flow_token_state = flow_token_state_t::NEEDS_VALUE_OR_SUFFIX;
                 break;
             case lexical_token_t::ALIAS_PREFIX: {
-                // An alias node must not specify any properties (tag, anchor).
+                // An alias node must not specify any properties (tag, anchor), but deferred ones are
+                // for the collection which this alias begins rather than for the alias itself.
                 // https://yaml.org/spec/1.2.2/#71-alias-nodes
                 if FK_YAML_UNLIKELY (m_needs_tag_impl) {
                     throw parse_error("Tag cannot be specified to an alias node", line, indent);
@@ -942,51 +1456,55 @@ private:
                     throw parse_error("Anchor cannot be specified to an alias node.", line, indent);
                 }
 
-                std::string token_str = std::string(token.str.begin(), token.str.end());
+                const std::string anchor_name = std::string(token.str.begin(), token.str.end());
 
-                const auto anchor_counts = static_cast<uint32_t>(mp_meta->anchor_table.count(token_str));
+                const auto anchor_counts = static_cast<uint32_t>(mp_meta->anchor_table.count(anchor_name));
                 if FK_YAML_UNLIKELY (anchor_counts == 0) {
                     throw parse_error("The given anchor name must appear prior to the alias node.", line, indent);
                 }
 
                 basic_node_type node {};
-                node.m_attrs |= detail::node_attr_bits::alias_bit;
-                node.m_prop.anchor = std::move(token_str);
-                detail::node_attr_bits::set_anchor_offset(anchor_counts - 1, node.m_attrs);
+                node.m_attrs.set(detail::node_attr_bits::alias_bit);
+                node.prop().anchor = anchor_name;
+                node.m_attrs.set_anchor_offset(anchor_counts - 1);
 
                 apply_directive_set(node);
                 apply_node_properties(node);
 
                 deserialize_scalar(lexer, std::move(node), indent, line, token);
+
+                // Check if the alias node is self-referential.
+                // If so, throw a parse error to avoid infinite recursion and stack overflow during deserialization.
+                auto itr = mp_meta->anchor_table.equal_range(anchor_name).first;
+                std::advance(itr, anchor_counts - 1);
+                const auto& anchor = itr->second;
+                const bool is_self_referential = anchor.contains_self_referential_alias(anchor_name, anchor_counts - 1);
+                if FK_YAML_UNLIKELY (is_self_referential) {
+                    const std::string msg = format("Self-referential alias (*%s) is found.", anchor_name.c_str());
+                    throw parse_error(msg.c_str(), line, indent);
+                }
+
                 continue;
             }
             case lexical_token_t::PLAIN_SCALAR:
             case lexical_token_t::SINGLE_QUOTED_SCALAR:
             case lexical_token_t::DOUBLE_QUOTED_SCALAR: {
-                tag_t tag_type {tag_t::NONE};
-                if (m_needs_tag_impl) {
-                    tag_type = tag_resolver_type::resolve_tag(m_tag_name, mp_meta);
-                }
+                const tag_t tag_type = resolve_scalar_tag(line, indent);
 
                 basic_node_type node = scalar_parser_type(line, indent).parse_flow(token.type, tag_type, token.str);
                 apply_directive_set(node);
-                apply_node_properties(node);
 
                 deserialize_scalar(lexer, std::move(node), indent, line, token);
                 continue;
             }
             case lexical_token_t::BLOCK_LITERAL_SCALAR:
             case lexical_token_t::BLOCK_FOLDED_SCALAR: {
-                tag_t tag_type {tag_t::NONE};
-                if (m_needs_tag_impl) {
-                    tag_type = tag_resolver_type::resolve_tag(m_tag_name, mp_meta);
-                }
+                const tag_t tag_type = resolve_scalar_tag(line, indent);
 
                 basic_node_type node =
                     scalar_parser_type(line, indent)
                         .parse_block(token.type, tag_type, token.str, lexer.get_block_scalar_header());
                 apply_directive_set(node);
-                apply_node_properties(node);
 
                 deserialize_scalar(lexer, std::move(node), indent, line, token);
                 continue;
@@ -1001,6 +1519,9 @@ private:
                 if FK_YAML_UNLIKELY (m_flow_context_depth > 0) {
                     throw parse_error("An invalid document marker found in a flow collection", line, indent);
                 }
+                if (token.type == lexical_token_t::END_OF_DIRECTIVES) {
+                    m_explicit_document_start_line = line;
+                }
                 last_type = token.type;
                 return;
             // no way to come here while lexically analyzing document contents.
@@ -1014,6 +1535,10 @@ private:
             indent = lexer.get_last_token_begin_pos();
             line = lexer.get_lines_processed();
         } while (token.type != lexical_token_t::END_OF_BUFFER);
+
+        if FK_YAML_UNLIKELY (m_flow_context_depth > 0) {
+            throw parse_error("An unclosed flow collection found at the end of input", line, indent);
+        }
 
         last_type = token.type;
     }
@@ -1084,8 +1609,36 @@ private:
             line = lexer.get_lines_processed();
             indent = lexer.get_last_token_begin_pos();
         }
+        else if FK_YAML_UNLIKELY (
+            line < lexer.get_lines_processed() && m_flow_context_depth == 0 && !m_context_stack.empty() &&
+            indent <= m_context_stack.back().indent) {
+            // Node properties which end their line belong to a node nested in the current block collection, so
+            // they must be more indented than it.
+            // ```yaml
+            // - item1
+            // &node   # error: not more indented than the sequence.
+            // - item2
+            // ```
+            throw parse_error("Node properties are not indented enough.", line, indent);
+        }
 
         return prop_specified;
+    }
+
+    /// @brief Reject a tab character used as the indentation of a block collection.
+    /// @note Indentation must consist of spaces only, while a tab which follows it is valid separation
+    /// white space. See https://yaml.org/spec/1.2.2/#61-indentation-spaces for more details.
+    /// ```yaml
+    /// -\t-    # the nested sequence is indented with a tab, which is an error
+    /// -\t-1   # the tab only separates the entry from its scalar, which is valid
+    /// ```
+    /// @param lexer The lexical analyzer to be used.
+    /// @param line The line of the node which begins the block collection.
+    /// @param indent The indentation width of the node which begins the block collection.
+    void check_tab_in_indentation(lexer_type& lexer, const uint32_t line, const uint32_t indent) const {
+        if FK_YAML_UNLIKELY (m_flow_context_depth == 0 && lexer.has_tab_in_indentation(indent)) {
+            throw parse_error("A tab character cannot be used as indentation.", line, indent);
+        }
     }
 
     /// @brief Add new key string to the current YAML node.
@@ -1094,6 +1647,9 @@ private:
     /// @param indent The indentation width in the current line where the key is found.
     void add_new_key(basic_node_type&& key, const uint32_t line, const uint32_t indent) {
         if (m_flow_context_depth == 0) {
+            if FK_YAML_UNLIKELY (m_context_stack.empty()) {
+                throw parse_error("A mapping key is not allowed in this context.", line, indent);
+            }
             if FK_YAML_UNLIKELY (m_context_stack.back().indent < indent) {
                 // bad indentation like the following YAML:
                 // ```yaml
@@ -1109,33 +1665,75 @@ private:
             });
         }
         else {
-            if FK_YAML_UNLIKELY (m_flow_token_state != flow_token_state_t::NEEDS_VALUE_OR_SUFFIX) {
-                throw parse_error("Flow mapping entry is found without separated with a comma.", line, indent);
-            }
-
             if (mp_current_node->is_sequence()) {
-                mp_current_node->template get_value_ref<sequence_type&>().emplace_back(basic_node_type::mapping());
+                mp_current_node->as_seq().emplace_back(basic_node_type::mapping());
                 mp_current_node = &(mp_current_node->operator[](mp_current_node->size() - 1));
                 m_context_stack.emplace_back(line, indent, context_state_t::BLOCK_MAPPING, mp_current_node);
             }
         }
 
-        auto itr = mp_current_node->template get_value_ref<mapping_type&>().emplace(std::move(key), basic_node_type());
+        auto itr = mp_current_node->as_map().emplace(std::move(key), basic_node_type());
         if FK_YAML_UNLIKELY (!itr.second) {
             throw parse_error("Detected duplication in mapping keys.", line, indent);
         }
 
         mp_current_node = &(itr.first->second);
-        const parse_context& key_context = m_context_stack.back();
+        const parse_context& key_context = current_context(line, indent);
         m_context_stack.emplace_back(
             key_context.line, key_context.indent, context_state_t::MAPPING_VALUE, mp_current_node);
+    }
+
+    void restore_explicit_flow_collection_key(
+        lexer_type& lexer, std::unique_ptr<basic_node_type>&& owned_node, const uint32_t collection_begin_line,
+        const uint32_t collection_begin_indent, const bool is_multiline_collection, lexical_token& token,
+        uint32_t& line, uint32_t& indent) {
+        const context_state_t explicit_key_state = m_flow_context_depth > 0
+                                                       ? context_state_t::FLOW_MAPPING_EXPLICIT_KEY
+                                                       : context_state_t::BLOCK_MAPPING_EXPLICIT_KEY;
+        m_context_stack.emplace_back(
+            collection_begin_line, collection_begin_indent, explicit_key_state, std::move(owned_node));
+        mp_current_node = m_context_stack.back().p_node;
+
+        const uint32_t collection_end_line = lexer.get_lines_processed();
+        token = lexer.get_next_token();
+        line = lexer.get_lines_processed();
+        indent = lexer.get_last_token_begin_pos();
+
+        if (m_flow_context_depth > 0) {
+            return;
+        }
+
+        const bool begins_compact_mapping = token.type == lexical_token_t::KEY_SEPARATOR && line == collection_end_line;
+        if (!begins_compact_mapping) {
+            return;
+        }
+        if FK_YAML_UNLIKELY (is_multiline_collection) {
+            throw parse_error(
+                "An implicit mapping key cannot span multiple lines.",
+                lexer.get_lines_processed(),
+                lexer.get_last_token_begin_pos());
+        }
+
+        basic_node_type collection_key = std::move(*mp_current_node);
+        *mp_current_node = basic_node_type::mapping();
+        apply_directive_set(*mp_current_node);
+        auto itr = mp_current_node->as_map().emplace(std::move(collection_key), basic_node_type());
+        mp_current_node = &(itr.first->second);
+        apply_directive_set(*mp_current_node);
+        m_context_stack.emplace_back(line, indent, context_state_t::MAPPING_VALUE, mp_current_node);
+
+        token = lexer.get_next_token();
+        line = lexer.get_lines_processed();
+        indent = lexer.get_last_token_begin_pos();
     }
 
     /// @brief Assign node value to the current node.
     /// @param node_value A rvalue basic_node_type object to be assigned to the current node.
     void assign_node_value(basic_node_type&& node_value, const uint32_t line, const uint32_t indent) {
         if (mp_current_node->is_sequence()) {
-            FK_YAML_ASSERT(m_flow_context_depth > 0);
+            if FK_YAML_UNLIKELY (m_flow_context_depth == 0) {
+                throw parse_error("invalid block sequence entry is found.", line, indent);
+            }
 
             if FK_YAML_UNLIKELY (m_flow_token_state != flow_token_state_t::NEEDS_VALUE_OR_SUFFIX) {
                 // Flow sequence entries are not allowed to be empty.
@@ -1145,7 +1743,7 @@ private:
                 throw parse_error("flow sequence entry is found without separated with a comma.", line, indent);
             }
 
-            mp_current_node->template get_value_ref<sequence_type&>().emplace_back(std::move(node_value));
+            mp_current_node->as_seq().emplace_back(std::move(node_value));
             m_flow_token_state = flow_token_state_t::NEEDS_SEPARATOR_OR_SUFFIX;
             return;
         }
@@ -1157,9 +1755,11 @@ private:
             return;
         }
 
-        if FK_YAML_LIKELY (m_context_stack.back().state != context_state_t::BLOCK_MAPPING_EXPLICIT_KEY) {
+        if FK_YAML_LIKELY (
+            m_context_stack.back().state != context_state_t::BLOCK_MAPPING_EXPLICIT_KEY &&
+            m_context_stack.back().state != context_state_t::FLOW_MAPPING_EXPLICIT_KEY) {
             m_context_stack.pop_back();
-            mp_current_node = m_context_stack.back().p_node;
+            mp_current_node = current_context(line, indent).p_node;
 
             if (m_flow_context_depth > 0) {
                 m_flow_token_state = flow_token_state_t::NEEDS_SEPARATOR_OR_SUFFIX;
@@ -1177,15 +1777,53 @@ private:
     void deserialize_scalar(
         lexer_type& lexer, basic_node_type&& node, uint32_t& indent, uint32_t& line, lexical_token& token) {
         token = lexer.get_next_token();
-        if (mp_current_node->is_mapping()) {
-            const bool is_key_sep_followed =
-                (token.type == lexical_token_t::KEY_SEPARATOR) && (line == lexer.get_lines_processed());
-            if FK_YAML_UNLIKELY (!is_key_sep_followed) {
-                throw parse_error(
-                    "The \":\" mapping value indicator must be followed after a mapping key.",
-                    lexer.get_lines_processed(),
-                    lexer.get_last_token_begin_pos());
+        const bool is_mapping_key = mp_current_node->is_mapping() || token.type == lexical_token_t::KEY_SEPARATOR;
+        if (is_mapping_key) {
+            apply_node_properties(node);
+        }
+        else if (!node.is_alias()) {
+            if FK_YAML_UNLIKELY (m_defers_anchor && m_needs_anchor_impl) {
+                throw parse_error("anchor name cannot be specified more than once to the same node.", line, indent);
             }
+            if FK_YAML_UNLIKELY (m_defers_tag && m_needs_tag_impl) {
+                throw parse_error("tag name cannot be specified more than once to the same node.", line, indent);
+            }
+            apply_deferred_properties(node);
+            apply_node_properties(node);
+        }
+
+        if (!m_context_stack.empty() && m_context_stack.back().state == context_state_t::FLOW_MAPPING_EXPLICIT_KEY) {
+            assign_node_value(std::move(node), line, indent);
+            indent = lexer.get_last_token_begin_pos();
+            line = lexer.get_lines_processed();
+            return;
+        }
+
+        if (mp_current_node->is_mapping()) {
+            // An implicit key in the block context must be followed by the ":" indicator on the same line, while in
+            // the flow context the two can be separated by line breaks.
+            // ```yaml
+            // {"foo"
+            // : "bar"}
+            // ```
+            const bool is_key_sep_followed = (token.type == lexical_token_t::KEY_SEPARATOR) &&
+                                             (line == lexer.get_lines_processed() || m_flow_context_depth > 0);
+            if (!is_key_sep_followed) {
+                // A flow mapping entry may consist of a key alone, with both the ":" indicator and the
+                // value omitted. The entry then ends at the separator or the suffix which follows it.
+                // ```yaml
+                // {foo, bar: baz}
+                // ```
+                const bool ends_omitted_entry = (token.type == lexical_token_t::VALUE_SEPARATOR) ||
+                                                (token.type == lexical_token_t::MAPPING_FLOW_END);
+                if FK_YAML_UNLIKELY (!ends_omitted_entry) {
+                    throw parse_error(
+                        "The \":\" mapping value indicator must be followed after a mapping key.",
+                        lexer.get_lines_processed(),
+                        lexer.get_last_token_begin_pos());
+                }
+            }
+            check_tab_in_indentation(lexer, line, indent);
             add_new_key(std::move(node), line, indent);
         }
         else if (token.type == lexical_token_t::KEY_SEPARATOR) {
@@ -1200,7 +1838,23 @@ private:
                 indent = lexer.get_last_token_begin_pos();
                 line = lexer.get_lines_processed();
 
+                if (m_context_stack.empty()) {
+                    throw parse_error("invalid explicit mapping key separator is found.", line, indent);
+                }
+
                 if (m_context_stack.back().state != context_state_t::BLOCK_MAPPING_EXPLICIT_KEY) {
+                    const parse_context& cur_context = m_context_stack.back();
+                    if (cur_context.state == context_state_t::BLOCK_MAPPING && cur_context.indent == indent) {
+                        // A key separator which begins a line belongs to an entry with an empty key.
+                        // ```yaml
+                        // foo: bar
+                        // : baz
+                        // # -> {foo: bar, null: baz}
+                        // ```
+                        add_empty_key_entry(lexer, token, line, indent);
+                        return;
+                    }
+
                     pop_to_parent_node(line, indent, [indent](const parse_context& c) {
                         return c.state == context_state_t::BLOCK_MAPPING_EXPLICIT_KEY && indent == c.indent;
                     });
@@ -1211,12 +1865,67 @@ private:
             if (mp_current_node->is_scalar()) {
                 if FK_YAML_LIKELY (!m_context_stack.empty()) {
                     parse_context& cur_context = m_context_stack.back();
+
+                    const bool is_omitted_mapping_value_with_properties =
+                        cur_context.state == context_state_t::MAPPING_VALUE && cur_context.indent == indent &&
+                        defers_props();
+                    if (is_omitted_mapping_value_with_properties) {
+                        pop_to_parent_node(line, indent, [indent](const parse_context& c) {
+                            return c.state == context_state_t::BLOCK_MAPPING && indent == c.indent;
+                        });
+                        check_tab_in_indentation(lexer, line, indent);
+                        add_new_key(std::move(node), line, indent);
+                        indent = lexer.get_last_token_begin_pos();
+                        line = lexer.get_lines_processed();
+                        return;
+                    }
+
                     switch (cur_context.state) {
                     case context_state_t::BLOCK_MAPPING_EXPLICIT_KEY:
-                    case context_state_t::BLOCK_MAPPING_EXPLICIT_VALUE:
-                    case context_state_t::BLOCK_SEQUENCE_ENTRY:
+                        if (cur_context.indent == indent) {
+                            // A mapping entry which follows an explicit key without its value, for example:
+                            // ```yaml
+                            // ? foo
+                            // bar: 123
+                            // # -> {foo: null, bar: 123}
+                            // ```
+                            add_explicit_key_with_null_value();
+                            check_tab_in_indentation(lexer, line, indent);
+                            add_new_key(std::move(node), line, indent);
+                            indent = lexer.get_last_token_begin_pos();
+                            line = lexer.get_lines_processed();
+                            return;
+                        }
+
                         m_context_stack.emplace_back(line, indent, context_state_t::BLOCK_MAPPING, mp_current_node);
                         break;
+                    case context_state_t::BLOCK_MAPPING_EXPLICIT_VALUE:
+                        m_context_stack.emplace_back(line, indent, context_state_t::BLOCK_MAPPING, mp_current_node);
+                        break;
+                    case context_state_t::BLOCK_SEQUENCE_ENTRY:
+                        if FK_YAML_UNLIKELY (cur_context.indent >= indent) {
+                            // This handles combination of empty block sequence entry and block mapping entry with the
+                            // same indentation level, for examples:
+                            // ```yaml
+                            // foo:
+                            //   bar:
+                            //   -         # These entries are indented
+                            //   baz: 123  # with the same width.
+                            // # ^^^
+                            // ```
+                            pop_to_parent_node(line, indent, [indent](const parse_context& c) {
+                                return c.state == context_state_t::BLOCK_MAPPING && indent == c.indent;
+                            });
+                            check_tab_in_indentation(lexer, line, indent);
+                            add_new_key(std::move(node), line, indent);
+                            indent = lexer.get_last_token_begin_pos();
+                            line = lexer.get_lines_processed();
+                            return;
+                        }
+
+                        m_context_stack.emplace_back(line, indent, context_state_t::BLOCK_MAPPING, mp_current_node);
+                        break;
+                    case context_state_t::MAPPING_VALUE:
                     default:
                         if FK_YAML_UNLIKELY (cur_context.line == line) {
                             throw parse_error("Multiple mapping keys are specified on the same line.", line, indent);
@@ -1229,34 +1938,217 @@ private:
 
                     *mp_current_node = basic_node_type::mapping();
                     apply_directive_set(*mp_current_node);
+                    // The scalar turned out to be a key, so any deferred properties are for the mapping
+                    // which it begins rather than for the key itself.
+                    apply_deferred_properties(*mp_current_node);
                 }
                 else {
                     // root mapping node
+                    if FK_YAML_UNLIKELY (m_has_explicit_document_start && line == m_explicit_document_start_line) {
+                        throw parse_error("A block mapping entry cannot be on the document start line.", line, indent);
+                    }
 
                     m_context_stack.emplace_back(line, indent, context_state_t::BLOCK_MAPPING, mp_current_node);
                     *mp_current_node = basic_node_type::mapping();
                     apply_directive_set(*mp_current_node);
-
-                    // apply node properties if any to the root mapping node.
-                    if (!m_root_anchor_name.empty()) {
-                        mp_current_node->add_anchor_name(
-                            std::string(m_root_anchor_name.begin(), m_root_anchor_name.end()));
-                        m_root_anchor_name = {};
-                    }
-                    if (!m_root_tag_name.empty()) {
-                        mp_current_node->add_tag_name(std::string(m_root_tag_name.begin(), m_root_tag_name.end()));
-                        m_root_tag_name = {};
-                    }
+                    apply_deferred_properties(*mp_current_node);
                 }
             }
+            check_tab_in_indentation(lexer, line, indent);
             add_new_key(std::move(node), line, indent);
         }
         else {
+            if (defers_props()) {
+                // Non-alias values consume deferred properties before reaching this point. An alias
+                // cannot carry properties, which is only known once it turns out not to be a key.
+                // https://yaml.org/spec/1.2.2/#71-alias-nodes
+                throw parse_error("Node properties cannot be specified to an alias node.", line, indent);
+            }
+            const bool ends_document = token.type == lexical_token_t::END_OF_BUFFER ||
+                                       token.type == lexical_token_t::END_OF_DIRECTIVES ||
+                                       token.type == lexical_token_t::END_OF_DOCUMENT;
+            if FK_YAML_UNLIKELY (m_context_stack.empty() && !ends_document) {
+                throw parse_error("Multiple root nodes are not allowed in the same document.", line, indent);
+            }
             assign_node_value(std::move(node), line, indent);
         }
 
         indent = lexer.get_last_token_begin_pos();
         line = lexer.get_lines_processed();
+    }
+
+    /// @brief Returns the parse context on the top of the context stack.
+    /// @note
+    /// Accessing an empty context stack is undefined behavior, so the emptiness is checked before the access.
+    /// No known input reaches the throw now that a parse context owns its key node, which is why it is left out
+    /// of the coverage measurement. The check stays because the alternative for a caller is dereferencing an
+    /// invalid iterator.
+    /// @param line The current line count.
+    /// @param indent The current indentation width.
+    /// @return The parse context on the top of the context stack.
+    parse_context& current_context(const uint32_t line, const uint32_t indent) {
+        // LCOV_EXCL_START
+        if FK_YAML_UNLIKELY (m_context_stack.empty()) {
+            throw parse_error("No parent context is found.", line, indent);
+        }
+        // LCOV_EXCL_STOP
+        return m_context_stack.back();
+    }
+
+    /// @brief Adds a mapping entry whose key is empty and moves to the token which follows it.
+    /// @note
+    /// An empty key is a null node. Its value can be omitted as well, in which case the following token
+    /// belongs to the parent mapping rather than to this entry.
+    /// ```yaml
+    /// :
+    /// foo: bar
+    /// # -> {null: null, foo: bar}
+    /// ```
+    /// @param lexer The lexical analyzer to be used.
+    /// @param token The storage for the token which follows the key separator.
+    /// @param line The line of the key separator. Updated to the line of the following token.
+    /// @param indent The indentation width of the key separator. Updated for the following token.
+    void add_empty_key_entry(lexer_type& lexer, lexical_token& token, uint32_t& line, uint32_t& indent) {
+        const uint32_t key_line = line;
+        const uint32_t key_indent = indent;
+        basic_node_type key_node;
+        if (m_needs_tag_impl) {
+            const tag_t tag_type = resolve_scalar_tag(line, indent);
+            materialize_tagged_empty_node(key_node, tag_type, line, indent);
+        }
+        apply_directive_set(key_node);
+        apply_node_properties(key_node);
+        add_new_key(std::move(key_node), line, indent);
+
+        token = lexer.get_next_token();
+        line = lexer.get_lines_processed();
+        indent = lexer.get_last_token_begin_pos();
+
+        const bool is_block_sequence_entry =
+            token.type == lexical_token_t::SEQUENCE_BLOCK_PREFIX && line > key_line && indent <= key_indent;
+        if (is_block_sequence_entry) {
+            initialize_block_sequence_value(line, indent, false);
+
+            token = lexer.get_next_token();
+            line = lexer.get_lines_processed();
+            indent = lexer.get_last_token_begin_pos();
+            return;
+        }
+
+        if (line > key_line && indent <= key_indent) {
+            pop_to_parent_node(line, indent, [key_indent](const parse_context& c) {
+                return c.state == context_state_t::BLOCK_MAPPING && key_indent == c.indent;
+            });
+        }
+    }
+
+    /// @brief Initializes a block sequence as the current mapping value.
+    /// @param line The line where the sequence begins.
+    /// @param indent The indentation width where the sequence begins.
+    /// @param apply_properties Whether pending node properties belong to the sequence.
+    void initialize_block_sequence_value(const uint32_t line, const uint32_t indent, const bool apply_properties) {
+        *mp_current_node = basic_node_type::sequence({basic_node_type()});
+        apply_directive_set(*mp_current_node);
+        if (apply_properties) {
+            apply_deferred_properties(*mp_current_node);
+            apply_node_properties(*mp_current_node);
+        }
+
+        auto& cur_context = m_context_stack.back();
+        cur_context.line = line;
+        cur_context.indent = indent;
+        cur_context.state = context_state_t::BLOCK_SEQUENCE;
+
+        mp_current_node = &(mp_current_node->as_seq().back());
+        apply_directive_set(*mp_current_node);
+        m_context_stack.emplace_back(line, indent, context_state_t::BLOCK_SEQUENCE_ENTRY, mp_current_node);
+    }
+
+    /// @brief Checks whether an explicit key context exists at the given indentation.
+    /// @param indent The indentation width of the explicit key context to look for.
+    /// @return true if such a context is on the context stack, false otherwise.
+    bool has_explicit_key_context_at(const uint32_t indent) const noexcept {
+        const auto is_explicit_key_context = [indent](const parse_context& c) {
+            return c.state == context_state_t::BLOCK_MAPPING_EXPLICIT_KEY && indent == c.indent;
+        };
+        return std::any_of(m_context_stack.rbegin(), m_context_stack.rend(), is_explicit_key_context);
+    }
+
+    /// @brief Settles an explicit key into its value context when properties follow its separator.
+    /// @note As in `? key` followed by `: &anchor`, the value context of the explicit key is settled
+    /// before its node is known so that the properties which follow the separator are bound to the
+    /// (empty) value node. Does nothing when no matching explicit key context exists.
+    /// @param line The line of the key separator.
+    /// @param indent The indentation width of the key separator.
+    void settle_explicit_key_value_with_props(const uint32_t line, const uint32_t indent) {
+        if (!has_explicit_key_context_at(indent)) {
+            return;
+        }
+        if (m_context_stack.back().state != context_state_t::BLOCK_MAPPING_EXPLICIT_KEY) {
+            const auto is_explicit_key_context = [indent](const parse_context& c) {
+                return c.state == context_state_t::BLOCK_MAPPING_EXPLICIT_KEY && indent == c.indent;
+            };
+            pop_to_parent_node(line, indent, is_explicit_key_context);
+        }
+        add_explicit_key_with_empty_value(line, indent);
+    }
+
+    /// @brief Adds an entry for an explicit key and makes its value node the current node.
+    /// @note The current context must be the context of the explicit key.
+    /// @param line The line where the value of the explicit key begins.
+    /// @param indent The indentation width where the value of the explicit key begins.
+    void add_explicit_key_with_empty_value(const uint32_t line, const uint32_t indent) {
+        FK_YAML_ASSERT(m_context_stack.back().state == context_state_t::BLOCK_MAPPING_EXPLICIT_KEY);
+
+        // Deferred properties precede the key, so they belong to the key rather than to its value.
+        apply_deferred_properties(*m_context_stack.back().p_node);
+
+        basic_node_type key_node = std::move(*m_context_stack.back().p_node);
+        m_context_stack.pop_back();
+        basic_node_type* p_parent_node = current_context(line, indent).p_node;
+        auto itr = p_parent_node->as_map().emplace(std::move(key_node), basic_node_type());
+        mp_current_node = &(itr.first->second);
+        m_context_stack.emplace_back(line, indent, context_state_t::BLOCK_MAPPING_EXPLICIT_VALUE, mp_current_node);
+    }
+
+    /// @brief Adds an explicit flow mapping key and makes its value node the current node.
+    /// @param line The line where the value separator or entry ending is found.
+    /// @param indent The indentation width where the value separator or entry ending is found.
+    void add_explicit_flow_key(const uint32_t line, const uint32_t indent) {
+        FK_YAML_ASSERT(m_context_stack.back().state == context_state_t::FLOW_MAPPING_EXPLICIT_KEY);
+
+        apply_deferred_properties(*m_context_stack.back().p_node);
+        basic_node_type key_node = std::move(*m_context_stack.back().p_node);
+        m_context_stack.pop_back();
+        mp_current_node = current_context(line, indent).p_node;
+        add_new_key(std::move(key_node), line, indent);
+    }
+
+    /// @brief Adds an entry with a null value for an explicit key which is not followed by its value.
+    /// @note
+    /// An explicit key is kept in its own context until its value is found. If no value follows the key, the
+    /// entry must still be added to the parent mapping since an omitted value is a null value.
+    /// ```yaml
+    /// ? foo
+    /// ? bar
+    /// # -> {foo: null, bar: null}
+    /// ```
+    /// @return true if an entry has been added, false if the current context is not an explicit key.
+    bool add_explicit_key_with_null_value() {
+        const bool is_explicit_key =
+            m_context_stack.size() > 1 && m_context_stack.back().state == context_state_t::BLOCK_MAPPING_EXPLICIT_KEY;
+        if (!is_explicit_key) {
+            return false;
+        }
+
+        // Deferred properties precede the key, so they belong to the key rather than to its value.
+        apply_deferred_properties(*m_context_stack.back().p_node);
+
+        basic_node_type key_node = std::move(*m_context_stack.back().p_node);
+        m_context_stack.pop_back();
+        m_context_stack.back().p_node->as_map().emplace(std::move(key_node), basic_node_type());
+        mp_current_node = m_context_stack.back().p_node;
+        return true;
     }
 
     /// @brief Pops parent contexts to a block mapping with the given indentation.
@@ -1265,29 +2157,237 @@ private:
     /// @param indent The indentation level of the target parent block mapping.
     template <typename Pred>
     void pop_to_parent_node(uint32_t line, uint32_t indent, Pred&& pred) {
-        FK_YAML_ASSERT(!m_context_stack.empty());
-
         // LCOV_EXCL_START
-        auto itr = std::find_if(m_context_stack.rbegin(), m_context_stack.rend(), std::forward<Pred>(pred));
-        // LCOV_EXCL_STOP
-        const bool is_indent_valid = (itr != m_context_stack.rend());
-        if FK_YAML_UNLIKELY (!is_indent_valid) {
-            throw parse_error("Detected invalid indentation.", line, indent);
+        if FK_YAML_UNLIKELY (m_context_stack.empty()) {
+            throw parse_error("No parent block mapping is found.", line, indent);
         }
+        // LCOV_EXCL_STOP
 
-        const auto pop_num = static_cast<uint32_t>(std::distance(m_context_stack.rbegin(), itr));
+        for (;;) {
+            // LCOV_EXCL_START
+            auto itr = std::find_if(m_context_stack.rbegin(), m_context_stack.rend(), std::forward<Pred>(pred));
+            // LCOV_EXCL_STOP
+            const bool is_indent_valid = (itr != m_context_stack.rend());
+            if FK_YAML_UNLIKELY (!is_indent_valid) {
+                throw parse_error("Detected invalid indentation.", line, indent);
+            }
 
-        // move back to the parent block mapping.
-        for (uint32_t i = 0; i < pop_num; i++) {
+            const auto pop_num = static_cast<uint32_t>(std::distance(m_context_stack.rbegin(), itr));
+            if (pop_num == 0) {
+                mp_current_node = m_context_stack.back().p_node;
+                return;
+            }
+
+            if (m_context_stack.back().state == context_state_t::BLOCK_MAPPING_EXPLICIT_KEY) {
+                // Simply popping an explicit key context would drop the entry for the `? key`
+                // entirely. Settle it as an entry with a null value before moving to the parent.
+                add_explicit_key_with_null_value();
+                continue;
+            }
+
+            if (defers_props()) {
+                // The entry which the properties preceded ends here without a node of its own, so they
+                // belong to its empty value. Any node which did follow them would have taken them before
+                // its context could be popped, so the current node is still the empty one.
+                // ```yaml
+                // foo: &anchor
+                // bar: 1        # the anchor is for the empty value of "foo".
+                // ```
+                if (m_defers_tag) {
+                    const tag_t tag_type = tag_resolver_type::resolve_tag(m_deferred_tag_name, mp_meta);
+                    ensure_scalar_tag(tag_type, line, indent);
+                    materialize_tagged_empty_node(*mp_current_node, tag_type, line, indent);
+                }
+                // The empty node never received the document metainfo, in which an anchor name must be
+                // registered for aliases to resolve it.
+                apply_directive_set(*mp_current_node);
+                apply_deferred_properties(*mp_current_node);
+            }
+
             m_context_stack.pop_back();
         }
-        mp_current_node = m_context_stack.back().p_node;
     }
 
     /// @brief Set YAML directive properties to the given node.
     /// @param node A basic_node_type object to be set YAML directive properties.
     void apply_directive_set(basic_node_type& node) noexcept {
         node.mp_meta = mp_meta;
+    }
+
+    /// @brief Closes the implicit single pair mapping wrapping a flow sequence entry, if one is open.
+    /// @note
+    /// A flow sequence entry may be a mapping entry written without braces, e.g. `[foo: 1]` meaning
+    /// `[{foo: 1}]`. Such an entry is wrapped in a mapping when its key separator is found, and that
+    /// wrapper must be closed once the entry ends, either at a separator or at the sequence suffix.
+    /// Block content cannot appear inside a flow collection, so a block mapping context found here can
+    /// only be that wrapper.
+    /// @param line Current line.
+    /// @param indent Current indentation.
+    void close_single_pair_mapping(const uint32_t line, const uint32_t indent) {
+        // LCOV_EXCL_START
+        if FK_YAML_UNLIKELY (m_context_stack.empty()) {
+            throw parse_error("No parent flow collection is found.", line, indent);
+        }
+        // LCOV_EXCL_STOP
+
+        if (m_context_stack.back().state == context_state_t::BLOCK_MAPPING) {
+            m_context_stack.pop_back();
+            mp_current_node = current_context(line, indent).p_node;
+        }
+    }
+
+    /// @brief Adds a flow sequence entry which has node properties only, if one is pending.
+    /// @note
+    /// A flow sequence entry may consist of node properties only, in which case the entry is an empty node
+    /// with those properties, e.g. `[foo, &anchor]` meaning `[foo, &anchor null]`. The entry is added once it
+    /// ends, either at a separator or at the sequence suffix.
+    /// @param line Current line.
+    /// @param indent Current indentation.
+    void close_empty_flow_sequence_entry(const uint32_t line, const uint32_t indent) {
+        // LCOV_EXCL_START
+        if FK_YAML_UNLIKELY (m_context_stack.empty()) {
+            throw parse_error("No parent flow collection is found.", line, indent);
+        }
+        // LCOV_EXCL_STOP
+
+        const parse_context& last_context = m_context_stack.back();
+        const bool is_sequence_entry = last_context.state == context_state_t::FLOW_SEQUENCE ||
+                                       last_context.state == context_state_t::FLOW_SEQUENCE_KEY;
+        if (is_sequence_entry && (m_needs_anchor_impl || m_needs_tag_impl)) {
+            basic_node_type entry;
+            if (m_needs_tag_impl) {
+                const tag_t tag_type = resolve_scalar_tag(line, indent);
+                materialize_tagged_empty_node(entry, tag_type, line, indent);
+            }
+            apply_directive_set(entry);
+            apply_node_properties(entry);
+            last_context.p_node->as_seq().emplace_back(std::move(entry));
+            m_flow_token_state = flow_token_state_t::NEEDS_SEPARATOR_OR_SUFFIX;
+        }
+    }
+
+    /// @brief Completes a flow mapping entry whose value was omitted, if one is pending.
+    /// @note
+    /// A flow mapping entry may leave its value empty, in which case the value is null, e.g. `{foo: }`
+    /// meaning `{foo: null}`. The value node is already null since `add_new_key` default constructs it,
+    /// so the entry only needs its context closed once it ends, either at a separator or at the mapping
+    /// suffix.
+    /// @param line Current line.
+    /// @param indent Current indentation.
+    void close_omitted_mapping_value(const uint32_t line, const uint32_t indent) {
+        // LCOV_EXCL_START
+        if FK_YAML_UNLIKELY (m_context_stack.empty()) {
+            throw parse_error("No parent flow collection is found.", line, indent);
+        }
+        // LCOV_EXCL_STOP
+
+        if (m_context_stack.back().state == context_state_t::MAPPING_VALUE) {
+            if (m_needs_tag_impl) {
+                const tag_t tag_type = resolve_scalar_tag(line, indent);
+                materialize_tagged_empty_node(*mp_current_node, tag_type, line, indent);
+            }
+            apply_directive_set(*mp_current_node);
+            apply_node_properties(*mp_current_node);
+            m_context_stack.pop_back();
+            mp_current_node = current_context(line, indent).p_node;
+            m_flow_token_state = flow_token_state_t::NEEDS_SEPARATOR_OR_SUFFIX;
+        }
+    }
+
+    /// @brief Materializes an empty node with the specified tag type.
+    /// @param tag_type The tag type to apply to the empty node.
+    /// @param line Current line.
+    /// @param indent Current indentation.
+    void materialize_tagged_empty_node(
+        basic_node_type& node, tag_t tag_type, const uint32_t line, const uint32_t indent) {
+        switch (tag_type) {
+        case tag_t::STRING:
+        case tag_t::NON_SPECIFIC:
+        case tag_t::CUSTOM_TAG:
+            node = basic_node_type(typename basic_node_type::string_type());
+            break;
+        case tag_t::NULL_VALUE:
+            // A null value is already represented by a default-constructed node.
+            break;
+        default: {
+            auto msg = format("Unsupported tag (%s) for an empty node.", m_tag_name.data());
+            throw parse_error(msg.c_str(), line, indent);
+            break;
+        }
+        }
+    }
+
+    /// @brief Resolves the tag for a scalar node, if any is pending.
+    /// @param line Current line.
+    /// @param indent Current indentation.
+    /// @return The resolved tag type, or tag_t::NONE if no tag is pending.
+    tag_t resolve_scalar_tag(const uint32_t line, const uint32_t indent) const {
+        if (!m_needs_tag_impl) {
+            return tag_t::NONE;
+        }
+
+        const tag_t tag_type = tag_resolver_type::resolve_tag(m_tag_name, mp_meta);
+        ensure_scalar_tag(tag_type, line, indent);
+
+        return tag_type;
+    }
+
+    /// @brief Ensure that the given tag type is valid for a scalar node.
+    /// @param tag_type The tag type to check.
+    /// @param line Current line.
+    /// @param indent Current indentation.
+    static void ensure_scalar_tag(tag_t tag_type, const uint32_t line, const uint32_t indent) {
+        // A collection tag denotes a sequence or a mapping, so it cannot apply to a scalar node.
+        // Such an input is a syntax error rather than an internal inconsistency.
+        if FK_YAML_UNLIKELY (tag_type == tag_t::SEQUENCE || tag_type == tag_t::MAPPING) {
+            throw parse_error("A sequence or mapping tag cannot be specified to a scalar node.", line, indent);
+        }
+    }
+
+    /// @brief Move the pending node properties aside until the node they belong to is known.
+    /// @note They precede their node by a line, so the node which follows may carry properties of its
+    /// own. Keeping the two apart lets both be bound to the right node.
+    /// ```yaml
+    /// foo: &map
+    ///   &key bar: baz   # &map is for the mapping, &key is for the "bar" key.
+    /// ```
+    void defer_node_properties() {
+        if (m_needs_anchor_impl) {
+            m_deferred_anchor_name = m_anchor_name;
+            m_defers_anchor = true;
+            m_needs_anchor_impl = false;
+            m_anchor_name = {};
+        }
+        if (m_needs_tag_impl) {
+            m_deferred_tag_name = m_tag_name;
+            m_defers_tag = true;
+            m_needs_tag_impl = false;
+            m_tag_name = {};
+        }
+    }
+
+    /// @brief Check whether any node properties are waiting to be bound.
+    /// @return true if properties precede a node whose kind is not known yet, false otherwise.
+    bool defers_props() const noexcept {
+        return m_defers_anchor || m_defers_tag;
+    }
+
+    /// @brief Set the node properties which precede their node to the given node.
+    /// @param node A node type object the deferred properties belong to.
+    void apply_deferred_properties(basic_node_type& node) {
+        if (m_defers_anchor) {
+            node.add_anchor_name(std::string(m_deferred_anchor_name.begin(), m_deferred_anchor_name.end()));
+            m_defers_anchor = false;
+            m_deferred_anchor_name = {};
+        }
+
+        if (m_defers_tag) {
+            // Ensure the tag is valid in the current document before applying it.
+            tag_resolver_type::resolve_tag(m_deferred_tag_name, mp_meta);
+            node.add_tag_name(std::string(m_deferred_tag_name.begin(), m_deferred_tag_name.end()));
+            m_defers_tag = false;
+            m_deferred_tag_name = {};
+        }
     }
 
     /// @brief Set YAML node properties (anchor and/or tag names) to the given node.
@@ -1300,6 +2400,8 @@ private:
         }
 
         if (m_needs_tag_impl) {
+            // Ensure the tag is valid in the current document before applying it.
+            tag_resolver_type::resolve_tag(m_tag_name, mp_meta);
             node.add_tag_name(std::string(m_tag_name.begin(), m_tag_name.end()));
             m_needs_tag_impl = false;
             m_tag_name = {};
@@ -1319,8 +2421,26 @@ private:
     std::deque<parse_context> m_context_stack {};
     /// The current depth of flow contexts.
     uint32_t m_flow_context_depth {0};
+    /// The indentation the contents of the outermost flow context must exceed, or -1 if unconstrained.
+    int32_t m_flow_base_indent {-1};
     /// The set of YAML directives.
     std::shared_ptr<doc_metainfo_type> mp_meta {};
+    /// Whether the document being parsed exists at all: it has contents or an explicit "---".
+    bool m_has_document {false};
+    /// Whether a provisional root mapping still requires a separator after its flow collection key.
+    bool m_expects_root_flow_key_separator {false};
+    /// Whether the current document begins with an explicit document start marker.
+    bool m_has_explicit_document_start {false};
+    /// The line where the explicit document start marker was found.
+    uint32_t m_explicit_document_start_line {0};
+    /// Whether the pending node properties precede their node and are not bound yet.
+    bool m_defers_anchor {false};
+    /// Whether a tag which precedes its node is waiting to be bound.
+    bool m_defers_tag {false};
+    /// The anchor name which precedes its node.
+    str_view m_deferred_anchor_name;
+    /// The tag name which precedes its node.
+    str_view m_deferred_tag_name;
     /// A flag to determine the need for YAML anchor node implementation.
     bool m_needs_anchor_impl {false};
     /// A flag to determine the need for a corresponding node with the last YAML tag.
@@ -1331,10 +2451,6 @@ private:
     str_view m_anchor_name;
     /// The last tag name.
     str_view m_tag_name;
-    /// The root YAML anchor name. (maybe empty and unused)
-    str_view m_root_anchor_name;
-    /// The root tag name. (maybe empty and unused)
-    str_view m_root_tag_name;
 };
 
 FK_YAML_DETAIL_NAMESPACE_END

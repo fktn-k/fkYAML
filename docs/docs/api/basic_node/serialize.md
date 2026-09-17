@@ -18,7 +18,7 @@ This function serializes the given `node` parameter in the following format.
 
 # A sequence key presented as an explicit key node.
 ? - <sequence value>
-  - <another sequnce value>
+  - <another sequence value>
 : <scalar>
 
 # A sequence value.

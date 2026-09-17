@@ -1,16 +1,16 @@
 //  _______   __ __   __  _____   __  __  __
 // |   __| |_/  |  \_/  |/  _  \ /  \/  \|  |     fkYAML: A C++ header-only YAML library
-// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.4.2
+// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.5.0
 // |__|  |_| \__|  |_|  |_|   |_|___||___|______| https://github.com/fktn-k/fkYAML
 //
-// SPDX-FileCopyrightText: 2023-2025 Kensuke Fukutani <fktn.dev@gmail.com>
+// SPDX-FileCopyrightText: 2023-2026 Kensuke Fukutani <fktn.dev@gmail.com>
 // SPDX-License-Identifier: MIT
 
 #ifndef FK_YAML_DETAIL_ENCODINGS_URI_ENCODING_HPP
 #define FK_YAML_DETAIL_ENCODINGS_URI_ENCODING_HPP
 
-#include <cctype>
 #include <string>
+#include <fkYAML/detail/char_class.hpp>
 
 #include <fkYAML/detail/macros/define_macros.hpp>
 
@@ -37,6 +37,11 @@ public:
                     return false;
                 }
 
+                // validate_octets() advances `current` past the last octet it consumed. Without
+                // moving it back, the loop's own ++current skips the character which follows the
+                // escape sequence, and, when the escape ends the sequence, moves `current` one
+                // past `end` so that the loop condition never holds and reads out of bounds.
+                --current;
                 continue;
             }
 
@@ -60,18 +65,9 @@ private:
                 return false;
             }
 
-            // Normalize a character for a-f/A-F comparison
-            const int octet = std::tolower(*begin);
-
-            if ('0' <= octet && octet <= '9') {
-                continue;
+            if (!is_xdigit(*begin)) {
+                return false;
             }
-
-            if ('a' <= octet && octet <= 'f') {
-                continue;
-            }
-
-            return false;
         }
 
         return true;
@@ -115,7 +111,7 @@ private:
             return true;
         default:
             // alphabets and numbers are also allowed.
-            return static_cast<bool>(std::isalnum(c));
+            return is_alnum(c);
         }
     }
 };

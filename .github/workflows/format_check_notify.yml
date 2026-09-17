@@ -1,0 +1,75 @@
+name: Format Check Notification
+
+on:
+  workflow_run:
+    workflows:
+      - Format_Check
+    types:
+      - completed
+
+jobs:
+  notify:
+    if: github.event.workflow_run.event == 'pull_request'
+    runs-on: ubuntu-latest
+    permissions:
+      actions: read
+      contents: read
+      issues: write
+      pull-requests: write
+
+    steps:
+    - name: Resolve PR and artifact metadata
+      id: resolve
+      env:
+        GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
+        REPOSITORY: ${{github.repository}}
+        RUN_ID: ${{github.event.workflow_run.id}}
+      run: |
+        set -eu
+
+        PR_NUMBER=$(jq -r '.workflow_run.pull_requests[0].number // empty' "$GITHUB_EVENT_PATH")
+
+        if [[ -z "${PR_NUMBER}" ]]; then
+          echo "found=false" >> "$GITHUB_OUTPUT"
+          exit 0
+        fi
+
+        echo "pr_number=${PR_NUMBER}" >> "$GITHUB_OUTPUT"
+
+        api_url="https://api.github.com/repos/${REPOSITORY}/actions/runs/${RUN_ID}/artifacts"
+        artifact_json=$(curl -fsSL \
+          -H "Authorization: Bearer ${GITHUB_TOKEN}" \
+          -H "Accept: application/vnd.github+json" \
+          "$api_url")
+
+        artifact_name=$(printf '%s' "$artifact_json" | jq -r --arg prefix "format_diff_pr${PR_NUMBER}.patch" '.artifacts[] | select(.name == $prefix) | .name' | head -n1)
+        artifact_id=$(printf '%s' "$artifact_json" | jq -r --arg prefix "format_diff_pr${PR_NUMBER}.patch" '.artifacts[] | select(.name == $prefix) | .id' | head -n1)
+
+        if [[ -z "${artifact_name}" || -z "${artifact_id}" || "${artifact_name}" == "null" || "${artifact_id}" == "null" ]]; then
+          echo "found=false" >> "$GITHUB_OUTPUT"
+          exit 0
+        fi
+
+        artifact_url="https://github.com/${REPOSITORY}/actions/runs/${RUN_ID}/artifacts/${artifact_id}"
+
+        echo "artifact_name=${artifact_name}" >> "$GITHUB_OUTPUT"
+        echo "artifact_id=${artifact_id}" >> "$GITHUB_OUTPUT"
+        echo "artifact_url=${artifact_url}" >> "$GITHUB_OUTPUT"
+        echo "found=true" >> "$GITHUB_OUTPUT"
+
+    - name: Notify the artifact URL
+      if: steps.resolve.outputs.found == 'true'
+      uses: thollander/actions-comment-pull-request@v3
+      with:
+        pr-number: ${{steps.resolve.outputs.pr_number}}
+        comment-tag: format_notification
+        mode: upsert
+        message: |
+          ## :octocat: Format/Amalgamation Check Failed
+          The source code has not been formatted/amalgamated correctly in the commit [${{github.event.workflow_run.head_sha}}](https://github.com/${{github.repository}}/commit/${{github.event.workflow_run.head_sha}}).
+          Please download and apply the patch to fix it.
+
+          | Name | ${{steps.resolve.outputs.artifact_name}}.zip |
+          |:-----|:----------------------------------------------|
+          | ID   | ${{steps.resolve.outputs.artifact_id}}        |
+          | URL  | ${{steps.resolve.outputs.artifact_url}}       |

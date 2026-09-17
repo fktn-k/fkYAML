@@ -56,16 +56,14 @@ This class provides features to handle YAML nodes.
 | difference_type                               | [`std::ptrdiff_t`](https://en.cppreference.com/w/cpp/types/ptrdiff_t)                                     |
 | [iterator](iterator.md)                       | [LegacyBidirectionalIterator](https://en.cppreference.com/w/cpp/named_req/BidirectionalIterator)          |
 | [const_iterator](iterator.md)                 | constant [LegacyBidirectionalIterator](https://en.cppreference.com/w/cpp/named_req/BidirectionalIterator) |
-| [reverse_iterator](reverse_iterator.md)       | reverse iterator derived from `iterator`          |
-| [const_reverse_iterator](reverse_iterator.md) | reverse iterator derived from `const_iterator` |
+| [reverse_iterator](reverse_iterator.md)       | reverse iterator derived from `iterator`                                                                  |
+| [const_reverse_iterator](reverse_iterator.md) | reverse iterator derived from `const_iterator`                                                            |
 
 ### Miscellaneous
 | Name                                            | Description                                                         |
 | ----------------------------------------------- | ------------------------------------------------------------------- |
 | [value_converter_type](value_converter_type.md) | The type used to convert between node and native data.              |
 | initializer_list_t                              | The type for initializer lists of `basic_node` values.              |
-| [node_t](node_t.md)                             | **(DEPRECATED)** The type used to store the internal value type.    |
-| [yaml_version_t](yaml_version_t.md)             | **(DEPRECATED)** The type used to store the enable version of YAML. |
 | [map_range](map_range.md)                       | The helper type for the `map_items()` function.                     |
 | [const_map_range](map_range.md)                 | The helper type for the `map_items()` function.                     |
 
@@ -85,7 +83,6 @@ This class provides features to handle YAML nodes.
 | Name                                  | Description                                                        |
 | ------------------------------------- | ------------------------------------------------------------------ |
 | [get_type](get_type.md)               | returns the type of a node value in a basic_node.                  |
-| [type](type.md)                       | **(DEPRECATED)** returns the type of a node value in a basic_node. |
 | [is_sequence](is_sequence.md)         | checks if a basic_node has a sequence node value.                  |
 | [is_mapping](is_mapping.md)           | checks if a basic_node has a mapping node value.                   |
 | [is_null](is_null.md)                 | checks if a basic_node has a null node value.                      |
@@ -96,17 +93,23 @@ This class provides features to handle YAML nodes.
 | [is_string](is_string.md)             | checks if a basic_node has a string node value.                    |
 
 ### Conversions
-| Name                                      |          | Description                                                             |
-| ----------------------------------------- | -------- | ----------------------------------------------------------------------- |
-| [deserialize](deserialize.md)             | (static) | deserializes the first YAML document into a basic_node.                 |
-| [deserialize_docs](deserialize_docs.md)   | (static) | deserializes all YAML documents into basic_node objects.                |
-| [operator>>](extraction_operator.md)      |          | deserializes an input stream into a basic_node.                         |
-| [serialize](serialize.md)                 | (static) | serializes a basic_node into a YAML formatted string.                   |
-| [serialize_docs](serialize_docs.md)       | (static) | serializes basic_node objects into a YAML formatted string.             |
-| [operator<<](insertion_operator.md)       |          | serializes a basic_node into an output stream.                          |
-| [get_value](get_value.md)                 |          | converts a basic_node into a target type.                               |
-| [get_value_inplace](get_value_inplace.md) |          | converts a basic_node into a target type and write it to a destination. |
-| [get_value_ref](get_value_ref.md)         |          | converts a basic_node into reference to a target type.                  |
+| Name                                      |          | Description                                                                                       |
+| ----------------------------------------- | -------- | ------------------------------------------------------------------------------------------------- |
+| [deserialize](deserialize.md)             | (static) | deserializes the first YAML document into a basic_node.                                           |
+| [deserialize_docs](deserialize_docs.md)   | (static) | deserializes all YAML documents into basic_node objects.                                          |
+| [operator>>](extraction_operator.md)      |          | deserializes an input stream into a basic_node.                                                   |
+| [serialize](serialize.md)                 | (static) | serializes a basic_node into a YAML formatted string.                                             |
+| [serialize_docs](serialize_docs.md)       | (static) | serializes basic_node objects into a YAML formatted string.                                       |
+| [operator<<](insertion_operator.md)       |          | serializes a basic_node into an output stream.                                                    |
+| [get_value](get_value.md)                 |          | converts a basic_node into a target type.                                                         |
+| [get_value_inplace](get_value_inplace.md) |          | converts a basic_node into a target type and write it to a destination.                           |
+| [get_value_or](get_value_or.md)           |          | tries to convert a basic_node into a target type.<br>returns a default value if conversion fails. |
+| [as_seq](as_seq.md)                       |          | get reference to the sequence node value.                                                         |
+| [as_map](as_map.md)                       |          | get reference to the mapping node value.                                                          |
+| [as_bool](as_bool.md)                     |          | get reference to the boolean node value.                                                          |
+| [as_int](as_int.md)                       |          | get reference to the integer node value.                                                          |
+| [as_float](as_float.md)                   |          | get reference to the float node value.                                                            |
+| [as_str](as_str.md)                       |          | get reference to the string node value.                                                           |
 
 ### Iterators
 | Name                      | Description                                                                                                |
@@ -145,27 +148,27 @@ This class provides features to handle YAML nodes.
 | [operator>=](operator_ge.md) | comparison: greater than or equal |
 
 ### Manipulations for Node Properties
-| Name                                  | Description                                              |
-| ------------------------------------- | -------------------------------------------------------- |
-| [is_alias](is_alias.md)               | checks if a basic_node is an alias node.                 |
-| [is_anchor](is_anchor.md)             | checks if a basic_node is an anchor node.                |
-| [add_anchor_name](add_anchor_name.md) | registers an anchor name to a basic_node object.         |
-| [get_anchor_name](get_anchor_name.md) | gets an anchor name associated with a basic_node object. |
-| [has_anchor_name](has_anchor_name.md) | checks if a basic_node has any anchor name.              |
-| [add_tag_name](add_tag_name.md)       | registers a tag name to a basic_node object.             |
-| [get_tag_name](get_tag_name.md)       | gets a tag name associated with a basic_node object.     |
-| [has_tag_name](has_tag_name.md)       | checks if a basic_node has any tag name.                 |
+| Name                                              | Description                                                   |
+| ------------------------------------------------- | ------------------------------------------------------------- |
+| [is_alias](is_alias.md)                           | checks if a basic_node is an alias node.                      |
+| [is_anchor](is_anchor.md)                         | checks if a basic_node is an anchor node.                     |
+| [add_anchor_name](add_anchor_name.md)             | registers an anchor name to a basic_node object.              |
+| [get_anchor_name](get_anchor_name.md)             | gets an anchor name associated with a basic_node object.      |
+| [has_anchor_name](has_anchor_name.md)             | checks if a basic_node has any anchor name.                   |
+| [add_tag_name](add_tag_name.md)                   | registers a tag name to a basic_node object.                  |
+| [get_tag_name](get_tag_name.md)                   | gets a tag name associated with a basic_node object.          |
+| [get_resolved_tag_name](get_resolved_tag_name.md) | gets a resolved tag name associated with a basic_node object. |
+| [has_tag_name](has_tag_name.md)                   | checks if a basic_node has any tag name.                      |
 
 ### Manipulations for Document Properties
 | Name                                              | Description                                                               |
 | ------------------------------------------------- | ------------------------------------------------------------------------- |
 | [get_yaml_version_type](get_yaml_version_type.md) | gets a YAML version associated with a basic_node object.                  |
 | [set_yaml_version_type](set_yaml_version_type.md) | sets a YAML version to a basic_node object.                               |
-| [get_yaml_version](get_yaml_version.md)           | **(DEPRECATED)** gets a YAML version associated with a basic_node object. |
-| [set_yaml_version](set_yaml_version.md)           | **(DEPRECATED)** sets a YAML version to a basic_node object.              |
 
 ### Modifiers
 
-| Name            | Description                      |
-| --------------- | -------------------------------- |
-| [swap](swap.md) | swaps the internally stored data |
+| Name              | Description                                    |
+| ----------------- | ---------------------------------------------- |
+| [erase](erase.md) | erases a mapping entry specified by the key.   |
+| [swap](swap.md)   | swaps the internally stored data.              |

@@ -1,9 +1,9 @@
 //  _______   __ __   __  _____   __  __  __
 // |   __| |_/  |  \_/  |/  _  \ /  \/  \|  |     fkYAML: A C++ header-only YAML library
-// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.4.2
+// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.5.0
 // |__|  |_| \__|  |_|  |_|   |_|___||___|______| https://github.com/fktn-k/fkYAML
 //
-// SPDX-FileCopyrightText: 2023-2025 Kensuke Fukutani <fktn.dev@gmail.com>
+// SPDX-FileCopyrightText: 2023-2026 Kensuke Fukutani <fktn.dev@gmail.com>
 // SPDX-License-Identifier: MIT
 
 #ifndef FK_YAML_DETAIL_INPUT_SCALAR_SCANNER_HPP
@@ -14,6 +14,7 @@
 
 #include <fkYAML/detail/macros/define_macros.hpp>
 #include <fkYAML/detail/assert.hpp>
+#include <fkYAML/detail/char_class.hpp>
 #include <fkYAML/node_type.hpp>
 
 FK_YAML_DETAIL_NAMESPACE_BEGIN
@@ -305,24 +306,6 @@ private:
             return (len > 1) ? scan_hexadecimal_number(++itr, --len) : node_type::INTEGER;
         }
         return node_type::STRING;
-    }
-
-    /// @brief Check if the given character is a digit.
-    /// @note This function is needed to avoid assertion failures in `std::isdigit()` especially when compiled with
-    /// MSVC.
-    /// @param c A character to be checked.
-    /// @return true if the given character is a digit, false otherwise.
-    static bool is_digit(char c) {
-        return ('0' <= c && c <= '9');
-    }
-
-    /// @brief Check if the given character is a hex-digit.
-    /// @note This function is needed to avoid assertion failures in `std::isxdigit()` especially when compiled with
-    /// MSVC.
-    /// @param c A character to be checked.
-    /// @return true if the given character is a hex-digit, false otherwise.
-    static bool is_xdigit(char c) {
-        return (('0' <= c && c <= '9') || ('A' <= c && c <= 'F') || ('a' <= c && c <= 'f'));
     }
 };
 

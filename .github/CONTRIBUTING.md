@@ -57,7 +57,7 @@ scripts/check_amalgamation.sh
 
 ### 2. [`test/unit_test/*.cpp`](https://github.com/fktn-k/fkYAML/tree/develop/test/unit_test)
 
-These files contain the [Catch2](https://github.com/catchorg/Catch2) unit tests from which current coverage data is generated. (Click [here](https://coveralls.io/github/fktn-k/fkYAML) to see the current coverage of the library's code.) If you have added or changed a feature, please also modify a unit test to the associated file(s) to keep covering 100% of the lines/branches in the fkYAML library.  
+These files contain the [doctest](https://github.com/doctest/doctest) unit tests from which current coverage data is generated. (Click [here](https://coveralls.io/github/fktn-k/fkYAML) to see the current coverage of the library's code.) If you have added or changed a feature, please also modify a unit test to the associated file(s) to keep covering 100% of the lines/branches in the fkYAML library.  
 
 The unit tests can be compiled and executed with the following commands:  
 
@@ -106,7 +106,7 @@ The commands above will automatically install all the dependencies using [Python
 ### 4. Format source files
 
 [GitHub Actions](https://github.com/fktn-k/fkYAML/actions) will test the updated project with the [Clang-Format](https://github.com/llvm/llvm-project/releases/tag/llvmorg-18.1.3) tool (18.1.3) once you open a PR or push commits afterwards which include changes in the source files under either [`include`](https://github.com/fktn-k/fkYAML/tree/develop/include) or [`test`](https://github.com/fktn-k/fkYAML/tree/develop/test) directories.  
-Although code formatting is automatically executed in the GitHub Actions workflows, you can run the script files ([`run_clang_format.bat`](https://github.com/fktn-k/fkYAML/blob/develop/scripts/run_clang_format.bat) for Windows, [`run_clang_format.sh`](https://github.com/fktn-k/fkYAML/blob/develop/scripts/run_clang_format.sh) otherwise) to check if your changes follow the rules defined in the [`.clang-format`](https://github.com/fktn-k/fkYAML/blob/develop/.clang-format) file on your local environment in advance.  
+Although format check is automatically executed in the GitHub Actions workflows, you can run the script files ([`run_clang_format.bat`](https://github.com/fktn-k/fkYAML/blob/develop/scripts/run_clang_format.bat) for Windows, [`run_clang_format.sh`](https://github.com/fktn-k/fkYAML/blob/develop/scripts/run_clang_format.sh) otherwise) to check if your changes follow the rules defined in the [`.clang-format`](https://github.com/fktn-k/fkYAML/blob/develop/.clang-format) file on your local environment in advance.  
 Note that, since the Clang-Format tool does not gurantee backward compatibility especially in its edge cases and its behaviors might therefore vary from version to version, it's highly recommended that you use the above script files to avoid unnecessary confusion for that kind of reason.  
 The scripts uses [the Clang-Format Python distribution](https://pypi.org/project/clang-format/18.1.3/) and installs it using [the Python venv module](https://docs.python.org/3/library/venv.html) if it's not been installed yet.  
 You can run the scripts with the following commands:  
@@ -125,7 +125,7 @@ scripts/run_clang_format.sh
 
 ## Note
 
-When you open a pull request, fkYAML will automatically be built/tested with (1) various combinations of compilers and operating systems and (2) analyzers such as [Valgrind](https://valgrind.org/) and [Clang Sanitizers](https://clang.llvm.org/docs/index.html) to detect runtime issues (e.g., memory leaks), on [GitHub Actions](https://github.com/fktn-k/fkYAML/actions) once you open a pull request.  
+When you open a pull request, fkYAML will automatically be built/tested with (1) various combinations of compilers and operating systems and (2) analyzers such as [Valgrind](https://valgrind.org/), [Clang Sanitizers](https://clang.llvm.org/docs/index.html) and [MSVC AddressSanitizer](https://learn.microsoft.com/cpp/sanitizers/asan) to detect runtime issues (e.g., memory leaks), on [GitHub Actions](https://github.com/fktn-k/fkYAML/actions) once you open a pull request.  
 These can result in failing builds and/or unit tests which run successfully on your local environment.  
 As a policy of this project, however, all the workflow checks must be passed before merging.  
 You can run tests with those tools locally by executing the following commands:  
@@ -142,6 +142,14 @@ ctest -C Debug -T memcheck --test-dir build --output-on-failure
 ```bash
 cd path/to/fkYAML
 CXX=clang++ cmake -B build -S . -DCMAKE_BUILD_TYPE=Debug -DFK_YAML_BUILD_TEST=ON -DFK_YAML_RUN_CLANG_SANITIZERS=ON
+cmake --build build --config Debug
+ctest -C Debug --test-dir build --output-on-failure
+```
+
+**MSVC Sanitizers** (assuming Visual Studio with the C++ AddressSanitizer component is already installed.)
+```bash
+cd path/to/fkYAML
+cmake -B build -S . -DFK_YAML_BUILD_TEST=ON -DFK_YAML_RUN_MSVC_SANITIZERS=ON
 cmake --build build --config Debug
 ctest -C Debug --test-dir build --output-on-failure
 ```
