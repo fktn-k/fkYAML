@@ -986,9 +986,10 @@ private:
                 const uint32_t props_line = lexer.get_lines_processed();
                 deserialize_node_properties(lexer, token, line, indent);
 
-                if (lexer.get_lines_processed() > props_line) {
+                if (m_flow_context_depth == 0 && lexer.get_lines_processed() > props_line) {
                     // The properties belong to whatever begins on the following line. Which node that
                     // is depends on the token after it, so the binding waits until that is known.
+                    // In the flow context, line breaks do not change the node which properties belong to.
                     // ```yaml
                     // - !circle
                     //   center: 1   # the tag is for the mapping, not for the "center" key.
@@ -1158,6 +1159,7 @@ private:
                     m_flow_base_indent = -1;
                 }
 
+                close_empty_flow_sequence_entry(line, indent);
                 close_omitted_mapping_value(line, indent);
                 close_single_pair_mapping(line, indent);
 
@@ -1435,6 +1437,7 @@ private:
                     m_context_stack.back().state == context_state_t::FLOW_MAPPING_EXPLICIT_KEY) {
                     add_explicit_flow_key(line, indent);
                 }
+                close_empty_flow_sequence_entry(line, indent);
                 close_omitted_mapping_value(line, indent);
                 if FK_YAML_UNLIKELY (m_flow_token_state != flow_token_state_t::NEEDS_SEPARATOR_OR_SUFFIX) {
                     throw parse_error("invalid value separator is found.", line, indent);
@@ -2230,6 +2233,36 @@ private:
         if (m_context_stack.back().state == context_state_t::BLOCK_MAPPING) {
             m_context_stack.pop_back();
             mp_current_node = current_context(line, indent).p_node;
+        }
+    }
+
+    /// @brief Adds a flow sequence entry which has node properties only, if one is pending.
+    /// @note
+    /// A flow sequence entry may consist of node properties only, in which case the entry is an empty node
+    /// with those properties, e.g. `[foo, &anchor]` meaning `[foo, &anchor null]`. The entry is added once it
+    /// ends, either at a separator or at the sequence suffix.
+    /// @param line Current line.
+    /// @param indent Current indentation.
+    void close_empty_flow_sequence_entry(const uint32_t line, const uint32_t indent) {
+        // LCOV_EXCL_START
+        if FK_YAML_UNLIKELY (m_context_stack.empty()) {
+            throw parse_error("No parent flow collection is found.", line, indent);
+        }
+        // LCOV_EXCL_STOP
+
+        const parse_context& last_context = m_context_stack.back();
+        const bool is_sequence_entry = last_context.state == context_state_t::FLOW_SEQUENCE ||
+                                       last_context.state == context_state_t::FLOW_SEQUENCE_KEY;
+        if (is_sequence_entry && (m_needs_anchor_impl || m_needs_tag_impl)) {
+            basic_node_type entry;
+            if (m_needs_tag_impl) {
+                const tag_t tag_type = resolve_scalar_tag(line, indent);
+                materialize_tagged_empty_node(entry, tag_type, line, indent);
+            }
+            apply_directive_set(entry);
+            apply_node_properties(entry);
+            last_context.p_node->as_seq().emplace_back(std::move(entry));
+            m_flow_token_state = flow_token_state_t::NEEDS_SEPARATOR_OR_SUFFIX;
         }
     }
 

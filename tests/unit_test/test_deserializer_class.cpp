@@ -2676,6 +2676,52 @@ TEST_CASE("Deserializer_SinglePairMappingInFlowSequence") {
         REQUIRE_NOTHROW(root = deserializer.deserialize(fkyaml::detail::input_adapter(input)));
         REQUIRE(root.is_sequence());
     }
+
+    SUBCASE("the last entry has node properties only") {
+        std::string input = "[a, &x]";
+        REQUIRE_NOTHROW(root = deserializer.deserialize(fkyaml::detail::input_adapter(input)));
+
+        REQUIRE(root.is_sequence());
+        REQUIRE_FALSE(root.has_anchor_name());
+        REQUIRE(root.size() == 2);
+        REQUIRE(root[0].as_str() == "a");
+        REQUIRE(root[1].is_null());
+        REQUIRE(root[1].get_anchor_name() == "x");
+    }
+
+    SUBCASE("the first entry has node properties only") {
+        std::string input = "[&x, b]";
+        REQUIRE_NOTHROW(root = deserializer.deserialize(fkyaml::detail::input_adapter(input)));
+
+        REQUIRE(root.size() == 2);
+        REQUIRE(root[0].is_null());
+        REQUIRE(root[0].get_anchor_name() == "x");
+        REQUIRE(root[1].as_str() == "b");
+        REQUIRE_FALSE(root[1].has_anchor_name());
+    }
+
+    SUBCASE("an entry with a tag only which ends its line") {
+        std::string input = "[a, !!str\n]";
+        REQUIRE_NOTHROW(root = deserializer.deserialize(fkyaml::detail::input_adapter(input)));
+
+        REQUIRE(root.is_sequence());
+        REQUIRE_FALSE(root.has_tag_name());
+        REQUIRE(root.size() == 2);
+        REQUIRE(root[1].is_string());
+        REQUIRE(root[1].as_str().empty());
+        REQUIRE(root[1].get_tag_name() == "!!str");
+    }
+
+    SUBCASE("an entry with an anchor only which ends its line in an anchored sequence") {
+        std::string input = "&m\n[a, &x\n]";
+        REQUIRE_NOTHROW(root = deserializer.deserialize(fkyaml::detail::input_adapter(input)));
+
+        REQUIRE(root.is_sequence());
+        REQUIRE(root.get_anchor_name() == "m");
+        REQUIRE(root.size() == 2);
+        REQUIRE(root[1].is_null());
+        REQUIRE(root[1].get_anchor_name() == "x");
+    }
 }
 
 TEST_CASE("Deserializer_FlowMapping") {
@@ -3133,6 +3179,29 @@ TEST_CASE("Deserializer_OmittedFlowMappingValue") {
         auto input =
             GENERATE(std::string("{foo: 1,, bar: 2}"), std::string("{,}"), std::string("[a,,b]"), std::string("[,]"));
         REQUIRE_THROWS_AS(root = deserializer.deserialize(fkyaml::detail::input_adapter(input)), fkyaml::parse_error);
+    }
+
+    SUBCASE("a value with node properties only which ends its line") {
+        std::string input = "{a: &x\n, b: c}";
+        REQUIRE_NOTHROW(root = deserializer.deserialize(fkyaml::detail::input_adapter(input)));
+
+        REQUIRE(root.is_mapping());
+        REQUIRE(root.size() == 2);
+        REQUIRE(root["a"].is_null());
+        REQUIRE(root["a"].get_anchor_name() == "x");
+        REQUIRE(root["b"].as_str() == "c");
+        REQUIRE_FALSE(root["b"].has_anchor_name());
+    }
+
+    SUBCASE("the last value with node properties only which ends its line in an anchored mapping") {
+        std::string input = "&m\n{a: &x\n}";
+        REQUIRE_NOTHROW(root = deserializer.deserialize(fkyaml::detail::input_adapter(input)));
+
+        REQUIRE(root.is_mapping());
+        REQUIRE(root.get_anchor_name() == "m");
+        REQUIRE(root.size() == 1);
+        REQUIRE(root["a"].is_null());
+        REQUIRE(root["a"].get_anchor_name() == "x");
     }
 }
 
