@@ -10,7 +10,8 @@
 #include <fkYAML/node.hpp>
 
 int main() {
-    fkyaml::node n(fkyaml::node::node_t::INTEGER);
-    std::cout << n << std::endl;
+    fkyaml::node n(fkyaml::node_type::BOOLEAN);
+    fkyaml::node n2(n);
+    std::cout << n2 << std::endl;
     return 0;
 }

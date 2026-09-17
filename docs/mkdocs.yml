@@ -92,6 +92,7 @@ nav:
   - Releases: home/releases.md
   - Supported Compilers: home/supported_compilers.md
   - Community Support: home/community_support.md
+  - Migration Guide: migration.md
 - Tutorials:
   - The First Steps: tutorials/index.md
   - CMake Integration: tutorials/cmake_integration.md
@@ -171,13 +172,6 @@ nav:
     - set_yaml_version_type: api/basic_node/set_yaml_version_type.md
     - size: api/basic_node/size.md
     - swap: api/basic_node/swap.md
-    - deprecated:
-      - node_t: api/basic_node/node_t.md
-      - yaml_version_t: api/basic_node/yaml_version_t.md
-      - get_value_ref: api/basic_node/get_value_ref.md
-      - get_yaml_version: api/basic_node/get_yaml_version.md
-      - set_yaml_version: api/basic_node/set_yaml_version.md
-      - type: api/basic_node/type.md
   - exception:
     - exception: api/exception/index.md
     - (constructor): api/exception/constructor.md
