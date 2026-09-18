@@ -24,8 +24,6 @@ We have also resolved an issue where anchor resolution would break after seriali
 While this release introduces compatibility-breaking changes to the API and ABI, the migration process has been simplified as much as possible.  
 For details, please refer to the "Breaking Changes" section down below.  
 
-Translated with DeepL.com (free version)
-
 #### :boom: Breaking Changes
 
 This release changes selected parsing results, public API contracts, and the `basic_node` ABI.  

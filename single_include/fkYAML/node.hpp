@@ -3228,6 +3228,37 @@ class lexical_analyzer {
         const char* begin_itr {nullptr};
     };
 
+    class scan_context {
+    public:
+        void enter_flow_context() noexcept {
+            m_is_in_flow_context = true;
+        }
+
+        void exit_flow_context() noexcept {
+            m_is_in_flow_context = false;
+        }
+
+        bool is_in_flow_context() const noexcept {
+            return m_is_in_flow_context;
+        }
+
+        void enter_document_directives() noexcept {
+            m_is_in_document_directives = true;
+        }
+
+        void exit_document_directives() noexcept {
+            m_is_in_document_directives = false;
+        }
+
+        bool is_in_document_directives() const noexcept {
+            return m_is_in_document_directives;
+        }
+
+    private:
+        bool m_is_in_flow_context {false};
+        bool m_is_in_document_directives {false};
+    };
+
     // whether the current context is flow(1) or block(0)
     static constexpr uint32_t flow_context_bit = 1u << 0u;
     // whether the current document part is directive(1) or content(0)
@@ -3239,9 +3270,9 @@ public:
     explicit lexical_analyzer(str_view input_buffer) noexcept
         : m_begin_itr(input_buffer.begin()),
           m_cur_itr(input_buffer.begin()),
-          m_end_itr(input_buffer.end()),
-          m_last_token_begin_itr(input_buffer.begin()) {
+          m_end_itr(input_buffer.end()) {
         m_pos_tracker.set_target_buffer(input_buffer);
+        m_last_token.begin_itr = input_buffer.begin();
     }
 
     /// @brief Get the next lexical token by scanning the left of the input buffer.
@@ -3256,10 +3287,7 @@ public:
             info = process_token();
         }
 
-        m_last_token_begin_pos = info.begin_pos;
-        m_last_token_begin_line = info.begin_line;
-        m_last_token_begin_itr = info.begin_itr;
-        m_last_token_type = info.token.type;
+        m_last_token = info;
         return info.token;
     }
 
@@ -3277,7 +3305,7 @@ public:
     /// @brief Get the beginning position of a last token.
     /// @return uint32_t The beginning position of a last token.
     uint32_t get_last_token_begin_pos() const noexcept {
-        return m_last_token_begin_pos;
+        return m_last_token.begin_pos;
     }
 
     /// @brief Check whether a tab character is used within the indentation of the last token line.
@@ -3287,13 +3315,13 @@ public:
     /// @param indent The indentation width required at the beginning of the last token line.
     /// @return true if a tab appears before the required indentation, false otherwise.
     bool has_tab_in_indentation(uint32_t indent) const noexcept {
-        return has_tab_before(m_last_token_begin_itr, indent);
+        return has_tab_before(m_last_token.begin_itr, indent);
     }
 
     /// @brief Get the number of lines already processed.
     /// @return uint32_t The number of lines already processed.
     uint32_t get_lines_processed() const noexcept {
-        return m_last_token_begin_line;
+        return m_last_token.begin_line;
     }
 
     /// @brief Get the YAML version specification.
@@ -3320,25 +3348,25 @@ public:
         return m_block_scalar_header;
     }
 
-    /// @brief Toggles the context state between flow and block.
-    /// @param is_flow_context true: flow context, false: block context
-    void set_context_state(bool is_flow_context) noexcept {
-        m_state &= ~flow_context_bit;
-        if (is_flow_context) {
-            m_state |= flow_context_bit;
-            // The outermost flow collection owns the indentation which its lines must have. Only that
-            // one reaches here, since the deserializer enters the flow context from the block one alone.
-            m_flow_required_indent = get_required_continuation_indent();
-        }
+    /// @brief Enter the flow context.
+    void enter_flow_context() noexcept {
+        m_scan_context.enter_flow_context();
+        m_flow_required_indent = get_required_continuation_indent();
     }
 
-    /// @brief Toggles the document state between directive and content.
-    /// @param is_directive true: directive, false: content
-    void set_document_state(bool is_directive) noexcept {
-        m_state &= ~document_directive_bit;
-        if (is_directive) {
-            m_state |= document_directive_bit;
-        }
+    /// @brief Exit the flow context.
+    void exit_flow_context() noexcept {
+        m_scan_context.exit_flow_context();
+    }
+
+    /// @brief Enter the document directives context.
+    void enter_directives() noexcept {
+        m_scan_context.enter_document_directives();
+    }
+
+    /// @brief Exit the document directives context.
+    void exit_directives() noexcept {
+        m_scan_context.exit_document_directives();
     }
 
 private:
@@ -3357,7 +3385,8 @@ private:
             return info;
         }
 
-        const bool continues_flow_line = (m_state & flow_context_bit) != 0 && info.begin_line > m_last_token_begin_line;
+        const bool continues_flow_line =
+            m_scan_context.is_in_flow_context() && info.begin_line > m_last_token.begin_line;
         if FK_YAML_UNLIKELY (continues_flow_line && has_tab_before(m_token_begin_itr, m_flow_required_indent)) {
             emit_error("A tab character cannot be used as indentation.");
         }
@@ -3382,7 +3411,7 @@ private:
             case '[':
             case ']':
             case ',':
-                if (m_state & flow_context_bit) {
+                if (m_scan_context.is_in_flow_context()) {
                     info.token.type = lexical_token_t::EXPLICIT_KEY_PREFIX;
                     return info;
                 }
@@ -3404,7 +3433,7 @@ private:
                 info.token.type = lexical_token_t::KEY_SEPARATOR;
                 return info;
             default:
-                if ((m_state & flow_context_bit) == 0) {
+                if (!m_scan_context.is_in_flow_context()) {
                     // in a block context
                     break;
                 }
@@ -3431,7 +3460,7 @@ private:
                     //   {[1,2,3]:null}:"baz"
                     // }
                     // ```
-                    switch (m_last_token_type) {
+                    switch (m_last_token.token.type) {
                     case lexical_token_t::SINGLE_QUOTED_SCALAR:
                     case lexical_token_t::DOUBLE_QUOTED_SCALAR:
                     case lexical_token_t::SEQUENCE_FLOW_END:
@@ -3463,7 +3492,7 @@ private:
             scan_comment();
             return process_token();
         case '%': // directive prefix
-            if (m_state & document_directive_bit) {
+            if (m_scan_context.is_in_document_directives()) {
                 info.token.type = scan_directive();
                 return info;
             }
@@ -3491,7 +3520,7 @@ private:
             case ',':
                 // "-" cannot start a plain scalar if it is followed by a flow indicator in a flow context.
                 // See https://yaml.org/spec/1.2.2/#733-plain-style for more details.
-                if (m_state & flow_context_bit) {
+                if (m_scan_context.is_in_flow_context()) {
                     ++m_cur_itr;
                     info.token.type = lexical_token_t::SEQUENCE_BLOCK_PREFIX;
                     return info;
@@ -3662,7 +3691,7 @@ private:
         case ',':
             // A separator beginning a line ends the preceding entry of a flow collection, while in a
             // block context it is just an ordinary plain scalar character.
-            return (m_state & flow_context_bit) != 0;
+            return m_scan_context.is_in_flow_context();
         case '#':
             return true;
         default:
@@ -4118,7 +4147,7 @@ private:
         case '}':
         case ']':
         case ',':
-            if ((m_state & flow_context_bit) != 0) {
+            if (m_scan_context.is_in_flow_context()) {
                 return {m_token_begin_itr, m_cur_itr};
             }
             break;
@@ -4174,7 +4203,7 @@ private:
                 // ```yaml
                 // {foo: !!str, bar: !<tag:yaml.org,2002:str>}
                 // ```
-                ends_loop = !is_in_verbatim_uri && (m_state & flow_context_bit) != 0;
+                ends_loop = !is_in_verbatim_uri && m_scan_context.is_in_flow_context();
                 break;
             default:
                 break;
@@ -4418,7 +4447,7 @@ private:
         const str_view sv {m_token_begin_itr, m_end_itr};
 
         // flow indicators are checked only within a flow context.
-        const str_view filter = (m_state & flow_context_bit) ? "\t\n :{}[]," : "\t\n :";
+        const str_view filter = m_scan_context.is_in_flow_context() ? "\t\n :{}[]," : "\t\n :";
         std::size_t pos = sv.find_first_of(filter);
         if FK_YAML_UNLIKELY (pos == str_view::npos) {
             check_scalar_content(sv);
@@ -4440,7 +4469,7 @@ private:
                     // Only meaningful in a block context: in a flow context the surrounding collection
                     // determines the required indentation of continuation lines.
                     begins_own_line =
-                        ((m_state & flow_context_bit) == 0) && (m_pos_tracker.get_cur_pos_in_line() == indent);
+                        !m_scan_context.is_in_flow_context() && (m_pos_tracker.get_cur_pos_in_line() == indent);
                 }
 
                 constexpr str_view space_filter {" \t\n"};
@@ -4458,7 +4487,7 @@ private:
                 // One which follows a key on the same line must be continued by more indented lines,
                 // because a line at the key's indentation belongs to the parent mapping instead.
                 uint32_t min_continuation_indent = 0;
-                if (m_state & flow_context_bit) {
+                if (m_scan_context.is_in_flow_context()) {
                     min_continuation_indent = m_flow_required_indent;
                 }
                 else {
@@ -4531,7 +4560,7 @@ private:
                     case ']':
                     case '{':
                     case '}':
-                        ends_loop = ((m_state & flow_context_bit) != 0);
+                        ends_loop = m_scan_context.is_in_flow_context();
                         break;
                     default:
                         break;
@@ -4543,7 +4572,7 @@ private:
                 case '[':
                 case ']':
                 case ',':
-                    ends_loop = ((m_state & flow_context_bit) != 0);
+                    ends_loop = m_scan_context.is_in_flow_context();
                     break;
                 default:
                     break;
@@ -4566,7 +4595,7 @@ private:
                         // A flow indicator is not "safe" to follow a ":" in a flow context, so the ":" ends
                         // the plain scalar and becomes a mapping value indicator instead.
                         // See https://yaml.org/spec/1.2.2/#733-plain-style for more details.
-                        ends_loop = ((m_state & flow_context_bit) != 0);
+                        ends_loop = m_scan_context.is_in_flow_context();
                         break;
                     default:
                         break;
@@ -4950,18 +4979,12 @@ private:
     str_view m_tag_prefix;
     /// The last block scalar header.
     block_scalar_header m_block_scalar_header {};
-    /// The beginning of the last lexical token, used to inspect the indentation of its line.
-    const char* m_last_token_begin_itr;
     /// The indentation which the lines of the current flow collection must have.
     uint32_t m_flow_required_indent {0};
-    /// The beginning position of the last lexical token. (zero origin)
-    uint32_t m_last_token_begin_pos {0};
-    /// The beginning line of the last lexical token. (zero origin)
-    uint32_t m_last_token_begin_line {0};
-    /// The type of the last lexical token.
-    lexical_token_t m_last_token_type {lexical_token_t::END_OF_BUFFER};
+    /// The information of the last lexical token.
+    token_info m_last_token;
     /// The current depth of flow context.
-    uint32_t m_state {0};
+    scan_context m_scan_context {};
     /// The queue of pending tokens.
     std::deque<token_info> m_pending_token_queue;
 };
@@ -8126,6 +8149,149 @@ FK_YAML_DETAIL_NAMESPACE_END
 
 FK_YAML_DETAIL_NAMESPACE_BEGIN
 
+/// @brief Definition of state types of parse contexts.
+enum class context_state_t : std::uint8_t {
+    BLOCK_MAPPING,                //!< The underlying node is a block mapping.
+    BLOCK_MAPPING_EXPLICIT_KEY,   //!< The underlying node is an explicit block mapping key.
+    BLOCK_MAPPING_EXPLICIT_VALUE, //!< The underlying node is an explicit block mapping value.
+    MAPPING_VALUE,                //!< The underlying node is a block mapping value.
+    BLOCK_SEQUENCE,               //!< The underlying node is a block sequence.
+    BLOCK_SEQUENCE_ENTRY,         //!< The underlying node is a block sequence entry.
+    FLOW_SEQUENCE,                //!< The underlying node is a flow sequence.
+    FLOW_SEQUENCE_KEY,            //!< The underlying node is a flow sequence as a key.
+    FLOW_MAPPING,                 //!< The underlying node is a flow mapping.
+    FLOW_MAPPING_KEY,             //!< The underlying node is a flow mapping as a key.
+    FLOW_MAPPING_EXPLICIT_KEY,    //!< The underlying node is an explicit key in a flow collection.
+};
+
+/// @brief Definitions of state types for expected flow token hints.
+enum class flow_token_state_t : std::uint8_t {
+    NEEDS_VALUE_OR_SUFFIX,     //!< Either value or flow suffix (`]` or `}`)
+    NEEDS_SEPARATOR_OR_SUFFIX, //!< Either separator (`,`) or flow suffix (`]` or `}`)
+};
+
+/// @brief State management for flow context during YAML parsing.
+class flow_context_state {
+public:
+    /// @brief Check whether the flow context is currently active.
+    /// @return True if the flow context is active, false otherwise.
+    bool is_active() const noexcept {
+        return m_depth > 0;
+    }
+
+    int32_t get_base_indent() const noexcept {
+        return m_base_indent;
+    }
+
+    bool needs_separator_or_suffix() const noexcept {
+        return m_token_state == flow_token_state_t::NEEDS_SEPARATOR_OR_SUFFIX;
+    }
+
+    bool needs_value_or_suffix() const noexcept {
+        return m_token_state == flow_token_state_t::NEEDS_VALUE_OR_SUFFIX;
+    }
+
+    void set_token_state(flow_token_state_t state) noexcept {
+        m_token_state = state;
+    }
+
+    /// @brief Begin a new flow context.
+    /// @note This should be called when entering a flow collection.
+    void begin() noexcept {
+        ++m_depth;
+        m_token_state = flow_token_state_t::NEEDS_VALUE_OR_SUFFIX;
+    }
+
+    /// @brief Begin a new flow context with a specified parent indentation.
+    /// @param parent_indent The indentation level of the parent context.
+    void begin(const uint32_t parent_indent) {
+        if (m_depth == 0) {
+            m_base_indent = static_cast<int32_t>(parent_indent);
+        }
+        ++m_depth;
+        m_token_state = flow_token_state_t::NEEDS_VALUE_OR_SUFFIX;
+    }
+
+    /// @brief End the current flow context.
+    /// @return True if the flow context was active and is now ended, false otherwise.
+    bool end() noexcept {
+        if (--m_depth == 0) {
+            m_base_indent = -1;
+            return true;
+        }
+        return false;
+    }
+
+    void reset() noexcept {
+        m_depth = 0;
+        m_base_indent = -1;
+        m_token_state = flow_token_state_t::NEEDS_VALUE_OR_SUFFIX;
+    }
+
+private:
+    /// The current depth of flow contexts.
+    uint32_t m_depth {0};
+    /// The indentation the contents of the outermost flow context must exceed, or -1 if unconstrained.
+    int32_t m_base_indent {-1};
+    /// A flag to determine the need for a value separator or a flow suffix to follow.
+    flow_token_state_t m_token_state {flow_token_state_t::NEEDS_VALUE_OR_SUFFIX};
+};
+
+/// @brief Node properties waiting to be applied.
+struct pending_node_properties {
+    /// @brief Check whether an anchor name is stored.
+    bool has_anchor() const noexcept {
+        return !m_anchor_name.empty();
+    }
+
+    /// @brief Check whether a tag name is stored.
+    bool has_tag() const noexcept {
+        return !m_tag_name.empty();
+    }
+
+    /// @brief Store an anchor name.
+    void store_anchor(const str_view name) noexcept {
+        m_anchor_name = name;
+    }
+
+    /// @brief Store a tag name.
+    void store_tag(const str_view name) noexcept {
+        m_tag_name = name;
+    }
+
+    /// @brief Get the stored anchor name.
+    /// @return The stored anchor name.
+    str_view get_anchor() const noexcept {
+        return m_anchor_name;
+    }
+
+    /// @brief Get the stored tag name.
+    /// @return The stored tag name.
+    str_view get_tag() const noexcept {
+        return m_tag_name;
+    }
+
+    /// @brief Release the stored anchor name.
+    str_view release_anchor() noexcept {
+        const str_view name = get_anchor();
+        m_anchor_name = {};
+        return name;
+    }
+
+    /// @brief Release the stored tag name.
+    str_view release_tag() noexcept {
+        const str_view name = get_tag();
+        m_tag_name = {};
+        return name;
+    }
+
+private:
+    /// The pending anchor name.
+    str_view m_anchor_name;
+    /// The pending tag name.
+    str_view m_tag_name;
+};
+
 /// @brief A class which provides the feature of deserializing YAML documents.
 /// @tparam BasicNodeType A type of the container for deserialized YAML values.
 template <typename BasicNodeType>
@@ -8136,8 +8302,6 @@ class basic_deserializer {
     using basic_node_type = BasicNodeType;
     /** A type for the lexical analyzer. */
     using lexer_type = lexical_analyzer;
-    /** A type for the document metainfo. */
-    using doc_metainfo_type = document_metainfo<basic_node_type>;
     /** A type for the tag resolver. */
     using tag_resolver_type = tag_resolver<basic_node_type>;
     /** A type for the scalar parser. */
@@ -8146,21 +8310,6 @@ class basic_deserializer {
     using sequence_type = typename basic_node_type::sequence_type;
     /** A type for mapping node value containers. */
     using mapping_type = typename basic_node_type::mapping_type;
-
-    /// @brief Definition of state types of parse contexts.
-    enum class context_state_t : std::uint8_t {
-        BLOCK_MAPPING,                //!< The underlying node is a block mapping.
-        BLOCK_MAPPING_EXPLICIT_KEY,   //!< The underlying node is an explicit block mapping key.
-        BLOCK_MAPPING_EXPLICIT_VALUE, //!< The underlying node is an explicit block mapping value.
-        MAPPING_VALUE,                //!< The underlying node is a block mapping value.
-        BLOCK_SEQUENCE,               //!< The underlying node is a block sequence.
-        BLOCK_SEQUENCE_ENTRY,         //!< The underlying node is a block sequence entry.
-        FLOW_SEQUENCE,                //!< The underlying node is a flow sequence.
-        FLOW_SEQUENCE_KEY,            //!< The underlying node is a flow sequence as a key.
-        FLOW_MAPPING,                 //!< The underlying node is a flow mapping.
-        FLOW_MAPPING_KEY,             //!< The underlying node is a flow mapping as a key.
-        FLOW_MAPPING_EXPLICIT_KEY,    //!< The underlying node is an explicit key in a flow collection.
-    };
 
     /// @brief Context information set for parsing.
     /// @note
@@ -8224,10 +8373,74 @@ class basic_deserializer {
         bool is_explicit_key {false};
     };
 
-    /// @brief Definitions of state types for expected flow token hints.
-    enum class flow_token_state_t : std::uint8_t {
-        NEEDS_VALUE_OR_SUFFIX,     //!< Either value or flow suffix (`]` or `}`)
-        NEEDS_SEPARATOR_OR_SUFFIX, //!< Either separator (`,`) or flow suffix (`]` or `}`)
+    /// @brief Represents the state of a YAML document during parsing.
+    class document_state {
+    public:
+        /// @brief Initialize the document state.
+        /// @param last_token_type The type of the last lexical token encountered.
+        void initialize(const lexical_token_t last_token_type) {
+            // One metainfo object is created per document and shared by all of its nodes.
+            mp_meta = std::make_shared<document_metainfo<basic_node_type>>();
+            m_has_document = false;
+            m_expects_root_flow_key_separator = false;
+            if (last_token_type != lexical_token_t::END_OF_DIRECTIVES) {
+                m_explicit_document_start_line = std::numeric_limits<uint32_t>::max();
+            }
+        }
+
+        /// @brief Get the document metainfo associated with the current document.
+        /// @return The document metainfo associated with the current document.
+        std::shared_ptr<document_metainfo<basic_node_type>> get_meta() const noexcept {
+            return mp_meta;
+        }
+
+        /// @brief Check if the document being parsed exists at all: it has contents or an explicit "---".
+        /// @return True if the document exists, false otherwise.
+        bool has_document() const noexcept {
+            return m_has_document;
+        }
+
+        /// @brief Set whether the document being parsed exists.
+        /// @param has_document True if the document exists, false otherwise.
+        void has_document(const bool has_document) noexcept {
+            m_has_document = has_document;
+        }
+
+        /// @brief Check if a provisional root mapping still requires a separator after its flow collection key.
+        /// @return True if a separator is expected, false otherwise.
+        bool expects_root_flow_key_separator() const noexcept {
+            return m_expects_root_flow_key_separator;
+        }
+
+        /// @brief Set whether a provisional root mapping still requires a separator after its flow collection key.
+        /// @param expects_root_flow_key_separator True if a separator is expected, false otherwise.
+        void expects_root_flow_key_separator(const bool expects_root_flow_key_separator) noexcept {
+            m_expects_root_flow_key_separator = expects_root_flow_key_separator;
+        }
+
+        /// @brief Set the line where the explicit document start marker was found.
+        /// @param line The line number of the explicit document start marker.
+        void set_explicit_document_start_line(const uint32_t line) noexcept {
+            m_explicit_document_start_line = line;
+        }
+
+        /// @brief Check if the given line is the line where the explicit document start marker was found.
+        /// @param line The line number to check.
+        /// @return True if the given line is the explicit document start line, false otherwise.
+        bool is_on_explicit_document_start_line(const uint32_t line) const noexcept {
+            return m_explicit_document_start_line != std::numeric_limits<uint32_t>::max() &&
+                   m_explicit_document_start_line == line;
+        }
+
+    private:
+        /// The set of YAML directives.
+        std::shared_ptr<document_metainfo<basic_node_type>> mp_meta {nullptr};
+        /// Whether the document being parsed exists at all: it has contents or an explicit "---".
+        bool m_has_document {false};
+        /// Whether a provisional root mapping still requires a separator after its flow collection key.
+        bool m_expects_root_flow_key_separator {false};
+        /// The line where the explicit document start marker was found.
+        uint32_t m_explicit_document_start_line {std::numeric_limits<uint32_t>::max()};
     };
 
 public:
@@ -8268,7 +8481,7 @@ public:
 
         do {
             basic_node_type doc = deserialize_document(lexer, type);
-            if (m_has_document || begun_by_marker) {
+            if (m_document_state.has_document() || begun_by_marker) {
                 nodes.emplace_back(std::move(doc));
             }
             // A "---" which ends a document begins the next one, even if that one is empty.
@@ -8283,7 +8496,7 @@ public:
             if (type == lexical_token_t::END_OF_DOCUMENT) {
                 // A next document may start from the directive part. Ensure '%' is lexed as a directive token
                 // during the lookahead; otherwise it can be cached as a plain scalar and break parsing.
-                lexer.set_document_state(true);
+                lexer.enter_directives();
                 const lexical_token_t next_type = lexer.peek_next_token().type;
                 if (next_type == lexical_token_t::END_OF_BUFFER) {
                     break;
@@ -8302,15 +8515,12 @@ private:
     basic_node_type deserialize_document(lexer_type& lexer, lexical_token_t& last_type) {
         lexical_token token {};
 
-        m_has_document = false;
-        m_expects_root_flow_key_separator = false;
-        m_has_explicit_document_start = last_type == lexical_token_t::END_OF_DIRECTIVES;
+        m_document_state.initialize(last_type);
 
         basic_node_type root;
         mp_current_node = &root;
         // One metainfo object is created per document and shared by all of its nodes.
-        mp_meta = std::make_shared<doc_metainfo_type>();
-        root.mp_meta = mp_meta;
+        root.mp_meta = m_document_state.get_meta();
 
         // parse directives first.
         deserialize_directives(lexer, token);
@@ -8329,13 +8539,12 @@ private:
         const bool has_contents =
             token.type != lexical_token_t::END_OF_BUFFER && token.type != lexical_token_t::END_OF_DOCUMENT;
         if (has_contents || found_props) {
-            m_has_document = true;
+            m_document_state.has_document(true);
         }
 
         switch (token.type) {
         case lexical_token_t::SEQUENCE_BLOCK_PREFIX: {
-            if FK_YAML_UNLIKELY (
-                m_has_explicit_document_start && m_explicit_document_start_line == lexer.get_lines_processed()) {
+            if FK_YAML_UNLIKELY (m_document_state.is_on_explicit_document_start_line(lexer.get_lines_processed())) {
                 throw parse_error("A block sequence entry cannot be on the document start line.", line, indent);
             }
             if FK_YAML_UNLIKELY (found_props && line == lexer.get_lines_processed()) {
@@ -8366,8 +8575,8 @@ private:
             break;
         }
         case lexical_token_t::SEQUENCE_FLOW_BEGIN:
-            ++m_flow_context_depth;
-            lexer.set_context_state(true);
+            m_flow_context_state.begin();
+            lexer.enter_flow_context();
             root = basic_node_type::sequence();
             apply_directive_set(root);
             apply_deferred_properties(root);
@@ -8379,8 +8588,8 @@ private:
             indent = lexer.get_last_token_begin_pos();
             break;
         case lexical_token_t::MAPPING_FLOW_BEGIN:
-            ++m_flow_context_depth;
-            lexer.set_context_state(true);
+            m_flow_context_state.begin();
+            lexer.enter_flow_context();
             root = basic_node_type::mapping();
             apply_directive_set(root);
             apply_deferred_properties(root);
@@ -8446,12 +8655,13 @@ private:
             last_type == lexical_token_t::END_OF_BUFFER || last_type == lexical_token_t::END_OF_DIRECTIVES ||
             last_type == lexical_token_t::END_OF_DOCUMENT);
 
-        if (m_needs_tag_impl) {
+        if (m_pending_properties.has_tag()) {
             const tag_t tag_type = resolve_scalar_tag(line, indent);
             materialize_tagged_empty_node(*mp_current_node, tag_type, line, indent);
         }
-        if (m_defers_tag) {
-            const tag_t tag_type = tag_resolver_type::resolve_tag(m_deferred_tag_name, mp_meta);
+        if (m_deferred_properties.has_tag()) {
+            const tag_t tag_type =
+                tag_resolver_type::resolve_tag(m_deferred_properties.get_tag(), m_document_state.get_meta());
             ensure_scalar_tag(tag_type, line, indent);
             materialize_tagged_empty_node(*mp_current_node, tag_type, line, indent);
         }
@@ -8478,12 +8688,8 @@ private:
 
         // reset parameters for the next call.
         mp_current_node = nullptr;
-        mp_meta.reset();
-        m_needs_tag_impl = false;
-        m_needs_anchor_impl = false;
-        m_flow_context_depth = 0;
-        m_flow_base_indent = -1;
-        m_flow_token_state = flow_token_state_t::NEEDS_VALUE_OR_SUFFIX;
+        m_pending_properties = {};
+        m_flow_context_state.reset();
         m_context_stack.clear();
 
         return root;
@@ -8494,29 +8700,30 @@ private:
     /// @param last_token Storage for last lexical token type.
     void deserialize_directives(lexer_type& lexer, lexical_token& last_token) {
         bool lacks_end_of_directives_marker = false;
-        lexer.set_document_state(true);
+        lexer.enter_directives();
+        auto p_meta = m_document_state.get_meta();
 
         for (;;) {
             const lexical_token token = lexer.get_next_token();
 
             switch (token.type) {
             case lexical_token_t::YAML_VER_DIRECTIVE:
-                if FK_YAML_UNLIKELY (mp_meta->is_version_specified) {
+                if FK_YAML_UNLIKELY (p_meta->is_version_specified) {
                     throw parse_error(
                         "YAML version cannot be specified more than once.",
                         lexer.get_lines_processed(),
                         lexer.get_last_token_begin_pos());
                 }
 
-                mp_meta->version = convert_yaml_version(lexer.get_yaml_version());
-                mp_meta->is_version_specified = true;
+                p_meta->version = convert_yaml_version(lexer.get_yaml_version());
+                p_meta->is_version_specified = true;
                 lacks_end_of_directives_marker = true;
                 break;
             case lexical_token_t::TAG_DIRECTIVE: {
                 const str_view tag_handle_view = lexer.get_tag_handle();
                 switch (tag_handle_view.size()) {
                 case 1 /* ! */: {
-                    const bool is_already_specified = !mp_meta->primary_handle_prefix.empty();
+                    const bool is_already_specified = !p_meta->primary_handle_prefix.empty();
                     if FK_YAML_UNLIKELY (is_already_specified) {
                         throw parse_error(
                             "Primary handle cannot be specified more than once.",
@@ -8524,12 +8731,12 @@ private:
                             lexer.get_last_token_begin_pos());
                     }
                     const str_view tag_prefix = lexer.get_tag_prefix();
-                    mp_meta->primary_handle_prefix.assign(tag_prefix.begin(), tag_prefix.end());
+                    p_meta->primary_handle_prefix.assign(tag_prefix.begin(), tag_prefix.end());
                     lacks_end_of_directives_marker = true;
                     break;
                 }
                 case 2 /* !! */: {
-                    const bool is_already_specified = !mp_meta->secondary_handle_prefix.empty();
+                    const bool is_already_specified = !p_meta->secondary_handle_prefix.empty();
                     if FK_YAML_UNLIKELY (is_already_specified) {
                         throw parse_error(
                             "Secondary handle cannot be specified more than once.",
@@ -8537,7 +8744,7 @@ private:
                             lexer.get_last_token_begin_pos());
                     }
                     const str_view tag_prefix = lexer.get_tag_prefix();
-                    mp_meta->secondary_handle_prefix.assign(tag_prefix.begin(), tag_prefix.end());
+                    p_meta->secondary_handle_prefix.assign(tag_prefix.begin(), tag_prefix.end());
                     lacks_end_of_directives_marker = true;
                     break;
                 }
@@ -8546,7 +8753,7 @@ private:
                     const str_view tag_prefix_view = lexer.get_tag_prefix();
                     std::string tag_prefix(tag_prefix_view.begin(), tag_prefix_view.end());
                     const bool is_already_specified =
-                        !(mp_meta->named_handle_map.emplace(std::move(tag_handle), std::move(tag_prefix)).second);
+                        !(p_meta->named_handle_map.emplace(std::move(tag_handle), std::move(tag_prefix)).second);
                     if FK_YAML_UNLIKELY (is_already_specified) {
                         throw parse_error(
                             "The same named handle cannot be specified more than once.",
@@ -8563,7 +8770,7 @@ private:
                 // TODO: should output a warning log. Currently just ignore this case.
                 break;
             case lexical_token_t::END_OF_DIRECTIVES:
-                if (m_has_document) {
+                if (m_document_state.has_document()) {
                     // A "---" which follows another one ends the document that one began and begins the
                     // next, even though the document it ends holds no node at all.
                     // ```yaml
@@ -8571,16 +8778,15 @@ private:
                     // ---
                     // # -> two documents, both empty
                     // ```
-                    m_explicit_document_start_line = lexer.get_lines_processed();
+                    m_document_state.set_explicit_document_start_line(lexer.get_lines_processed());
                     last_token = token;
-                    lexer.set_document_state(false);
+                    lexer.exit_directives();
                     return;
                 }
 
                 lacks_end_of_directives_marker = false;
-                m_has_document = true;
-                m_has_explicit_document_start = true;
-                m_explicit_document_start_line = lexer.get_lines_processed();
+                m_document_state.has_document(true);
+                m_document_state.set_explicit_document_start_line(lexer.get_lines_processed());
                 break;
             default:
                 if FK_YAML_UNLIKELY (lacks_end_of_directives_marker) {
@@ -8591,7 +8797,7 @@ private:
                 }
                 // end the parsing of directives if the other tokens are found.
                 last_token = token;
-                lexer.set_document_state(false);
+                lexer.exit_directives();
                 return;
             }
         }
@@ -8609,7 +8815,7 @@ private:
         uint32_t indent = first_indent;
 
         do {
-            if (m_flow_base_indent >= 0) {
+            if (m_flow_context_state.get_base_indent() >= 0) {
                 // The contents of a flow context nested in a block context must be more indented than the block
                 // context it belongs to.
                 // ```yaml
@@ -8618,7 +8824,7 @@ private:
                 // # ^ this line is not indented enough.
                 // ```
                 const auto token_indent = static_cast<int32_t>(lexer.get_last_token_begin_pos());
-                if FK_YAML_UNLIKELY (token_indent <= m_flow_base_indent) {
+                if FK_YAML_UNLIKELY (token_indent <= m_flow_context_state.get_base_indent()) {
                     throw parse_error(
                         "Contents of a flow context must be more indented than its parent block context.",
                         lexer.get_lines_processed(),
@@ -8632,8 +8838,8 @@ private:
                     throw parse_error("An explicit key is not allowed in this context.", line, indent);
                 }
 
-                if (m_flow_context_depth > 0) {
-                    if FK_YAML_UNLIKELY (m_flow_token_state == flow_token_state_t::NEEDS_SEPARATOR_OR_SUFFIX) {
+                if (m_flow_context_state.is_active()) {
+                    if FK_YAML_UNLIKELY (m_flow_context_state.needs_separator_or_suffix()) {
                         throw parse_error("An explicit key is found without separated with a comma.", line, indent);
                     }
 
@@ -8734,7 +8940,8 @@ private:
                     // the properties are for.
                     const parse_context& last_context = m_context_stack.back();
                     const bool begins_entry_with_empty_key =
-                        m_flow_context_depth == 0 && (m_needs_tag_impl || m_needs_anchor_impl) &&
+                        !m_flow_context_state.is_active() &&
+                        (m_pending_properties.has_tag() || m_pending_properties.has_anchor()) &&
                         last_context.line < line &&
                         (last_context.state == context_state_t::BLOCK_MAPPING ||
                          last_context.state == context_state_t::MAPPING_VALUE ||
@@ -8809,7 +9016,7 @@ private:
                     }
                 }
 
-                if (m_flow_context_depth > 0) {
+                if (m_flow_context_state.is_active()) {
                     if (m_context_stack.back().state != context_state_t::MAPPING_VALUE) {
                         // No key precedes this separator, so the entry has an empty key.
                         // ```yaml
@@ -9083,7 +9290,7 @@ private:
                 const uint32_t props_line = lexer.get_lines_processed();
                 deserialize_node_properties(lexer, token, line, indent);
 
-                if (m_flow_context_depth == 0 && lexer.get_lines_processed() > props_line) {
+                if (!m_flow_context_state.is_active() && lexer.get_lines_processed() > props_line) {
                     // The properties belong to whatever begins on the following line. Which node that
                     // is depends on the token after it, so the binding waits until that is known.
                     // In the flow context, line breaks do not change the node which properties belong to.
@@ -9110,7 +9317,7 @@ private:
             }
             case lexical_token_t::SEQUENCE_BLOCK_PREFIX: {
                 check_tab_in_indentation(lexer, lexer.get_lines_processed(), lexer.get_last_token_begin_pos());
-                if FK_YAML_UNLIKELY (m_flow_context_depth > 0) {
+                if FK_YAML_UNLIKELY (m_flow_context_state.is_active()) {
                     throw parse_error("A block sequence entry is not allowed in the flow context.", line, indent);
                 }
 
@@ -9122,7 +9329,7 @@ private:
                 // ```yaml
                 // foo: &anchor - bar   # error
                 // ```
-                if FK_YAML_UNLIKELY (m_needs_anchor_impl || m_needs_tag_impl) {
+                if FK_YAML_UNLIKELY (m_pending_properties.has_anchor() || m_pending_properties.has_tag()) {
                     throw parse_error(
                         "Node properties cannot precede a block sequence entry on the same line.", line, indent);
                 }
@@ -9172,8 +9379,8 @@ private:
                 break;
             }
             case lexical_token_t::SEQUENCE_FLOW_BEGIN:
-                if (m_flow_context_depth == 0) {
-                    lexer.set_context_state(true);
+                if (!m_flow_context_state.is_active()) {
+                    lexer.enter_flow_context();
 
                     if FK_YAML_UNLIKELY (m_context_stack.empty()) {
                         if (!defers_props()) {
@@ -9183,7 +9390,7 @@ private:
                         apply_directive_set(*mp_current_node);
                         apply_deferred_properties(*mp_current_node);
                         m_context_stack.emplace_back(line, indent, context_state_t::BLOCK_MAPPING, mp_current_node);
-                        m_expects_root_flow_key_separator = true;
+                        m_document_state.expects_root_flow_key_separator(true);
                     }
 
                     if (indent <= m_context_stack.back().indent) {
@@ -9197,14 +9404,12 @@ private:
                             }
                         });
                     }
-
-                    m_flow_base_indent = static_cast<int32_t>(current_context(line, indent).indent);
                 }
-                else if FK_YAML_UNLIKELY (m_flow_token_state == flow_token_state_t::NEEDS_SEPARATOR_OR_SUFFIX) {
+                else if FK_YAML_UNLIKELY (m_flow_context_state.needs_separator_or_suffix()) {
                     throw parse_error("Flow sequence beginning is found without separated with a comma.", line, indent);
                 }
 
-                ++m_flow_context_depth;
+                m_flow_context_state.begin(current_context(line, indent).indent);
 
                 switch (current_context(line, indent).state) {
                 case context_state_t::BLOCK_SEQUENCE:
@@ -9237,10 +9442,10 @@ private:
                 apply_deferred_properties(*mp_current_node);
                 apply_node_properties(*mp_current_node);
 
-                m_flow_token_state = flow_token_state_t::NEEDS_VALUE_OR_SUFFIX;
+                m_flow_context_state.set_token_state(flow_token_state_t::NEEDS_VALUE_OR_SUFFIX);
                 break;
             case lexical_token_t::SEQUENCE_FLOW_END: {
-                if FK_YAML_UNLIKELY (m_flow_context_depth == 0) {
+                if FK_YAML_UNLIKELY (!m_flow_context_state.is_active()) {
                     throw parse_error("Flow sequence ending is found outside the flow context.", line, indent);
                 }
 
@@ -9251,9 +9456,8 @@ private:
                     add_explicit_flow_key(line, indent);
                 }
 
-                if (--m_flow_context_depth == 0) {
-                    lexer.set_context_state(false);
-                    m_flow_base_indent = -1;
+                if (m_flow_context_state.end()) {
+                    lexer.exit_flow_context();
                 }
 
                 close_empty_flow_sequence_entry(line, indent);
@@ -9301,18 +9505,18 @@ private:
                             lexer.get_lines_processed(),
                             lexer.get_last_token_begin_pos());
                     }
-                    if (m_expects_root_flow_key_separator) {
+                    if (m_document_state.expects_root_flow_key_separator()) {
                         const lexical_token_t next_type = lexer.peek_next_token().type;
                         if FK_YAML_UNLIKELY (next_type != lexical_token_t::KEY_SEPARATOR) {
                             throw parse_error(
                                 "A flow collection key must be followed by a key separator.", line, indent);
                         }
-                        m_expects_root_flow_key_separator = false;
+                        m_document_state.expects_root_flow_key_separator(false);
                     }
                     basic_node_type key_node = std::move(*owned_node);
                     owned_node.reset();
                     mp_current_node = m_context_stack.back().p_node;
-                    m_flow_token_state = flow_token_state_t::NEEDS_VALUE_OR_SUFFIX;
+                    m_flow_context_state.set_token_state(flow_token_state_t::NEEDS_VALUE_OR_SUFFIX);
 
                     add_new_key(std::move(key_node), line, indent);
                     break;
@@ -9331,7 +9535,7 @@ private:
                     mp_current_node->swap(key_node);
 
                     m_context_stack.emplace_back(line, indent, context_state_t::BLOCK_MAPPING, mp_current_node);
-                    m_flow_token_state = flow_token_state_t::NEEDS_VALUE_OR_SUFFIX;
+                    m_flow_context_state.set_token_state(flow_token_state_t::NEEDS_VALUE_OR_SUFFIX);
 
                     add_new_key(std::move(key_node), line, indent);
                 }
@@ -9339,8 +9543,8 @@ private:
                     if (!m_context_stack.empty()) {
                         mp_current_node = m_context_stack.back().p_node;
                     }
-                    if (m_flow_context_depth > 0) {
-                        m_flow_token_state = flow_token_state_t::NEEDS_SEPARATOR_OR_SUFFIX;
+                    if (m_flow_context_state.is_active()) {
+                        m_flow_context_state.set_token_state(flow_token_state_t::NEEDS_SEPARATOR_OR_SUFFIX);
                     }
                 }
 
@@ -9349,8 +9553,8 @@ private:
                 continue;
             }
             case lexical_token_t::MAPPING_FLOW_BEGIN:
-                if (m_flow_context_depth == 0) {
-                    lexer.set_context_state(true);
+                if (!m_flow_context_state.is_active()) {
+                    lexer.enter_flow_context();
 
                     if FK_YAML_UNLIKELY (m_context_stack.empty()) {
                         if (!defers_props()) {
@@ -9360,7 +9564,7 @@ private:
                         apply_directive_set(*mp_current_node);
                         apply_deferred_properties(*mp_current_node);
                         m_context_stack.emplace_back(line, indent, context_state_t::BLOCK_MAPPING, mp_current_node);
-                        m_expects_root_flow_key_separator = true;
+                        m_document_state.expects_root_flow_key_separator(true);
                     }
 
                     if (indent <= m_context_stack.back().indent) {
@@ -9374,14 +9578,12 @@ private:
                             }
                         });
                     }
-
-                    m_flow_base_indent = static_cast<int32_t>(current_context(line, indent).indent);
                 }
-                else if FK_YAML_UNLIKELY (m_flow_token_state == flow_token_state_t::NEEDS_SEPARATOR_OR_SUFFIX) {
+                else if FK_YAML_UNLIKELY (m_flow_context_state.needs_separator_or_suffix()) {
                     throw parse_error("Flow mapping beginning is found without separated with a comma.", line, indent);
                 }
 
-                ++m_flow_context_depth;
+                m_flow_context_state.begin(current_context(line, indent).indent);
 
                 switch (current_context(line, indent).state) {
                 case context_state_t::BLOCK_SEQUENCE:
@@ -9417,10 +9619,10 @@ private:
                 line = lexer.get_lines_processed();
                 indent = lexer.get_last_token_begin_pos();
 
-                m_flow_token_state = flow_token_state_t::NEEDS_VALUE_OR_SUFFIX;
+                m_flow_context_state.set_token_state(flow_token_state_t::NEEDS_VALUE_OR_SUFFIX);
                 break;
             case lexical_token_t::MAPPING_FLOW_END: {
-                if FK_YAML_UNLIKELY (m_flow_context_depth == 0) {
+                if FK_YAML_UNLIKELY (!m_flow_context_state.is_active()) {
                     throw parse_error("Flow mapping ending is found outside the flow context.", line, indent);
                 }
 
@@ -9431,9 +9633,8 @@ private:
                     add_explicit_flow_key(line, indent);
                 }
 
-                if (--m_flow_context_depth == 0) {
-                    lexer.set_context_state(false);
-                    m_flow_base_indent = -1;
+                if (m_flow_context_state.end()) {
+                    lexer.exit_flow_context();
                 }
 
                 close_omitted_mapping_value(line, indent);
@@ -9479,18 +9680,18 @@ private:
                             lexer.get_lines_processed(),
                             lexer.get_last_token_begin_pos());
                     }
-                    if (m_expects_root_flow_key_separator) {
+                    if (m_document_state.expects_root_flow_key_separator()) {
                         const lexical_token_t next_type = lexer.peek_next_token().type;
                         if FK_YAML_UNLIKELY (next_type != lexical_token_t::KEY_SEPARATOR) {
                             throw parse_error(
                                 "A flow collection key must be followed by a key separator.", line, indent);
                         }
-                        m_expects_root_flow_key_separator = false;
+                        m_document_state.expects_root_flow_key_separator(false);
                     }
                     basic_node_type key_node = std::move(*owned_node);
                     owned_node.reset();
                     mp_current_node = m_context_stack.back().p_node;
-                    m_flow_token_state = flow_token_state_t::NEEDS_VALUE_OR_SUFFIX;
+                    m_flow_context_state.set_token_state(flow_token_state_t::NEEDS_VALUE_OR_SUFFIX);
 
                     add_new_key(std::move(key_node), line, indent);
                     break;
@@ -9509,7 +9710,7 @@ private:
                     mp_current_node->swap(key_node);
 
                     m_context_stack.emplace_back(line, indent, context_state_t::BLOCK_MAPPING, mp_current_node);
-                    m_flow_token_state = flow_token_state_t::NEEDS_VALUE_OR_SUFFIX;
+                    m_flow_context_state.set_token_state(flow_token_state_t::NEEDS_VALUE_OR_SUFFIX);
 
                     add_new_key(std::move(key_node), line, indent);
                 }
@@ -9517,8 +9718,8 @@ private:
                     if (!m_context_stack.empty()) {
                         mp_current_node = m_context_stack.back().p_node;
                     }
-                    if (m_flow_context_depth > 0) {
-                        m_flow_token_state = flow_token_state_t::NEEDS_SEPARATOR_OR_SUFFIX;
+                    if (m_flow_context_state.is_active()) {
+                        m_flow_context_state.set_token_state(flow_token_state_t::NEEDS_SEPARATOR_OR_SUFFIX);
                     }
                 }
 
@@ -9527,7 +9728,7 @@ private:
                 continue;
             }
             case lexical_token_t::VALUE_SEPARATOR:
-                if FK_YAML_UNLIKELY (m_flow_context_depth == 0) {
+                if FK_YAML_UNLIKELY (!m_flow_context_state.is_active()) {
                     throw parse_error("invalid value separator is found.", line, indent);
                 }
                 if (!m_context_stack.empty() &&
@@ -9536,26 +9737,27 @@ private:
                 }
                 close_empty_flow_sequence_entry(line, indent);
                 close_omitted_mapping_value(line, indent);
-                if FK_YAML_UNLIKELY (m_flow_token_state != flow_token_state_t::NEEDS_SEPARATOR_OR_SUFFIX) {
+                if FK_YAML_UNLIKELY (!m_flow_context_state.needs_separator_or_suffix()) {
                     throw parse_error("invalid value separator is found.", line, indent);
                 }
                 close_single_pair_mapping(line, indent);
-                m_flow_token_state = flow_token_state_t::NEEDS_VALUE_OR_SUFFIX;
+                m_flow_context_state.set_token_state(flow_token_state_t::NEEDS_VALUE_OR_SUFFIX);
                 break;
             case lexical_token_t::ALIAS_PREFIX: {
                 // An alias node must not specify any properties (tag, anchor), but deferred ones are
                 // for the collection which this alias begins rather than for the alias itself.
                 // https://yaml.org/spec/1.2.2/#71-alias-nodes
-                if FK_YAML_UNLIKELY (m_needs_tag_impl) {
+                if FK_YAML_UNLIKELY (m_pending_properties.has_tag()) {
                     throw parse_error("Tag cannot be specified to an alias node", line, indent);
                 }
-                if FK_YAML_UNLIKELY (m_needs_anchor_impl) {
+                if FK_YAML_UNLIKELY (m_pending_properties.has_anchor()) {
                     throw parse_error("Anchor cannot be specified to an alias node.", line, indent);
                 }
 
                 const std::string anchor_name = std::string(token.str.begin(), token.str.end());
 
-                const auto anchor_counts = static_cast<uint32_t>(mp_meta->anchor_table.count(anchor_name));
+                auto& anchor_table = m_document_state.get_meta()->anchor_table;
+                const auto anchor_counts = static_cast<uint32_t>(anchor_table.count(anchor_name));
                 if FK_YAML_UNLIKELY (anchor_counts == 0) {
                     throw parse_error("The given anchor name must appear prior to the alias node.", line, indent);
                 }
@@ -9572,7 +9774,7 @@ private:
 
                 // Check if the alias node is self-referential.
                 // If so, throw a parse error to avoid infinite recursion and stack overflow during deserialization.
-                auto itr = mp_meta->anchor_table.equal_range(anchor_name).first;
+                auto itr = anchor_table.equal_range(anchor_name).first;
                 std::advance(itr, anchor_counts - 1);
                 const auto& anchor = itr->second;
                 const bool is_self_referential = anchor.contains_self_referential_alias(anchor_name, anchor_counts - 1);
@@ -9613,11 +9815,11 @@ private:
                 return;
             case lexical_token_t::END_OF_DIRECTIVES:
             case lexical_token_t::END_OF_DOCUMENT:
-                if FK_YAML_UNLIKELY (m_flow_context_depth > 0) {
+                if FK_YAML_UNLIKELY (m_flow_context_state.is_active()) {
                     throw parse_error("An invalid document marker found in a flow collection", line, indent);
                 }
                 if (token.type == lexical_token_t::END_OF_DIRECTIVES) {
-                    m_explicit_document_start_line = line;
+                    m_document_state.set_explicit_document_start_line(line);
                 }
                 last_type = token.type;
                 return;
@@ -9633,7 +9835,7 @@ private:
             line = lexer.get_lines_processed();
         } while (token.type != lexical_token_t::END_OF_BUFFER);
 
-        if FK_YAML_UNLIKELY (m_flow_context_depth > 0) {
+        if FK_YAML_UNLIKELY (m_flow_context_state.is_active()) {
             throw parse_error("An unclosed flow collection found at the end of input", line, indent);
         }
 
@@ -9647,7 +9849,7 @@ private:
     /// @param indent The variable to store the indent of either the first property or the last non-property token.
     /// @return true if any property is found, false otherwise.
     bool deserialize_node_properties(lexer_type& lexer, lexical_token& last_token, uint32_t& line, uint32_t& indent) {
-        m_needs_anchor_impl = m_needs_tag_impl = false;
+        m_pending_properties = {};
 
         lexical_token token = last_token;
         bool ends_loop {false};
@@ -9658,17 +9860,16 @@ private:
 
             switch (token.type) {
             case lexical_token_t::ANCHOR_PREFIX:
-                if FK_YAML_UNLIKELY (m_needs_anchor_impl) {
+                if FK_YAML_UNLIKELY (m_pending_properties.has_anchor()) {
                     throw parse_error(
                         "anchor name cannot be specified more than once to the same node.",
                         lexer.get_lines_processed(),
                         lexer.get_last_token_begin_pos());
                 }
 
-                m_anchor_name = token.str;
-                m_needs_anchor_impl = true;
+                m_pending_properties.store_anchor(token.str);
 
-                if (!m_needs_tag_impl) {
+                if (!m_pending_properties.has_tag()) {
                     line = lexer.get_lines_processed();
                     indent = lexer.get_last_token_begin_pos();
                 }
@@ -9676,17 +9877,16 @@ private:
                 token = lexer.get_next_token();
                 break;
             case lexical_token_t::TAG_PREFIX: {
-                if FK_YAML_UNLIKELY (m_needs_tag_impl) {
+                if FK_YAML_UNLIKELY (m_pending_properties.has_tag()) {
                     throw parse_error(
                         "tag name cannot be specified more than once to the same node.",
                         lexer.get_lines_processed(),
                         lexer.get_last_token_begin_pos());
                 }
 
-                m_tag_name = token.str;
-                m_needs_tag_impl = true;
+                m_pending_properties.store_tag(token.str);
 
-                if (!m_needs_anchor_impl) {
+                if (!m_pending_properties.has_anchor()) {
                     line = lexer.get_lines_processed();
                     indent = lexer.get_last_token_begin_pos();
                 }
@@ -9701,13 +9901,13 @@ private:
         } while (!ends_loop);
 
         last_token = token;
-        const bool prop_specified = m_needs_anchor_impl || m_needs_tag_impl;
+        const bool prop_specified = m_pending_properties.has_anchor() || m_pending_properties.has_tag();
         if (!prop_specified) {
             line = lexer.get_lines_processed();
             indent = lexer.get_last_token_begin_pos();
         }
         else if FK_YAML_UNLIKELY (
-            line < lexer.get_lines_processed() && m_flow_context_depth == 0 && !m_context_stack.empty() &&
+            line < lexer.get_lines_processed() && !m_flow_context_state.is_active() && !m_context_stack.empty() &&
             indent <= m_context_stack.back().indent) {
             // Node properties which end their line belong to a node nested in the current block collection, so
             // they must be more indented than it.
@@ -9733,7 +9933,7 @@ private:
     /// @param line The line of the node which begins the block collection.
     /// @param indent The indentation width of the node which begins the block collection.
     void check_tab_in_indentation(lexer_type& lexer, const uint32_t line, const uint32_t indent) const {
-        if FK_YAML_UNLIKELY (m_flow_context_depth == 0 && lexer.has_tab_in_indentation(indent)) {
+        if FK_YAML_UNLIKELY (!m_flow_context_state.is_active() && lexer.has_tab_in_indentation(indent)) {
             throw parse_error("A tab character cannot be used as indentation.", line, indent);
         }
     }
@@ -9743,7 +9943,7 @@ private:
     /// @param line The line where the key is found.
     /// @param indent The indentation width in the current line where the key is found.
     void add_new_key(basic_node_type&& key, const uint32_t line, const uint32_t indent) {
-        if (m_flow_context_depth == 0) {
+        if (!m_flow_context_state.is_active()) {
             if FK_YAML_UNLIKELY (m_context_stack.empty()) {
                 throw parse_error("A mapping key is not allowed in this context.", line, indent);
             }
@@ -9784,7 +9984,7 @@ private:
         lexer_type& lexer, std::unique_ptr<basic_node_type>&& owned_node, const uint32_t collection_begin_line,
         const uint32_t collection_begin_indent, const bool is_multiline_collection, lexical_token& token,
         uint32_t& line, uint32_t& indent) {
-        const context_state_t explicit_key_state = m_flow_context_depth > 0
+        const context_state_t explicit_key_state = m_flow_context_state.is_active()
                                                        ? context_state_t::FLOW_MAPPING_EXPLICIT_KEY
                                                        : context_state_t::BLOCK_MAPPING_EXPLICIT_KEY;
         m_context_stack.emplace_back(
@@ -9796,7 +9996,7 @@ private:
         line = lexer.get_lines_processed();
         indent = lexer.get_last_token_begin_pos();
 
-        if (m_flow_context_depth > 0) {
+        if (m_flow_context_state.is_active()) {
             return;
         }
 
@@ -9828,11 +10028,11 @@ private:
     /// @param node_value A rvalue basic_node_type object to be assigned to the current node.
     void assign_node_value(basic_node_type&& node_value, const uint32_t line, const uint32_t indent) {
         if (mp_current_node->is_sequence()) {
-            if FK_YAML_UNLIKELY (m_flow_context_depth == 0) {
+            if FK_YAML_UNLIKELY (!m_flow_context_state.is_active()) {
                 throw parse_error("invalid block sequence entry is found.", line, indent);
             }
 
-            if FK_YAML_UNLIKELY (m_flow_token_state != flow_token_state_t::NEEDS_VALUE_OR_SUFFIX) {
+            if FK_YAML_UNLIKELY (!m_flow_context_state.needs_value_or_suffix()) {
                 // Flow sequence entries are not allowed to be empty.
                 // ```yaml
                 // [foo,,bar]
@@ -9841,7 +10041,7 @@ private:
             }
 
             mp_current_node->as_seq().emplace_back(std::move(node_value));
-            m_flow_token_state = flow_token_state_t::NEEDS_SEPARATOR_OR_SUFFIX;
+            m_flow_context_state.set_token_state(flow_token_state_t::NEEDS_SEPARATOR_OR_SUFFIX);
             return;
         }
 
@@ -9858,8 +10058,8 @@ private:
             m_context_stack.pop_back();
             mp_current_node = current_context(line, indent).p_node;
 
-            if (m_flow_context_depth > 0) {
-                m_flow_token_state = flow_token_state_t::NEEDS_SEPARATOR_OR_SUFFIX;
+            if (m_flow_context_state.is_active()) {
+                m_flow_context_state.set_token_state(flow_token_state_t::NEEDS_SEPARATOR_OR_SUFFIX);
             }
         }
     }
@@ -9879,10 +10079,10 @@ private:
             apply_node_properties(node);
         }
         else if (!node.is_alias()) {
-            if FK_YAML_UNLIKELY (m_defers_anchor && m_needs_anchor_impl) {
+            if FK_YAML_UNLIKELY (m_deferred_properties.has_anchor() && m_pending_properties.has_anchor()) {
                 throw parse_error("anchor name cannot be specified more than once to the same node.", line, indent);
             }
-            if FK_YAML_UNLIKELY (m_defers_tag && m_needs_tag_impl) {
+            if FK_YAML_UNLIKELY (m_deferred_properties.has_tag() && m_pending_properties.has_tag()) {
                 throw parse_error("tag name cannot be specified more than once to the same node.", line, indent);
             }
             apply_deferred_properties(node);
@@ -9904,7 +10104,7 @@ private:
             // : "bar"}
             // ```
             const bool is_key_sep_followed = (token.type == lexical_token_t::KEY_SEPARATOR) &&
-                                             (line == lexer.get_lines_processed() || m_flow_context_depth > 0);
+                                             (line == lexer.get_lines_processed() || m_flow_context_state.is_active());
             if (!is_key_sep_followed) {
                 // A flow mapping entry may consist of a key alone, with both the ":" indicator and the
                 // value omitted. The entry then ends at the separator or the suffix which follows it.
@@ -10041,7 +10241,7 @@ private:
                 }
                 else {
                     // root mapping node
-                    if FK_YAML_UNLIKELY (m_has_explicit_document_start && line == m_explicit_document_start_line) {
+                    if FK_YAML_UNLIKELY (m_document_state.is_on_explicit_document_start_line(line)) {
                         throw parse_error("A block mapping entry cannot be on the document start line.", line, indent);
                     }
 
@@ -10109,7 +10309,7 @@ private:
         const uint32_t key_line = line;
         const uint32_t key_indent = indent;
         basic_node_type key_node;
-        if (m_needs_tag_impl) {
+        if (m_pending_properties.has_tag()) {
             const tag_t tag_type = resolve_scalar_tag(line, indent);
             materialize_tagged_empty_node(key_node, tag_type, line, indent);
         }
@@ -10290,8 +10490,9 @@ private:
                 // foo: &anchor
                 // bar: 1        # the anchor is for the empty value of "foo".
                 // ```
-                if (m_defers_tag) {
-                    const tag_t tag_type = tag_resolver_type::resolve_tag(m_deferred_tag_name, mp_meta);
+                if (m_deferred_properties.has_tag()) {
+                    const tag_t tag_type =
+                        tag_resolver_type::resolve_tag(m_deferred_properties.get_tag(), m_document_state.get_meta());
                     ensure_scalar_tag(tag_type, line, indent);
                     materialize_tagged_empty_node(*mp_current_node, tag_type, line, indent);
                 }
@@ -10308,7 +10509,7 @@ private:
     /// @brief Set YAML directive properties to the given node.
     /// @param node A basic_node_type object to be set YAML directive properties.
     void apply_directive_set(basic_node_type& node) noexcept {
-        node.mp_meta = mp_meta;
+        node.mp_meta = m_document_state.get_meta();
     }
 
     /// @brief Closes the implicit single pair mapping wrapping a flow sequence entry, if one is open.
@@ -10350,16 +10551,16 @@ private:
         const parse_context& last_context = m_context_stack.back();
         const bool is_sequence_entry = last_context.state == context_state_t::FLOW_SEQUENCE ||
                                        last_context.state == context_state_t::FLOW_SEQUENCE_KEY;
-        if (is_sequence_entry && (m_needs_anchor_impl || m_needs_tag_impl)) {
+        if (is_sequence_entry && (m_pending_properties.has_anchor() || m_pending_properties.has_tag())) {
             basic_node_type entry;
-            if (m_needs_tag_impl) {
+            if (m_pending_properties.has_tag()) {
                 const tag_t tag_type = resolve_scalar_tag(line, indent);
                 materialize_tagged_empty_node(entry, tag_type, line, indent);
             }
             apply_directive_set(entry);
             apply_node_properties(entry);
             last_context.p_node->as_seq().emplace_back(std::move(entry));
-            m_flow_token_state = flow_token_state_t::NEEDS_SEPARATOR_OR_SUFFIX;
+            m_flow_context_state.set_token_state(flow_token_state_t::NEEDS_SEPARATOR_OR_SUFFIX);
         }
     }
 
@@ -10379,7 +10580,7 @@ private:
         // LCOV_EXCL_STOP
 
         if (m_context_stack.back().state == context_state_t::MAPPING_VALUE) {
-            if (m_needs_tag_impl) {
+            if (m_pending_properties.has_tag()) {
                 const tag_t tag_type = resolve_scalar_tag(line, indent);
                 materialize_tagged_empty_node(*mp_current_node, tag_type, line, indent);
             }
@@ -10387,7 +10588,7 @@ private:
             apply_node_properties(*mp_current_node);
             m_context_stack.pop_back();
             mp_current_node = current_context(line, indent).p_node;
-            m_flow_token_state = flow_token_state_t::NEEDS_SEPARATOR_OR_SUFFIX;
+            m_flow_context_state.set_token_state(flow_token_state_t::NEEDS_SEPARATOR_OR_SUFFIX);
         }
     }
 
@@ -10407,7 +10608,7 @@ private:
             // A null value is already represented by a default-constructed node.
             break;
         default: {
-            auto msg = format("Unsupported tag (%s) for an empty node.", m_tag_name.data());
+            auto msg = format("Unsupported tag (%s) for an empty node.", m_pending_properties.get_tag().data());
             throw parse_error(msg.c_str(), line, indent);
             break;
         }
@@ -10419,11 +10620,12 @@ private:
     /// @param indent Current indentation.
     /// @return The resolved tag type, or tag_t::NONE if no tag is pending.
     tag_t resolve_scalar_tag(const uint32_t line, const uint32_t indent) const {
-        if (!m_needs_tag_impl) {
+        if (!m_pending_properties.has_tag()) {
             return tag_t::NONE;
         }
 
-        const tag_t tag_type = tag_resolver_type::resolve_tag(m_tag_name, mp_meta);
+        const tag_t tag_type =
+            tag_resolver_type::resolve_tag(m_pending_properties.get_tag(), m_document_state.get_meta());
         ensure_scalar_tag(tag_type, line, indent);
 
         return tag_type;
@@ -10449,59 +10651,49 @@ private:
     ///   &key bar: baz   # &map is for the mapping, &key is for the "bar" key.
     /// ```
     void defer_node_properties() {
-        if (m_needs_anchor_impl) {
-            m_deferred_anchor_name = m_anchor_name;
-            m_defers_anchor = true;
-            m_needs_anchor_impl = false;
-            m_anchor_name = {};
+        if (m_pending_properties.has_anchor()) {
+            m_deferred_properties.store_anchor(m_pending_properties.release_anchor());
         }
-        if (m_needs_tag_impl) {
-            m_deferred_tag_name = m_tag_name;
-            m_defers_tag = true;
-            m_needs_tag_impl = false;
-            m_tag_name = {};
+        if (m_pending_properties.has_tag()) {
+            m_deferred_properties.store_tag(m_pending_properties.release_tag());
         }
     }
 
     /// @brief Check whether any node properties are waiting to be bound.
     /// @return true if properties precede a node whose kind is not known yet, false otherwise.
     bool defers_props() const noexcept {
-        return m_defers_anchor || m_defers_tag;
+        return m_deferred_properties.has_anchor() || m_deferred_properties.has_tag();
     }
 
     /// @brief Set the node properties which precede their node to the given node.
     /// @param node A node type object the deferred properties belong to.
     void apply_deferred_properties(basic_node_type& node) {
-        if (m_defers_anchor) {
-            node.add_anchor_name(std::string(m_deferred_anchor_name.begin(), m_deferred_anchor_name.end()));
-            m_defers_anchor = false;
-            m_deferred_anchor_name = {};
+        if (m_deferred_properties.has_anchor()) {
+            const str_view anchor_name = m_deferred_properties.release_anchor();
+            node.add_anchor_name(std::string(anchor_name.begin(), anchor_name.end()));
         }
 
-        if (m_defers_tag) {
+        if (m_deferred_properties.has_tag()) {
             // Ensure the tag is valid in the current document before applying it.
-            tag_resolver_type::resolve_tag(m_deferred_tag_name, mp_meta);
-            node.add_tag_name(std::string(m_deferred_tag_name.begin(), m_deferred_tag_name.end()));
-            m_defers_tag = false;
-            m_deferred_tag_name = {};
+            const str_view tag_name = m_deferred_properties.release_tag();
+            tag_resolver_type::resolve_tag(tag_name, m_document_state.get_meta());
+            node.add_tag_name(std::string(tag_name.begin(), tag_name.end()));
         }
     }
 
     /// @brief Set YAML node properties (anchor and/or tag names) to the given node.
     /// @param node A node type object to be set YAML node properties.
     void apply_node_properties(basic_node_type& node) {
-        if (m_needs_anchor_impl) {
-            node.add_anchor_name(std::string(m_anchor_name.begin(), m_anchor_name.end()));
-            m_needs_anchor_impl = false;
-            m_anchor_name = {};
+        if (m_pending_properties.has_anchor()) {
+            const str_view anchor_name = m_pending_properties.release_anchor();
+            node.add_anchor_name(std::string(anchor_name.begin(), anchor_name.end()));
         }
 
-        if (m_needs_tag_impl) {
+        if (m_pending_properties.has_tag()) {
             // Ensure the tag is valid in the current document before applying it.
-            tag_resolver_type::resolve_tag(m_tag_name, mp_meta);
-            node.add_tag_name(std::string(m_tag_name.begin(), m_tag_name.end()));
-            m_needs_tag_impl = false;
-            m_tag_name = {};
+            const str_view tag_name = m_pending_properties.release_tag();
+            tag_resolver_type::resolve_tag(tag_name, m_document_state.get_meta());
+            node.add_tag_name(std::string(tag_name.begin(), tag_name.end()));
         }
     }
 
@@ -10516,38 +10708,14 @@ private:
     basic_node_type* mp_current_node {nullptr};
     /// The stack of parse contexts.
     std::deque<parse_context> m_context_stack {};
-    /// The current depth of flow contexts.
-    uint32_t m_flow_context_depth {0};
-    /// The indentation the contents of the outermost flow context must exceed, or -1 if unconstrained.
-    int32_t m_flow_base_indent {-1};
-    /// The set of YAML directives.
-    std::shared_ptr<doc_metainfo_type> mp_meta {};
-    /// Whether the document being parsed exists at all: it has contents or an explicit "---".
-    bool m_has_document {false};
-    /// Whether a provisional root mapping still requires a separator after its flow collection key.
-    bool m_expects_root_flow_key_separator {false};
-    /// Whether the current document begins with an explicit document start marker.
-    bool m_has_explicit_document_start {false};
-    /// The line where the explicit document start marker was found.
-    uint32_t m_explicit_document_start_line {0};
-    /// Whether the pending node properties precede their node and are not bound yet.
-    bool m_defers_anchor {false};
-    /// Whether a tag which precedes its node is waiting to be bound.
-    bool m_defers_tag {false};
-    /// The anchor name which precedes its node.
-    str_view m_deferred_anchor_name;
-    /// The tag name which precedes its node.
-    str_view m_deferred_tag_name;
-    /// A flag to determine the need for YAML anchor node implementation.
-    bool m_needs_anchor_impl {false};
-    /// A flag to determine the need for a corresponding node with the last YAML tag.
-    bool m_needs_tag_impl {false};
-    /// A flag to determine the need for a value separator or a flow suffix to follow.
-    flow_token_state_t m_flow_token_state {flow_token_state_t::NEEDS_VALUE_OR_SUFFIX};
-    /// The last YAML anchor name.
-    str_view m_anchor_name;
-    /// The last tag name.
-    str_view m_tag_name;
+    /// The current state of the document being parsed.
+    document_state m_document_state {};
+    /// The current state of the flow context.
+    flow_context_state m_flow_context_state {};
+    /// Node properties which precede their node and are not bound yet.
+    pending_node_properties m_deferred_properties {};
+    /// Node properties read for the current node and waiting to be applied.
+    pending_node_properties m_pending_properties {};
 };
 
 FK_YAML_DETAIL_NAMESPACE_END

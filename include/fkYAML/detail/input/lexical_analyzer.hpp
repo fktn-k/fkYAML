@@ -61,6 +61,37 @@ class lexical_analyzer {
         const char* begin_itr {nullptr};
     };
 
+    class scan_context {
+    public:
+        void enter_flow_context() noexcept {
+            m_is_in_flow_context = true;
+        }
+
+        void exit_flow_context() noexcept {
+            m_is_in_flow_context = false;
+        }
+
+        bool is_in_flow_context() const noexcept {
+            return m_is_in_flow_context;
+        }
+
+        void enter_document_directives() noexcept {
+            m_is_in_document_directives = true;
+        }
+
+        void exit_document_directives() noexcept {
+            m_is_in_document_directives = false;
+        }
+
+        bool is_in_document_directives() const noexcept {
+            return m_is_in_document_directives;
+        }
+
+    private:
+        bool m_is_in_flow_context {false};
+        bool m_is_in_document_directives {false};
+    };
+
     // whether the current context is flow(1) or block(0)
     static constexpr uint32_t flow_context_bit = 1u << 0u;
     // whether the current document part is directive(1) or content(0)
@@ -72,9 +103,9 @@ public:
     explicit lexical_analyzer(str_view input_buffer) noexcept
         : m_begin_itr(input_buffer.begin()),
           m_cur_itr(input_buffer.begin()),
-          m_end_itr(input_buffer.end()),
-          m_last_token_begin_itr(input_buffer.begin()) {
+          m_end_itr(input_buffer.end()) {
         m_pos_tracker.set_target_buffer(input_buffer);
+        m_last_token.begin_itr = input_buffer.begin();
     }
 
     /// @brief Get the next lexical token by scanning the left of the input buffer.
@@ -89,10 +120,7 @@ public:
             info = process_token();
         }
 
-        m_last_token_begin_pos = info.begin_pos;
-        m_last_token_begin_line = info.begin_line;
-        m_last_token_begin_itr = info.begin_itr;
-        m_last_token_type = info.token.type;
+        m_last_token = info;
         return info.token;
     }
 
@@ -110,7 +138,7 @@ public:
     /// @brief Get the beginning position of a last token.
     /// @return uint32_t The beginning position of a last token.
     uint32_t get_last_token_begin_pos() const noexcept {
-        return m_last_token_begin_pos;
+        return m_last_token.begin_pos;
     }
 
     /// @brief Check whether a tab character is used within the indentation of the last token line.
@@ -120,13 +148,13 @@ public:
     /// @param indent The indentation width required at the beginning of the last token line.
     /// @return true if a tab appears before the required indentation, false otherwise.
     bool has_tab_in_indentation(uint32_t indent) const noexcept {
-        return has_tab_before(m_last_token_begin_itr, indent);
+        return has_tab_before(m_last_token.begin_itr, indent);
     }
 
     /// @brief Get the number of lines already processed.
     /// @return uint32_t The number of lines already processed.
     uint32_t get_lines_processed() const noexcept {
-        return m_last_token_begin_line;
+        return m_last_token.begin_line;
     }
 
     /// @brief Get the YAML version specification.
@@ -153,25 +181,25 @@ public:
         return m_block_scalar_header;
     }
 
-    /// @brief Toggles the context state between flow and block.
-    /// @param is_flow_context true: flow context, false: block context
-    void set_context_state(bool is_flow_context) noexcept {
-        m_state &= ~flow_context_bit;
-        if (is_flow_context) {
-            m_state |= flow_context_bit;
-            // The outermost flow collection owns the indentation which its lines must have. Only that
-            // one reaches here, since the deserializer enters the flow context from the block one alone.
-            m_flow_required_indent = get_required_continuation_indent();
-        }
+    /// @brief Enter the flow context.
+    void enter_flow_context() noexcept {
+        m_scan_context.enter_flow_context();
+        m_flow_required_indent = get_required_continuation_indent();
     }
 
-    /// @brief Toggles the document state between directive and content.
-    /// @param is_directive true: directive, false: content
-    void set_document_state(bool is_directive) noexcept {
-        m_state &= ~document_directive_bit;
-        if (is_directive) {
-            m_state |= document_directive_bit;
-        }
+    /// @brief Exit the flow context.
+    void exit_flow_context() noexcept {
+        m_scan_context.exit_flow_context();
+    }
+
+    /// @brief Enter the document directives context.
+    void enter_directives() noexcept {
+        m_scan_context.enter_document_directives();
+    }
+
+    /// @brief Exit the document directives context.
+    void exit_directives() noexcept {
+        m_scan_context.exit_document_directives();
     }
 
 private:
@@ -190,7 +218,8 @@ private:
             return info;
         }
 
-        const bool continues_flow_line = (m_state & flow_context_bit) != 0 && info.begin_line > m_last_token_begin_line;
+        const bool continues_flow_line =
+            m_scan_context.is_in_flow_context() && info.begin_line > m_last_token.begin_line;
         if FK_YAML_UNLIKELY (continues_flow_line && has_tab_before(m_token_begin_itr, m_flow_required_indent)) {
             emit_error("A tab character cannot be used as indentation.");
         }
@@ -215,7 +244,7 @@ private:
             case '[':
             case ']':
             case ',':
-                if (m_state & flow_context_bit) {
+                if (m_scan_context.is_in_flow_context()) {
                     info.token.type = lexical_token_t::EXPLICIT_KEY_PREFIX;
                     return info;
                 }
@@ -237,7 +266,7 @@ private:
                 info.token.type = lexical_token_t::KEY_SEPARATOR;
                 return info;
             default:
-                if ((m_state & flow_context_bit) == 0) {
+                if (!m_scan_context.is_in_flow_context()) {
                     // in a block context
                     break;
                 }
@@ -264,7 +293,7 @@ private:
                     //   {[1,2,3]:null}:"baz"
                     // }
                     // ```
-                    switch (m_last_token_type) {
+                    switch (m_last_token.token.type) {
                     case lexical_token_t::SINGLE_QUOTED_SCALAR:
                     case lexical_token_t::DOUBLE_QUOTED_SCALAR:
                     case lexical_token_t::SEQUENCE_FLOW_END:
@@ -296,7 +325,7 @@ private:
             scan_comment();
             return process_token();
         case '%': // directive prefix
-            if (m_state & document_directive_bit) {
+            if (m_scan_context.is_in_document_directives()) {
                 info.token.type = scan_directive();
                 return info;
             }
@@ -324,7 +353,7 @@ private:
             case ',':
                 // "-" cannot start a plain scalar if it is followed by a flow indicator in a flow context.
                 // See https://yaml.org/spec/1.2.2/#733-plain-style for more details.
-                if (m_state & flow_context_bit) {
+                if (m_scan_context.is_in_flow_context()) {
                     ++m_cur_itr;
                     info.token.type = lexical_token_t::SEQUENCE_BLOCK_PREFIX;
                     return info;
@@ -495,7 +524,7 @@ private:
         case ',':
             // A separator beginning a line ends the preceding entry of a flow collection, while in a
             // block context it is just an ordinary plain scalar character.
-            return (m_state & flow_context_bit) != 0;
+            return m_scan_context.is_in_flow_context();
         case '#':
             return true;
         default:
@@ -951,7 +980,7 @@ private:
         case '}':
         case ']':
         case ',':
-            if ((m_state & flow_context_bit) != 0) {
+            if (m_scan_context.is_in_flow_context()) {
                 return {m_token_begin_itr, m_cur_itr};
             }
             break;
@@ -1007,7 +1036,7 @@ private:
                 // ```yaml
                 // {foo: !!str, bar: !<tag:yaml.org,2002:str>}
                 // ```
-                ends_loop = !is_in_verbatim_uri && (m_state & flow_context_bit) != 0;
+                ends_loop = !is_in_verbatim_uri && m_scan_context.is_in_flow_context();
                 break;
             default:
                 break;
@@ -1251,7 +1280,7 @@ private:
         const str_view sv {m_token_begin_itr, m_end_itr};
 
         // flow indicators are checked only within a flow context.
-        const str_view filter = (m_state & flow_context_bit) ? "\t\n :{}[]," : "\t\n :";
+        const str_view filter = m_scan_context.is_in_flow_context() ? "\t\n :{}[]," : "\t\n :";
         std::size_t pos = sv.find_first_of(filter);
         if FK_YAML_UNLIKELY (pos == str_view::npos) {
             check_scalar_content(sv);
@@ -1273,7 +1302,7 @@ private:
                     // Only meaningful in a block context: in a flow context the surrounding collection
                     // determines the required indentation of continuation lines.
                     begins_own_line =
-                        ((m_state & flow_context_bit) == 0) && (m_pos_tracker.get_cur_pos_in_line() == indent);
+                        !m_scan_context.is_in_flow_context() && (m_pos_tracker.get_cur_pos_in_line() == indent);
                 }
 
                 constexpr str_view space_filter {" \t\n"};
@@ -1291,7 +1320,7 @@ private:
                 // One which follows a key on the same line must be continued by more indented lines,
                 // because a line at the key's indentation belongs to the parent mapping instead.
                 uint32_t min_continuation_indent = 0;
-                if (m_state & flow_context_bit) {
+                if (m_scan_context.is_in_flow_context()) {
                     min_continuation_indent = m_flow_required_indent;
                 }
                 else {
@@ -1364,7 +1393,7 @@ private:
                     case ']':
                     case '{':
                     case '}':
-                        ends_loop = ((m_state & flow_context_bit) != 0);
+                        ends_loop = m_scan_context.is_in_flow_context();
                         break;
                     default:
                         break;
@@ -1376,7 +1405,7 @@ private:
                 case '[':
                 case ']':
                 case ',':
-                    ends_loop = ((m_state & flow_context_bit) != 0);
+                    ends_loop = m_scan_context.is_in_flow_context();
                     break;
                 default:
                     break;
@@ -1399,7 +1428,7 @@ private:
                         // A flow indicator is not "safe" to follow a ":" in a flow context, so the ":" ends
                         // the plain scalar and becomes a mapping value indicator instead.
                         // See https://yaml.org/spec/1.2.2/#733-plain-style for more details.
-                        ends_loop = ((m_state & flow_context_bit) != 0);
+                        ends_loop = m_scan_context.is_in_flow_context();
                         break;
                     default:
                         break;
@@ -1783,18 +1812,12 @@ private:
     str_view m_tag_prefix;
     /// The last block scalar header.
     block_scalar_header m_block_scalar_header {};
-    /// The beginning of the last lexical token, used to inspect the indentation of its line.
-    const char* m_last_token_begin_itr;
     /// The indentation which the lines of the current flow collection must have.
     uint32_t m_flow_required_indent {0};
-    /// The beginning position of the last lexical token. (zero origin)
-    uint32_t m_last_token_begin_pos {0};
-    /// The beginning line of the last lexical token. (zero origin)
-    uint32_t m_last_token_begin_line {0};
-    /// The type of the last lexical token.
-    lexical_token_t m_last_token_type {lexical_token_t::END_OF_BUFFER};
+    /// The information of the last lexical token.
+    token_info m_last_token;
     /// The current depth of flow context.
-    uint32_t m_state {0};
+    scan_context m_scan_context {};
     /// The queue of pending tokens.
     std::deque<token_info> m_pending_token_queue;
 };

@@ -26,7 +26,7 @@ TEST_CASE("LexicalAnalyzer_YamlVersionDirective") {
             value_pair_t("%YAML 1.2", "1.2"));
 
         fkyaml::detail::lexical_analyzer lexer(value_pair.first);
-        lexer.set_document_state(true);
+        lexer.enter_directives();
 
         REQUIRE_NOTHROW(token = lexer.get_next_token());
         REQUIRE(token.type == fkyaml::detail::lexical_token_t::YAML_VER_DIRECTIVE);
@@ -43,7 +43,7 @@ TEST_CASE("LexicalAnalyzer_YamlVersionDirective") {
             fkyaml::detail::str_view("%YAML1.2"));
 
         fkyaml::detail::lexical_analyzer lexer(buffer);
-        lexer.set_document_state(true);
+        lexer.enter_directives();
 
         REQUIRE_NOTHROW(token = lexer.get_next_token());
         REQUIRE(token.type == fkyaml::detail::lexical_token_t::INVALID_DIRECTIVE);
@@ -61,7 +61,7 @@ TEST_CASE("LexicalAnalyzer_YamlVersionDirective") {
             fkyaml::detail::str_view("%YAML 1.11"));
 
         fkyaml::detail::lexical_analyzer lexer(buffer);
-        lexer.set_document_state(true);
+        lexer.enter_directives();
         REQUIRE(lexer.get_next_token().type == fkyaml::detail::lexical_token_t::YAML_VER_DIRECTIVE);
     }
 
@@ -75,7 +75,7 @@ TEST_CASE("LexicalAnalyzer_YamlVersionDirective") {
             fkyaml::detail::str_view("%YAML AbC"));
 
         fkyaml::detail::lexical_analyzer lexer(buffer);
-        lexer.set_document_state(true);
+        lexer.enter_directives();
         REQUIRE_THROWS_AS(lexer.get_next_token(), fkyaml::parse_error);
     }
 }
@@ -86,7 +86,7 @@ TEST_CASE("LexicalAnalyzer_TagDirective") {
     SUBCASE("primary tag handle") {
         auto input = GENERATE(fkyaml::detail::str_view("%TAG ! foo"), fkyaml::detail::str_view("%TAG\t!\tfoo"));
         fkyaml::detail::lexical_analyzer lexer(input);
-        lexer.set_document_state(true);
+        lexer.enter_directives();
 
         REQUIRE_NOTHROW(token = lexer.get_next_token());
         REQUIRE(token.type == fkyaml::detail::lexical_token_t::TAG_DIRECTIVE);
@@ -99,7 +99,7 @@ TEST_CASE("LexicalAnalyzer_TagDirective") {
     SUBCASE("secondary tag handle") {
         auto input = GENERATE(fkyaml::detail::str_view("%TAG !! foo"), fkyaml::detail::str_view("%TAG\t!!\tfoo"));
         fkyaml::detail::lexical_analyzer lexer(input);
-        lexer.set_document_state(true);
+        lexer.enter_directives();
 
         REQUIRE_NOTHROW(token = lexer.get_next_token());
         REQUIRE(token.type == fkyaml::detail::lexical_token_t::TAG_DIRECTIVE);
@@ -113,7 +113,7 @@ TEST_CASE("LexicalAnalyzer_TagDirective") {
         auto input = GENERATE(
             fkyaml::detail::str_view("%TAG !va1id-ta9! foo"), fkyaml::detail::str_view("%TAG\t!va1id-ta9!\tfoo"));
         fkyaml::detail::lexical_analyzer lexer(input);
-        lexer.set_document_state(true);
+        lexer.enter_directives();
 
         REQUIRE_NOTHROW(token = lexer.get_next_token());
         REQUIRE(token.type == fkyaml::detail::lexical_token_t::TAG_DIRECTIVE);
@@ -128,7 +128,7 @@ TEST_CASE("LexicalAnalyzer_TagDirective") {
             fkyaml::detail::str_view("%TUB"), fkyaml::detail::str_view("%TAC"), fkyaml::detail::str_view("%TAGE"));
 
         fkyaml::detail::lexical_analyzer lexer(buffer);
-        lexer.set_document_state(true);
+        lexer.enter_directives();
 
         REQUIRE_NOTHROW(token = lexer.get_next_token());
         REQUIRE(token.type == fkyaml::detail::lexical_token_t::INVALID_DIRECTIVE);
@@ -155,7 +155,7 @@ TEST_CASE("LexicalAnalyzer_TagDirective") {
             fkyaml::detail::str_view("%TAG !a\xFF! bar"));
 
         fkyaml::detail::lexical_analyzer lexer(input);
-        lexer.set_document_state(true);
+        lexer.enter_directives();
         REQUIRE_THROWS_AS(lexer.get_next_token(), fkyaml::parse_error);
     }
 
@@ -169,7 +169,7 @@ TEST_CASE("LexicalAnalyzer_TagDirective") {
             fkyaml::detail::str_view("%TAG !valid! %prefix"));
 
         fkyaml::detail::lexical_analyzer lexer(input);
-        lexer.set_document_state(true);
+        lexer.enter_directives();
         REQUIRE_THROWS_AS(lexer.get_next_token(), fkyaml::parse_error);
     }
 }
@@ -178,7 +178,7 @@ TEST_CASE("LexicalAnalyzer_InvalidDirective") {
     auto buffer = GENERATE(fkyaml::detail::str_view("%TAG"), fkyaml::detail::str_view("%YAML"));
 
     fkyaml::detail::lexical_analyzer lexer(buffer);
-    lexer.set_document_state(true);
+    lexer.enter_directives();
     REQUIRE_THROWS_AS(lexer.get_next_token(), fkyaml::parse_error);
 }
 
@@ -191,7 +191,7 @@ TEST_CASE("LexicalAnalyzer_ReservedDirective") {
 
     fkyaml::detail::lexical_token token;
     fkyaml::detail::lexical_analyzer lexer(buffer);
-    lexer.set_document_state(true);
+    lexer.enter_directives();
 
     REQUIRE_NOTHROW(token = lexer.get_next_token());
     REQUIRE(token.type == fkyaml::detail::lexical_token_t::INVALID_DIRECTIVE);
@@ -202,7 +202,7 @@ TEST_CASE("LexicalAnalyzer_ReservedDirective") {
 
 TEST_CASE("LexicalAnalyzer_EmptyDirective") {
     fkyaml::detail::lexical_analyzer lexer("%");
-    lexer.set_document_state(true);
+    lexer.enter_directives();
     REQUIRE(lexer.get_next_token().type == fkyaml::detail::lexical_token_t::INVALID_DIRECTIVE);
 }
 
@@ -211,7 +211,7 @@ TEST_CASE("LexicalAnalyzer_EndOfDirectives") {
 
     SUBCASE("valid YAML with directives") {
         fkyaml::detail::lexical_analyzer lexer("%YAML 1.2\n---\nfoo: bar");
-        lexer.set_document_state(true);
+        lexer.enter_directives();
 
         REQUIRE_NOTHROW(token = lexer.get_next_token());
         REQUIRE(token.type == fkyaml::detail::lexical_token_t::YAML_VER_DIRECTIVE);
@@ -220,7 +220,7 @@ TEST_CASE("LexicalAnalyzer_EndOfDirectives") {
         REQUIRE(token.type == fkyaml::detail::lexical_token_t::END_OF_DIRECTIVES);
         REQUIRE_NOTHROW(token = lexer.get_next_token());
 
-        lexer.set_document_state(false);
+        lexer.exit_directives();
 
         REQUIRE(token.type == fkyaml::detail::lexical_token_t::PLAIN_SCALAR);
         REQUIRE(token.str == "foo");
@@ -245,7 +245,7 @@ TEST_CASE("LexicalAnalyzer_EndOfDocuments") {
 
     SUBCASE("valid document end marker") {
         fkyaml::detail::lexical_analyzer lexer("%YAML 1.2\n---\n...");
-        lexer.set_document_state(true);
+        lexer.enter_directives();
 
         REQUIRE_NOTHROW(token = lexer.get_next_token());
         REQUIRE(token.type == fkyaml::detail::lexical_token_t::YAML_VER_DIRECTIVE);
@@ -253,7 +253,7 @@ TEST_CASE("LexicalAnalyzer_EndOfDocuments") {
         REQUIRE_NOTHROW(token = lexer.get_next_token());
         REQUIRE(token.type == fkyaml::detail::lexical_token_t::END_OF_DIRECTIVES);
 
-        lexer.set_document_state(false);
+        lexer.exit_directives();
 
         REQUIRE_NOTHROW(token = lexer.get_next_token());
         REQUIRE(token.type == fkyaml::detail::lexical_token_t::END_OF_DOCUMENT);
@@ -404,14 +404,14 @@ TEST_CASE("LexicalAnalyzer_Colon") {
         fkyaml::detail::lexical_analyzer lexer("[:test]");
         REQUIRE_NOTHROW(token = lexer.get_next_token());
         REQUIRE(token.type == fkyaml::detail::lexical_token_t::SEQUENCE_FLOW_BEGIN);
-        lexer.set_context_state(true);
+        lexer.enter_flow_context();
         REQUIRE_NOTHROW(token = lexer.get_next_token());
         REQUIRE(token.type == fkyaml::detail::lexical_token_t::PLAIN_SCALAR);
         REQUIRE(token.str == ":test");
         REQUIRE_NOTHROW(token = lexer.get_next_token());
         REQUIRE(token.type == fkyaml::detail::lexical_token_t::SEQUENCE_FLOW_END);
         REQUIRE_NOTHROW(token = lexer.get_next_token());
-        lexer.set_context_state(false);
+        lexer.exit_flow_context();
         REQUIRE(token.type == fkyaml::detail::lexical_token_t::END_OF_BUFFER);
     }
 
@@ -438,7 +438,7 @@ TEST_CASE("LexicalAnalyzer_Colon") {
         fkyaml::detail::lexical_analyzer lexer(input);
         REQUIRE_NOTHROW(token = lexer.get_next_token());
         REQUIRE(token.type == fkyaml::detail::lexical_token_t::MAPPING_FLOW_BEGIN);
-        lexer.set_context_state(true);
+        lexer.enter_flow_context();
         REQUIRE_NOTHROW(token = lexer.get_next_token());
         REQUIRE(token.type == fkyaml::detail::lexical_token_t::KEY_SEPARATOR);
     }
@@ -471,7 +471,7 @@ TEST_CASE("LexicalAnalzer_BlockSequenceEntryPrefix") {
         fkyaml::detail::lexical_analyzer lexer(input);
         REQUIRE_NOTHROW(token = lexer.get_next_token());
         REQUIRE(token.type == fkyaml::detail::lexical_token_t::MAPPING_FLOW_BEGIN);
-        lexer.set_context_state(true);
+        lexer.enter_flow_context();
         REQUIRE_NOTHROW(token = lexer.get_next_token());
         REQUIRE(token.type == fkyaml::detail::lexical_token_t::SEQUENCE_BLOCK_PREFIX);
     }
@@ -1808,7 +1808,7 @@ TEST_CASE("LexicalAnalyzer_Tag") {
 
         REQUIRE_NOTHROW(token = lexer.get_next_token());
         REQUIRE(token.type == fkyaml::detail::lexical_token_t::SEQUENCE_FLOW_BEGIN);
-        lexer.set_context_state(true);
+        lexer.enter_flow_context();
 
         REQUIRE_NOTHROW(token = lexer.get_next_token());
         REQUIRE(token.type == fkyaml::detail::lexical_token_t::TAG_PREFIX);
@@ -1985,7 +1985,7 @@ TEST_CASE("LexicalAnalyzer_FlowSequence") {
 
         REQUIRE_NOTHROW(token = lexer.get_next_token());
         REQUIRE(token.type == fkyaml::detail::lexical_token_t::SEQUENCE_FLOW_BEGIN);
-        lexer.set_context_state(true);
+        lexer.enter_flow_context();
 
         REQUIRE_NOTHROW(token = lexer.get_next_token());
         REQUIRE(token.type == fkyaml::detail::lexical_token_t::PLAIN_SCALAR);
@@ -2000,7 +2000,7 @@ TEST_CASE("LexicalAnalyzer_FlowSequence") {
 
         REQUIRE_NOTHROW(token = lexer.get_next_token());
         REQUIRE(token.type == fkyaml::detail::lexical_token_t::SEQUENCE_FLOW_END);
-        lexer.set_context_state(false);
+        lexer.exit_flow_context();
 
         REQUIRE_NOTHROW(token = lexer.get_next_token());
         REQUIRE(token.type == fkyaml::detail::lexical_token_t::END_OF_BUFFER);
@@ -2018,7 +2018,7 @@ TEST_CASE("LexicalAnalyzer_FlowSequence") {
 
         REQUIRE_NOTHROW(token = lexer.get_next_token());
         REQUIRE(token.type == fkyaml::detail::lexical_token_t::SEQUENCE_FLOW_BEGIN);
-        lexer.set_context_state(true);
+        lexer.enter_flow_context();
 
         REQUIRE_NOTHROW(token = lexer.get_next_token());
         REQUIRE(token.type == fkyaml::detail::lexical_token_t::MAPPING_FLOW_BEGIN);
@@ -2087,7 +2087,7 @@ TEST_CASE("LexicalAnalyzer_FlowSequence") {
 
         REQUIRE_NOTHROW(token = lexer.get_next_token());
         REQUIRE(token.type == fkyaml::detail::lexical_token_t::SEQUENCE_FLOW_END);
-        lexer.set_context_state(false);
+        lexer.exit_flow_context();
 
         REQUIRE_NOTHROW(token = lexer.get_next_token());
         REQUIRE(token.type == fkyaml::detail::lexical_token_t::END_OF_BUFFER);
@@ -2109,7 +2109,7 @@ TEST_CASE("LexicalAnalyzer_FlowMapping") {
 
         REQUIRE_NOTHROW(token = lexer.get_next_token());
         REQUIRE(token.type == fkyaml::detail::lexical_token_t::MAPPING_FLOW_BEGIN);
-        lexer.set_context_state(true);
+        lexer.enter_flow_context();
 
         REQUIRE_NOTHROW(token = lexer.get_next_token());
         REQUIRE(token.type == fkyaml::detail::lexical_token_t::PLAIN_SCALAR);
@@ -2152,7 +2152,7 @@ TEST_CASE("LexicalAnalyzer_FlowMapping") {
 
         REQUIRE_NOTHROW(token = lexer.get_next_token());
         REQUIRE(token.type == fkyaml::detail::lexical_token_t::MAPPING_FLOW_END);
-        lexer.set_context_state(false);
+        lexer.exit_flow_context();
 
         REQUIRE_NOTHROW(token = lexer.get_next_token());
         REQUIRE(token.type == fkyaml::detail::lexical_token_t::END_OF_BUFFER);
@@ -2170,7 +2170,7 @@ TEST_CASE("LexicalAnalyzer_FlowMapping") {
 
         REQUIRE_NOTHROW(token = lexer.get_next_token());
         REQUIRE(token.type == fkyaml::detail::lexical_token_t::MAPPING_FLOW_BEGIN);
-        lexer.set_context_state(true);
+        lexer.enter_flow_context();
 
         REQUIRE_NOTHROW(token = lexer.get_next_token());
         REQUIRE(token.type == fkyaml::detail::lexical_token_t::PLAIN_SCALAR);
@@ -2185,7 +2185,7 @@ TEST_CASE("LexicalAnalyzer_FlowMapping") {
 
         REQUIRE_NOTHROW(token = lexer.get_next_token());
         REQUIRE(token.type == fkyaml::detail::lexical_token_t::MAPPING_FLOW_END);
-        lexer.set_context_state(false);
+        lexer.exit_flow_context();
 
         REQUIRE_NOTHROW(token = lexer.get_next_token());
         REQUIRE(token.type == fkyaml::detail::lexical_token_t::END_OF_BUFFER);
@@ -2204,7 +2204,7 @@ TEST_CASE("LexicalAnalyzer_FlowMapping") {
         REQUIRE_NOTHROW(token = lexer.get_next_token());
         REQUIRE(token.type == fkyaml::detail::lexical_token_t::MAPPING_FLOW_BEGIN);
 
-        lexer.set_context_state(true);
+        lexer.enter_flow_context();
 
         REQUIRE_NOTHROW(token = lexer.get_next_token());
         REQUIRE(token.type == fkyaml::detail::lexical_token_t::DOUBLE_QUOTED_SCALAR);
@@ -2281,7 +2281,7 @@ TEST_CASE("LexicalAnalyzer_FlowMapping") {
         REQUIRE_NOTHROW(token = lexer.get_next_token());
         REQUIRE(token.type == fkyaml::detail::lexical_token_t::MAPPING_FLOW_END);
 
-        lexer.set_context_state(false);
+        lexer.exit_flow_context();
 
         REQUIRE_NOTHROW(token = lexer.get_next_token());
         REQUIRE(token.type == fkyaml::detail::lexical_token_t::END_OF_BUFFER);
