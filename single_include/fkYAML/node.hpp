@@ -8126,6 +8126,82 @@ FK_YAML_DETAIL_NAMESPACE_END
 
 FK_YAML_DETAIL_NAMESPACE_BEGIN
 
+/// @brief Definition of state types of parse contexts.
+enum class context_state_t : std::uint8_t {
+    BLOCK_MAPPING,                //!< The underlying node is a block mapping.
+    BLOCK_MAPPING_EXPLICIT_KEY,   //!< The underlying node is an explicit block mapping key.
+    BLOCK_MAPPING_EXPLICIT_VALUE, //!< The underlying node is an explicit block mapping value.
+    MAPPING_VALUE,                //!< The underlying node is a block mapping value.
+    BLOCK_SEQUENCE,               //!< The underlying node is a block sequence.
+    BLOCK_SEQUENCE_ENTRY,         //!< The underlying node is a block sequence entry.
+    FLOW_SEQUENCE,                //!< The underlying node is a flow sequence.
+    FLOW_SEQUENCE_KEY,            //!< The underlying node is a flow sequence as a key.
+    FLOW_MAPPING,                 //!< The underlying node is a flow mapping.
+    FLOW_MAPPING_KEY,             //!< The underlying node is a flow mapping as a key.
+    FLOW_MAPPING_EXPLICIT_KEY,    //!< The underlying node is an explicit key in a flow collection.
+};
+
+/// @brief Definitions of state types for expected flow token hints.
+enum class flow_token_state_t : std::uint8_t {
+    NEEDS_VALUE_OR_SUFFIX,     //!< Either value or flow suffix (`]` or `}`)
+    NEEDS_SEPARATOR_OR_SUFFIX, //!< Either separator (`,`) or flow suffix (`]` or `}`)
+};
+
+/// @brief Node properties waiting to be applied.
+struct pending_node_properties {
+    /// @brief Check whether an anchor name is stored.
+    bool has_anchor() const noexcept {
+        return !m_anchor_name.empty();
+    }
+
+    /// @brief Check whether a tag name is stored.
+    bool has_tag() const noexcept {
+        return !m_tag_name.empty();
+    }
+
+    /// @brief Store an anchor name.
+    void store_anchor(const str_view name) noexcept {
+        m_anchor_name = name;
+    }
+
+    /// @brief Store a tag name.
+    void store_tag(const str_view name) noexcept {
+        m_tag_name = name;
+    }
+
+    /// @brief Get the stored anchor name.
+    /// @return The stored anchor name.
+    str_view get_anchor() const noexcept {
+        return m_anchor_name;
+    }
+
+    /// @brief Get the stored tag name.
+    /// @return The stored tag name.
+    str_view get_tag() const noexcept {
+        return m_tag_name;
+    }
+
+    /// @brief Release the stored anchor name.
+    str_view release_anchor() noexcept {
+        const str_view name = get_anchor();
+        m_anchor_name = {};
+        return name;
+    }
+
+    /// @brief Release the stored tag name.
+    str_view release_tag() noexcept {
+        const str_view name = get_tag();
+        m_tag_name = {};
+        return name;
+    }
+
+private:
+    /// The pending anchor name.
+    str_view m_anchor_name;
+    /// The pending tag name.
+    str_view m_tag_name;
+};
+
 /// @brief A class which provides the feature of deserializing YAML documents.
 /// @tparam BasicNodeType A type of the container for deserialized YAML values.
 template <typename BasicNodeType>
@@ -8146,21 +8222,6 @@ class basic_deserializer {
     using sequence_type = typename basic_node_type::sequence_type;
     /** A type for mapping node value containers. */
     using mapping_type = typename basic_node_type::mapping_type;
-
-    /// @brief Definition of state types of parse contexts.
-    enum class context_state_t : std::uint8_t {
-        BLOCK_MAPPING,                //!< The underlying node is a block mapping.
-        BLOCK_MAPPING_EXPLICIT_KEY,   //!< The underlying node is an explicit block mapping key.
-        BLOCK_MAPPING_EXPLICIT_VALUE, //!< The underlying node is an explicit block mapping value.
-        MAPPING_VALUE,                //!< The underlying node is a block mapping value.
-        BLOCK_SEQUENCE,               //!< The underlying node is a block sequence.
-        BLOCK_SEQUENCE_ENTRY,         //!< The underlying node is a block sequence entry.
-        FLOW_SEQUENCE,                //!< The underlying node is a flow sequence.
-        FLOW_SEQUENCE_KEY,            //!< The underlying node is a flow sequence as a key.
-        FLOW_MAPPING,                 //!< The underlying node is a flow mapping.
-        FLOW_MAPPING_KEY,             //!< The underlying node is a flow mapping as a key.
-        FLOW_MAPPING_EXPLICIT_KEY,    //!< The underlying node is an explicit key in a flow collection.
-    };
 
     /// @brief Context information set for parsing.
     /// @note
@@ -8222,67 +8283,6 @@ class basic_deserializer {
         std::unique_ptr<basic_node_type> owned_node {};
         /// Whether this context originated as an explicit mapping key.
         bool is_explicit_key {false};
-    };
-
-    /// @brief Definitions of state types for expected flow token hints.
-    enum class flow_token_state_t : std::uint8_t {
-        NEEDS_VALUE_OR_SUFFIX,     //!< Either value or flow suffix (`]` or `}`)
-        NEEDS_SEPARATOR_OR_SUFFIX, //!< Either separator (`,`) or flow suffix (`]` or `}`)
-    };
-
-    /// @brief Node properties waiting to be applied.
-    struct pending_node_properties {
-        /// @brief Check whether an anchor name is stored.
-        bool has_anchor() const noexcept {
-            return !m_anchor_name.empty();
-        }
-
-        /// @brief Check whether a tag name is stored.
-        bool has_tag() const noexcept {
-            return !m_tag_name.empty();
-        }
-
-        /// @brief Store an anchor name.
-        void store_anchor(const str_view name) noexcept {
-            m_anchor_name = name;
-        }
-
-        /// @brief Store a tag name.
-        void store_tag(const str_view name) noexcept {
-            m_tag_name = name;
-        }
-
-        /// @brief Get the stored anchor name.
-        /// @return The stored anchor name.
-        str_view get_anchor() const noexcept {
-            return m_anchor_name;
-        }
-
-        /// @brief Get the stored tag name.
-        /// @return The stored tag name.
-        str_view get_tag() const noexcept {
-            return m_tag_name;
-        }
-
-        /// @brief Release the stored anchor name.
-        str_view release_anchor() noexcept {
-            const str_view name = get_anchor();
-            m_anchor_name = {};
-            return name;
-        }
-
-        /// @brief Release the stored tag name.
-        str_view release_tag() noexcept {
-            const str_view name = get_tag();
-            m_tag_name = {};
-            return name;
-        }
-
-    private:
-        /// The pending anchor name.
-        str_view m_anchor_name;
-        /// The pending tag name.
-        str_view m_tag_name;
     };
 
 public:
