@@ -8230,6 +8230,61 @@ class basic_deserializer {
         NEEDS_SEPARATOR_OR_SUFFIX, //!< Either separator (`,`) or flow suffix (`]` or `}`)
     };
 
+    /// @brief Node properties waiting to be applied.
+    struct pending_node_properties {
+        /// @brief Check whether an anchor name is stored.
+        bool has_anchor() const noexcept {
+            return !m_anchor_name.empty();
+        }
+
+        /// @brief Check whether a tag name is stored.
+        bool has_tag() const noexcept {
+            return !m_tag_name.empty();
+        }
+
+        /// @brief Store an anchor name.
+        void store_anchor(const str_view name) noexcept {
+            m_anchor_name = name;
+        }
+
+        /// @brief Store a tag name.
+        void store_tag(const str_view name) noexcept {
+            m_tag_name = name;
+        }
+
+        /// @brief Get the stored anchor name.
+        /// @return The stored anchor name.
+        str_view get_anchor() const noexcept {
+            return m_anchor_name;
+        }
+
+        /// @brief Get the stored tag name.
+        /// @return The stored tag name.
+        str_view get_tag() const noexcept {
+            return m_tag_name;
+        }
+
+        /// @brief Release the stored anchor name.
+        str_view release_anchor() noexcept {
+            const str_view name = get_anchor();
+            m_anchor_name = {};
+            return name;
+        }
+
+        /// @brief Release the stored tag name.
+        str_view release_tag() noexcept {
+            const str_view name = get_tag();
+            m_tag_name = {};
+            return name;
+        }
+
+    private:
+        /// The pending anchor name.
+        str_view m_anchor_name;
+        /// The pending tag name.
+        str_view m_tag_name;
+    };
+
 public:
     /// @brief Construct a new basic_deserializer object.
     basic_deserializer() = default;
@@ -8446,12 +8501,12 @@ private:
             last_type == lexical_token_t::END_OF_BUFFER || last_type == lexical_token_t::END_OF_DIRECTIVES ||
             last_type == lexical_token_t::END_OF_DOCUMENT);
 
-        if (m_needs_tag_impl) {
+        if (m_pending_properties.has_tag()) {
             const tag_t tag_type = resolve_scalar_tag(line, indent);
             materialize_tagged_empty_node(*mp_current_node, tag_type, line, indent);
         }
-        if (m_defers_tag) {
-            const tag_t tag_type = tag_resolver_type::resolve_tag(m_deferred_tag_name, mp_meta);
+        if (m_deferred_properties.has_tag()) {
+            const tag_t tag_type = tag_resolver_type::resolve_tag(m_deferred_properties.get_tag(), mp_meta);
             ensure_scalar_tag(tag_type, line, indent);
             materialize_tagged_empty_node(*mp_current_node, tag_type, line, indent);
         }
@@ -8479,8 +8534,7 @@ private:
         // reset parameters for the next call.
         mp_current_node = nullptr;
         mp_meta.reset();
-        m_needs_tag_impl = false;
-        m_needs_anchor_impl = false;
+        m_pending_properties = {};
         m_flow_context_depth = 0;
         m_flow_base_indent = -1;
         m_flow_token_state = flow_token_state_t::NEEDS_VALUE_OR_SUFFIX;
@@ -8734,7 +8788,8 @@ private:
                     // the properties are for.
                     const parse_context& last_context = m_context_stack.back();
                     const bool begins_entry_with_empty_key =
-                        m_flow_context_depth == 0 && (m_needs_tag_impl || m_needs_anchor_impl) &&
+                        m_flow_context_depth == 0 &&
+                        (m_pending_properties.has_tag() || m_pending_properties.has_anchor()) &&
                         last_context.line < line &&
                         (last_context.state == context_state_t::BLOCK_MAPPING ||
                          last_context.state == context_state_t::MAPPING_VALUE ||
@@ -9122,7 +9177,7 @@ private:
                 // ```yaml
                 // foo: &anchor - bar   # error
                 // ```
-                if FK_YAML_UNLIKELY (m_needs_anchor_impl || m_needs_tag_impl) {
+                if FK_YAML_UNLIKELY (m_pending_properties.has_anchor() || m_pending_properties.has_tag()) {
                     throw parse_error(
                         "Node properties cannot precede a block sequence entry on the same line.", line, indent);
                 }
@@ -9546,10 +9601,10 @@ private:
                 // An alias node must not specify any properties (tag, anchor), but deferred ones are
                 // for the collection which this alias begins rather than for the alias itself.
                 // https://yaml.org/spec/1.2.2/#71-alias-nodes
-                if FK_YAML_UNLIKELY (m_needs_tag_impl) {
+                if FK_YAML_UNLIKELY (m_pending_properties.has_tag()) {
                     throw parse_error("Tag cannot be specified to an alias node", line, indent);
                 }
-                if FK_YAML_UNLIKELY (m_needs_anchor_impl) {
+                if FK_YAML_UNLIKELY (m_pending_properties.has_anchor()) {
                     throw parse_error("Anchor cannot be specified to an alias node.", line, indent);
                 }
 
@@ -9647,7 +9702,7 @@ private:
     /// @param indent The variable to store the indent of either the first property or the last non-property token.
     /// @return true if any property is found, false otherwise.
     bool deserialize_node_properties(lexer_type& lexer, lexical_token& last_token, uint32_t& line, uint32_t& indent) {
-        m_needs_anchor_impl = m_needs_tag_impl = false;
+        m_pending_properties = {};
 
         lexical_token token = last_token;
         bool ends_loop {false};
@@ -9658,17 +9713,16 @@ private:
 
             switch (token.type) {
             case lexical_token_t::ANCHOR_PREFIX:
-                if FK_YAML_UNLIKELY (m_needs_anchor_impl) {
+                if FK_YAML_UNLIKELY (m_pending_properties.has_anchor()) {
                     throw parse_error(
                         "anchor name cannot be specified more than once to the same node.",
                         lexer.get_lines_processed(),
                         lexer.get_last_token_begin_pos());
                 }
 
-                m_anchor_name = token.str;
-                m_needs_anchor_impl = true;
+                m_pending_properties.store_anchor(token.str);
 
-                if (!m_needs_tag_impl) {
+                if (!m_pending_properties.has_tag()) {
                     line = lexer.get_lines_processed();
                     indent = lexer.get_last_token_begin_pos();
                 }
@@ -9676,17 +9730,16 @@ private:
                 token = lexer.get_next_token();
                 break;
             case lexical_token_t::TAG_PREFIX: {
-                if FK_YAML_UNLIKELY (m_needs_tag_impl) {
+                if FK_YAML_UNLIKELY (m_pending_properties.has_tag()) {
                     throw parse_error(
                         "tag name cannot be specified more than once to the same node.",
                         lexer.get_lines_processed(),
                         lexer.get_last_token_begin_pos());
                 }
 
-                m_tag_name = token.str;
-                m_needs_tag_impl = true;
+                m_pending_properties.store_tag(token.str);
 
-                if (!m_needs_anchor_impl) {
+                if (!m_pending_properties.has_anchor()) {
                     line = lexer.get_lines_processed();
                     indent = lexer.get_last_token_begin_pos();
                 }
@@ -9701,7 +9754,7 @@ private:
         } while (!ends_loop);
 
         last_token = token;
-        const bool prop_specified = m_needs_anchor_impl || m_needs_tag_impl;
+        const bool prop_specified = m_pending_properties.has_anchor() || m_pending_properties.has_tag();
         if (!prop_specified) {
             line = lexer.get_lines_processed();
             indent = lexer.get_last_token_begin_pos();
@@ -9879,10 +9932,10 @@ private:
             apply_node_properties(node);
         }
         else if (!node.is_alias()) {
-            if FK_YAML_UNLIKELY (m_defers_anchor && m_needs_anchor_impl) {
+            if FK_YAML_UNLIKELY (m_deferred_properties.has_anchor() && m_pending_properties.has_anchor()) {
                 throw parse_error("anchor name cannot be specified more than once to the same node.", line, indent);
             }
-            if FK_YAML_UNLIKELY (m_defers_tag && m_needs_tag_impl) {
+            if FK_YAML_UNLIKELY (m_deferred_properties.has_tag() && m_pending_properties.has_tag()) {
                 throw parse_error("tag name cannot be specified more than once to the same node.", line, indent);
             }
             apply_deferred_properties(node);
@@ -10109,7 +10162,7 @@ private:
         const uint32_t key_line = line;
         const uint32_t key_indent = indent;
         basic_node_type key_node;
-        if (m_needs_tag_impl) {
+        if (m_pending_properties.has_tag()) {
             const tag_t tag_type = resolve_scalar_tag(line, indent);
             materialize_tagged_empty_node(key_node, tag_type, line, indent);
         }
@@ -10290,8 +10343,8 @@ private:
                 // foo: &anchor
                 // bar: 1        # the anchor is for the empty value of "foo".
                 // ```
-                if (m_defers_tag) {
-                    const tag_t tag_type = tag_resolver_type::resolve_tag(m_deferred_tag_name, mp_meta);
+                if (m_deferred_properties.has_tag()) {
+                    const tag_t tag_type = tag_resolver_type::resolve_tag(m_deferred_properties.get_tag(), mp_meta);
                     ensure_scalar_tag(tag_type, line, indent);
                     materialize_tagged_empty_node(*mp_current_node, tag_type, line, indent);
                 }
@@ -10350,9 +10403,9 @@ private:
         const parse_context& last_context = m_context_stack.back();
         const bool is_sequence_entry = last_context.state == context_state_t::FLOW_SEQUENCE ||
                                        last_context.state == context_state_t::FLOW_SEQUENCE_KEY;
-        if (is_sequence_entry && (m_needs_anchor_impl || m_needs_tag_impl)) {
+        if (is_sequence_entry && (m_pending_properties.has_anchor() || m_pending_properties.has_tag())) {
             basic_node_type entry;
-            if (m_needs_tag_impl) {
+            if (m_pending_properties.has_tag()) {
                 const tag_t tag_type = resolve_scalar_tag(line, indent);
                 materialize_tagged_empty_node(entry, tag_type, line, indent);
             }
@@ -10379,7 +10432,7 @@ private:
         // LCOV_EXCL_STOP
 
         if (m_context_stack.back().state == context_state_t::MAPPING_VALUE) {
-            if (m_needs_tag_impl) {
+            if (m_pending_properties.has_tag()) {
                 const tag_t tag_type = resolve_scalar_tag(line, indent);
                 materialize_tagged_empty_node(*mp_current_node, tag_type, line, indent);
             }
@@ -10407,7 +10460,7 @@ private:
             // A null value is already represented by a default-constructed node.
             break;
         default: {
-            auto msg = format("Unsupported tag (%s) for an empty node.", m_tag_name.data());
+            auto msg = format("Unsupported tag (%s) for an empty node.", m_pending_properties.get_tag().data());
             throw parse_error(msg.c_str(), line, indent);
             break;
         }
@@ -10419,11 +10472,11 @@ private:
     /// @param indent Current indentation.
     /// @return The resolved tag type, or tag_t::NONE if no tag is pending.
     tag_t resolve_scalar_tag(const uint32_t line, const uint32_t indent) const {
-        if (!m_needs_tag_impl) {
+        if (!m_pending_properties.has_tag()) {
             return tag_t::NONE;
         }
 
-        const tag_t tag_type = tag_resolver_type::resolve_tag(m_tag_name, mp_meta);
+        const tag_t tag_type = tag_resolver_type::resolve_tag(m_pending_properties.get_tag(), mp_meta);
         ensure_scalar_tag(tag_type, line, indent);
 
         return tag_type;
@@ -10449,59 +10502,49 @@ private:
     ///   &key bar: baz   # &map is for the mapping, &key is for the "bar" key.
     /// ```
     void defer_node_properties() {
-        if (m_needs_anchor_impl) {
-            m_deferred_anchor_name = m_anchor_name;
-            m_defers_anchor = true;
-            m_needs_anchor_impl = false;
-            m_anchor_name = {};
+        if (m_pending_properties.has_anchor()) {
+            m_deferred_properties.store_anchor(m_pending_properties.release_anchor());
         }
-        if (m_needs_tag_impl) {
-            m_deferred_tag_name = m_tag_name;
-            m_defers_tag = true;
-            m_needs_tag_impl = false;
-            m_tag_name = {};
+        if (m_pending_properties.has_tag()) {
+            m_deferred_properties.store_tag(m_pending_properties.release_tag());
         }
     }
 
     /// @brief Check whether any node properties are waiting to be bound.
     /// @return true if properties precede a node whose kind is not known yet, false otherwise.
     bool defers_props() const noexcept {
-        return m_defers_anchor || m_defers_tag;
+        return m_deferred_properties.has_anchor() || m_deferred_properties.has_tag();
     }
 
     /// @brief Set the node properties which precede their node to the given node.
     /// @param node A node type object the deferred properties belong to.
     void apply_deferred_properties(basic_node_type& node) {
-        if (m_defers_anchor) {
-            node.add_anchor_name(std::string(m_deferred_anchor_name.begin(), m_deferred_anchor_name.end()));
-            m_defers_anchor = false;
-            m_deferred_anchor_name = {};
+        if (m_deferred_properties.has_anchor()) {
+            const str_view anchor_name = m_deferred_properties.release_anchor();
+            node.add_anchor_name(std::string(anchor_name.begin(), anchor_name.end()));
         }
 
-        if (m_defers_tag) {
+        if (m_deferred_properties.has_tag()) {
             // Ensure the tag is valid in the current document before applying it.
-            tag_resolver_type::resolve_tag(m_deferred_tag_name, mp_meta);
-            node.add_tag_name(std::string(m_deferred_tag_name.begin(), m_deferred_tag_name.end()));
-            m_defers_tag = false;
-            m_deferred_tag_name = {};
+            const str_view tag_name = m_deferred_properties.release_tag();
+            tag_resolver_type::resolve_tag(tag_name, mp_meta);
+            node.add_tag_name(std::string(tag_name.begin(), tag_name.end()));
         }
     }
 
     /// @brief Set YAML node properties (anchor and/or tag names) to the given node.
     /// @param node A node type object to be set YAML node properties.
     void apply_node_properties(basic_node_type& node) {
-        if (m_needs_anchor_impl) {
-            node.add_anchor_name(std::string(m_anchor_name.begin(), m_anchor_name.end()));
-            m_needs_anchor_impl = false;
-            m_anchor_name = {};
+        if (m_pending_properties.has_anchor()) {
+            const str_view anchor_name = m_pending_properties.release_anchor();
+            node.add_anchor_name(std::string(anchor_name.begin(), anchor_name.end()));
         }
 
-        if (m_needs_tag_impl) {
+        if (m_pending_properties.has_tag()) {
             // Ensure the tag is valid in the current document before applying it.
-            tag_resolver_type::resolve_tag(m_tag_name, mp_meta);
-            node.add_tag_name(std::string(m_tag_name.begin(), m_tag_name.end()));
-            m_needs_tag_impl = false;
-            m_tag_name = {};
+            const str_view tag_name = m_pending_properties.release_tag();
+            tag_resolver_type::resolve_tag(tag_name, mp_meta);
+            node.add_tag_name(std::string(tag_name.begin(), tag_name.end()));
         }
     }
 
@@ -10520,6 +10563,8 @@ private:
     uint32_t m_flow_context_depth {0};
     /// The indentation the contents of the outermost flow context must exceed, or -1 if unconstrained.
     int32_t m_flow_base_indent {-1};
+    /// A flag to determine the need for a value separator or a flow suffix to follow.
+    flow_token_state_t m_flow_token_state {flow_token_state_t::NEEDS_VALUE_OR_SUFFIX};
     /// The set of YAML directives.
     std::shared_ptr<doc_metainfo_type> mp_meta {};
     /// Whether the document being parsed exists at all: it has contents or an explicit "---".
@@ -10530,24 +10575,10 @@ private:
     bool m_has_explicit_document_start {false};
     /// The line where the explicit document start marker was found.
     uint32_t m_explicit_document_start_line {0};
-    /// Whether the pending node properties precede their node and are not bound yet.
-    bool m_defers_anchor {false};
-    /// Whether a tag which precedes its node is waiting to be bound.
-    bool m_defers_tag {false};
-    /// The anchor name which precedes its node.
-    str_view m_deferred_anchor_name;
-    /// The tag name which precedes its node.
-    str_view m_deferred_tag_name;
-    /// A flag to determine the need for YAML anchor node implementation.
-    bool m_needs_anchor_impl {false};
-    /// A flag to determine the need for a corresponding node with the last YAML tag.
-    bool m_needs_tag_impl {false};
-    /// A flag to determine the need for a value separator or a flow suffix to follow.
-    flow_token_state_t m_flow_token_state {flow_token_state_t::NEEDS_VALUE_OR_SUFFIX};
-    /// The last YAML anchor name.
-    str_view m_anchor_name;
-    /// The last tag name.
-    str_view m_tag_name;
+    /// Node properties which precede their node and are not bound yet.
+    pending_node_properties m_deferred_properties {};
+    /// Node properties read for the current node and waiting to be applied.
+    pending_node_properties m_pending_properties {};
 };
 
 FK_YAML_DETAIL_NAMESPACE_END
