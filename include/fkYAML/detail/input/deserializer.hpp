@@ -182,8 +182,6 @@ class basic_deserializer {
     using basic_node_type = BasicNodeType;
     /** A type for the lexical analyzer. */
     using lexer_type = lexical_analyzer;
-    /** A type for the document metainfo. */
-    using doc_metainfo_type = document_metainfo<basic_node_type>;
     /** A type for the tag resolver. */
     using tag_resolver_type = tag_resolver<basic_node_type>;
     /** A type for the scalar parser. */
@@ -255,6 +253,76 @@ class basic_deserializer {
         bool is_explicit_key {false};
     };
 
+    /// @brief Represents the state of a YAML document during parsing.
+    class document_state {
+    public:
+        /// @brief Initialize the document state.
+        /// @param last_token_type The type of the last lexical token encountered.
+        void initialize(const lexical_token_t last_token_type) {
+            // One metainfo object is created per document and shared by all of its nodes.
+            mp_meta = std::make_shared<document_metainfo<basic_node_type>>();
+            m_has_document = false;
+            m_expects_root_flow_key_separator = false;
+            if (last_token_type != lexical_token_t::END_OF_DIRECTIVES) {
+                m_explicit_document_start_line = std::numeric_limits<uint32_t>::max();
+            }
+        }
+
+        /// @brief Get the document metainfo associated with the current document.
+        /// @return The document metainfo associated with the current document.
+        std::shared_ptr<document_metainfo<basic_node_type>> get_meta() const noexcept {
+            return mp_meta;
+        }
+
+        /// @brief Check if the document being parsed exists at all: it has contents or an explicit "---".
+        /// @return True if the document exists, false otherwise.
+        bool has_document() const noexcept {
+            return m_has_document;
+        }
+
+        /// @brief Set whether the document being parsed exists.
+        /// @param has_document True if the document exists, false otherwise.
+        void has_document(const bool has_document) noexcept {
+            m_has_document = has_document;
+        }
+
+        /// @brief Check if a provisional root mapping still requires a separator after its flow collection key.
+        /// @return True if a separator is expected, false otherwise.
+        bool expects_root_flow_key_separator() const noexcept {
+            return m_expects_root_flow_key_separator;
+        }
+
+        /// @brief Set whether a provisional root mapping still requires a separator after its flow collection key.
+        /// @param expects_root_flow_key_separator True if a separator is expected, false otherwise.
+        void expects_root_flow_key_separator(const bool expects_root_flow_key_separator) noexcept {
+            m_expects_root_flow_key_separator = expects_root_flow_key_separator;
+        }
+
+        /// @brief Set the line where the explicit document start marker was found.
+        /// @param line The line number of the explicit document start marker.
+        void set_explicit_document_start_line(const uint32_t line) noexcept {
+            m_explicit_document_start_line = line;
+        }
+
+        /// @brief Check if the given line is the line where the explicit document start marker was found.
+        /// @param line The line number to check.
+        /// @return True if the given line is the explicit document start line, false otherwise.
+        bool is_on_explicit_document_start_line(const uint32_t line) const noexcept {
+            return m_explicit_document_start_line != std::numeric_limits<uint32_t>::max() &&
+                   m_explicit_document_start_line == line;
+        }
+
+    private:
+        /// The set of YAML directives.
+        std::shared_ptr<document_metainfo<basic_node_type>> mp_meta {nullptr};
+        /// Whether the document being parsed exists at all: it has contents or an explicit "---".
+        bool m_has_document {false};
+        /// Whether a provisional root mapping still requires a separator after its flow collection key.
+        bool m_expects_root_flow_key_separator {false};
+        /// The line where the explicit document start marker was found.
+        uint32_t m_explicit_document_start_line {std::numeric_limits<uint32_t>::max()};
+    };
+
 public:
     /// @brief Construct a new basic_deserializer object.
     basic_deserializer() = default;
@@ -293,7 +361,7 @@ public:
 
         do {
             basic_node_type doc = deserialize_document(lexer, type);
-            if (m_has_document || begun_by_marker) {
+            if (m_document_state.has_document() || begun_by_marker) {
                 nodes.emplace_back(std::move(doc));
             }
             // A "---" which ends a document begins the next one, even if that one is empty.
@@ -327,15 +395,12 @@ private:
     basic_node_type deserialize_document(lexer_type& lexer, lexical_token_t& last_type) {
         lexical_token token {};
 
-        m_has_document = false;
-        m_expects_root_flow_key_separator = false;
-        m_has_explicit_document_start = last_type == lexical_token_t::END_OF_DIRECTIVES;
+        m_document_state.initialize(last_type);
 
         basic_node_type root;
         mp_current_node = &root;
         // One metainfo object is created per document and shared by all of its nodes.
-        mp_meta = std::make_shared<doc_metainfo_type>();
-        root.mp_meta = mp_meta;
+        root.mp_meta = m_document_state.get_meta();
 
         // parse directives first.
         deserialize_directives(lexer, token);
@@ -354,13 +419,12 @@ private:
         const bool has_contents =
             token.type != lexical_token_t::END_OF_BUFFER && token.type != lexical_token_t::END_OF_DOCUMENT;
         if (has_contents || found_props) {
-            m_has_document = true;
+            m_document_state.has_document(true);
         }
 
         switch (token.type) {
         case lexical_token_t::SEQUENCE_BLOCK_PREFIX: {
-            if FK_YAML_UNLIKELY (
-                m_has_explicit_document_start && m_explicit_document_start_line == lexer.get_lines_processed()) {
+            if FK_YAML_UNLIKELY (m_document_state.is_on_explicit_document_start_line(lexer.get_lines_processed())) {
                 throw parse_error("A block sequence entry cannot be on the document start line.", line, indent);
             }
             if FK_YAML_UNLIKELY (found_props && line == lexer.get_lines_processed()) {
@@ -476,7 +540,8 @@ private:
             materialize_tagged_empty_node(*mp_current_node, tag_type, line, indent);
         }
         if (m_deferred_properties.has_tag()) {
-            const tag_t tag_type = tag_resolver_type::resolve_tag(m_deferred_properties.get_tag(), mp_meta);
+            const tag_t tag_type =
+                tag_resolver_type::resolve_tag(m_deferred_properties.get_tag(), m_document_state.get_meta());
             ensure_scalar_tag(tag_type, line, indent);
             materialize_tagged_empty_node(*mp_current_node, tag_type, line, indent);
         }
@@ -503,7 +568,6 @@ private:
 
         // reset parameters for the next call.
         mp_current_node = nullptr;
-        mp_meta.reset();
         m_pending_properties = {};
         m_flow_context_state.reset();
         m_context_stack.clear();
@@ -517,28 +581,29 @@ private:
     void deserialize_directives(lexer_type& lexer, lexical_token& last_token) {
         bool lacks_end_of_directives_marker = false;
         lexer.enter_directives();
+        auto p_meta = m_document_state.get_meta();
 
         for (;;) {
             const lexical_token token = lexer.get_next_token();
 
             switch (token.type) {
             case lexical_token_t::YAML_VER_DIRECTIVE:
-                if FK_YAML_UNLIKELY (mp_meta->is_version_specified) {
+                if FK_YAML_UNLIKELY (p_meta->is_version_specified) {
                     throw parse_error(
                         "YAML version cannot be specified more than once.",
                         lexer.get_lines_processed(),
                         lexer.get_last_token_begin_pos());
                 }
 
-                mp_meta->version = convert_yaml_version(lexer.get_yaml_version());
-                mp_meta->is_version_specified = true;
+                p_meta->version = convert_yaml_version(lexer.get_yaml_version());
+                p_meta->is_version_specified = true;
                 lacks_end_of_directives_marker = true;
                 break;
             case lexical_token_t::TAG_DIRECTIVE: {
                 const str_view tag_handle_view = lexer.get_tag_handle();
                 switch (tag_handle_view.size()) {
                 case 1 /* ! */: {
-                    const bool is_already_specified = !mp_meta->primary_handle_prefix.empty();
+                    const bool is_already_specified = !p_meta->primary_handle_prefix.empty();
                     if FK_YAML_UNLIKELY (is_already_specified) {
                         throw parse_error(
                             "Primary handle cannot be specified more than once.",
@@ -546,12 +611,12 @@ private:
                             lexer.get_last_token_begin_pos());
                     }
                     const str_view tag_prefix = lexer.get_tag_prefix();
-                    mp_meta->primary_handle_prefix.assign(tag_prefix.begin(), tag_prefix.end());
+                    p_meta->primary_handle_prefix.assign(tag_prefix.begin(), tag_prefix.end());
                     lacks_end_of_directives_marker = true;
                     break;
                 }
                 case 2 /* !! */: {
-                    const bool is_already_specified = !mp_meta->secondary_handle_prefix.empty();
+                    const bool is_already_specified = !p_meta->secondary_handle_prefix.empty();
                     if FK_YAML_UNLIKELY (is_already_specified) {
                         throw parse_error(
                             "Secondary handle cannot be specified more than once.",
@@ -559,7 +624,7 @@ private:
                             lexer.get_last_token_begin_pos());
                     }
                     const str_view tag_prefix = lexer.get_tag_prefix();
-                    mp_meta->secondary_handle_prefix.assign(tag_prefix.begin(), tag_prefix.end());
+                    p_meta->secondary_handle_prefix.assign(tag_prefix.begin(), tag_prefix.end());
                     lacks_end_of_directives_marker = true;
                     break;
                 }
@@ -568,7 +633,7 @@ private:
                     const str_view tag_prefix_view = lexer.get_tag_prefix();
                     std::string tag_prefix(tag_prefix_view.begin(), tag_prefix_view.end());
                     const bool is_already_specified =
-                        !(mp_meta->named_handle_map.emplace(std::move(tag_handle), std::move(tag_prefix)).second);
+                        !(p_meta->named_handle_map.emplace(std::move(tag_handle), std::move(tag_prefix)).second);
                     if FK_YAML_UNLIKELY (is_already_specified) {
                         throw parse_error(
                             "The same named handle cannot be specified more than once.",
@@ -585,7 +650,7 @@ private:
                 // TODO: should output a warning log. Currently just ignore this case.
                 break;
             case lexical_token_t::END_OF_DIRECTIVES:
-                if (m_has_document) {
+                if (m_document_state.has_document()) {
                     // A "---" which follows another one ends the document that one began and begins the
                     // next, even though the document it ends holds no node at all.
                     // ```yaml
@@ -593,16 +658,15 @@ private:
                     // ---
                     // # -> two documents, both empty
                     // ```
-                    m_explicit_document_start_line = lexer.get_lines_processed();
+                    m_document_state.set_explicit_document_start_line(lexer.get_lines_processed());
                     last_token = token;
                     lexer.exit_directives();
                     return;
                 }
 
                 lacks_end_of_directives_marker = false;
-                m_has_document = true;
-                m_has_explicit_document_start = true;
-                m_explicit_document_start_line = lexer.get_lines_processed();
+                m_document_state.has_document(true);
+                m_document_state.set_explicit_document_start_line(lexer.get_lines_processed());
                 break;
             default:
                 if FK_YAML_UNLIKELY (lacks_end_of_directives_marker) {
@@ -1206,7 +1270,7 @@ private:
                         apply_directive_set(*mp_current_node);
                         apply_deferred_properties(*mp_current_node);
                         m_context_stack.emplace_back(line, indent, context_state_t::BLOCK_MAPPING, mp_current_node);
-                        m_expects_root_flow_key_separator = true;
+                        m_document_state.expects_root_flow_key_separator(true);
                     }
 
                     if (indent <= m_context_stack.back().indent) {
@@ -1321,13 +1385,13 @@ private:
                             lexer.get_lines_processed(),
                             lexer.get_last_token_begin_pos());
                     }
-                    if (m_expects_root_flow_key_separator) {
+                    if (m_document_state.expects_root_flow_key_separator()) {
                         const lexical_token_t next_type = lexer.peek_next_token().type;
                         if FK_YAML_UNLIKELY (next_type != lexical_token_t::KEY_SEPARATOR) {
                             throw parse_error(
                                 "A flow collection key must be followed by a key separator.", line, indent);
                         }
-                        m_expects_root_flow_key_separator = false;
+                        m_document_state.expects_root_flow_key_separator(false);
                     }
                     basic_node_type key_node = std::move(*owned_node);
                     owned_node.reset();
@@ -1380,7 +1444,7 @@ private:
                         apply_directive_set(*mp_current_node);
                         apply_deferred_properties(*mp_current_node);
                         m_context_stack.emplace_back(line, indent, context_state_t::BLOCK_MAPPING, mp_current_node);
-                        m_expects_root_flow_key_separator = true;
+                        m_document_state.expects_root_flow_key_separator(true);
                     }
 
                     if (indent <= m_context_stack.back().indent) {
@@ -1496,13 +1560,13 @@ private:
                             lexer.get_lines_processed(),
                             lexer.get_last_token_begin_pos());
                     }
-                    if (m_expects_root_flow_key_separator) {
+                    if (m_document_state.expects_root_flow_key_separator()) {
                         const lexical_token_t next_type = lexer.peek_next_token().type;
                         if FK_YAML_UNLIKELY (next_type != lexical_token_t::KEY_SEPARATOR) {
                             throw parse_error(
                                 "A flow collection key must be followed by a key separator.", line, indent);
                         }
-                        m_expects_root_flow_key_separator = false;
+                        m_document_state.expects_root_flow_key_separator(false);
                     }
                     basic_node_type key_node = std::move(*owned_node);
                     owned_node.reset();
@@ -1572,7 +1636,8 @@ private:
 
                 const std::string anchor_name = std::string(token.str.begin(), token.str.end());
 
-                const auto anchor_counts = static_cast<uint32_t>(mp_meta->anchor_table.count(anchor_name));
+                auto& anchor_table = m_document_state.get_meta()->anchor_table;
+                const auto anchor_counts = static_cast<uint32_t>(anchor_table.count(anchor_name));
                 if FK_YAML_UNLIKELY (anchor_counts == 0) {
                     throw parse_error("The given anchor name must appear prior to the alias node.", line, indent);
                 }
@@ -1589,7 +1654,7 @@ private:
 
                 // Check if the alias node is self-referential.
                 // If so, throw a parse error to avoid infinite recursion and stack overflow during deserialization.
-                auto itr = mp_meta->anchor_table.equal_range(anchor_name).first;
+                auto itr = anchor_table.equal_range(anchor_name).first;
                 std::advance(itr, anchor_counts - 1);
                 const auto& anchor = itr->second;
                 const bool is_self_referential = anchor.contains_self_referential_alias(anchor_name, anchor_counts - 1);
@@ -1634,7 +1699,7 @@ private:
                     throw parse_error("An invalid document marker found in a flow collection", line, indent);
                 }
                 if (token.type == lexical_token_t::END_OF_DIRECTIVES) {
-                    m_explicit_document_start_line = line;
+                    m_document_state.set_explicit_document_start_line(line);
                 }
                 last_type = token.type;
                 return;
@@ -2056,7 +2121,7 @@ private:
                 }
                 else {
                     // root mapping node
-                    if FK_YAML_UNLIKELY (m_has_explicit_document_start && line == m_explicit_document_start_line) {
+                    if FK_YAML_UNLIKELY (m_document_state.is_on_explicit_document_start_line(line)) {
                         throw parse_error("A block mapping entry cannot be on the document start line.", line, indent);
                     }
 
@@ -2306,7 +2371,8 @@ private:
                 // bar: 1        # the anchor is for the empty value of "foo".
                 // ```
                 if (m_deferred_properties.has_tag()) {
-                    const tag_t tag_type = tag_resolver_type::resolve_tag(m_deferred_properties.get_tag(), mp_meta);
+                    const tag_t tag_type =
+                        tag_resolver_type::resolve_tag(m_deferred_properties.get_tag(), m_document_state.get_meta());
                     ensure_scalar_tag(tag_type, line, indent);
                     materialize_tagged_empty_node(*mp_current_node, tag_type, line, indent);
                 }
@@ -2323,7 +2389,7 @@ private:
     /// @brief Set YAML directive properties to the given node.
     /// @param node A basic_node_type object to be set YAML directive properties.
     void apply_directive_set(basic_node_type& node) noexcept {
-        node.mp_meta = mp_meta;
+        node.mp_meta = m_document_state.get_meta();
     }
 
     /// @brief Closes the implicit single pair mapping wrapping a flow sequence entry, if one is open.
@@ -2438,7 +2504,8 @@ private:
             return tag_t::NONE;
         }
 
-        const tag_t tag_type = tag_resolver_type::resolve_tag(m_pending_properties.get_tag(), mp_meta);
+        const tag_t tag_type =
+            tag_resolver_type::resolve_tag(m_pending_properties.get_tag(), m_document_state.get_meta());
         ensure_scalar_tag(tag_type, line, indent);
 
         return tag_type;
@@ -2489,7 +2556,7 @@ private:
         if (m_deferred_properties.has_tag()) {
             // Ensure the tag is valid in the current document before applying it.
             const str_view tag_name = m_deferred_properties.release_tag();
-            tag_resolver_type::resolve_tag(tag_name, mp_meta);
+            tag_resolver_type::resolve_tag(tag_name, m_document_state.get_meta());
             node.add_tag_name(std::string(tag_name.begin(), tag_name.end()));
         }
     }
@@ -2505,7 +2572,7 @@ private:
         if (m_pending_properties.has_tag()) {
             // Ensure the tag is valid in the current document before applying it.
             const str_view tag_name = m_pending_properties.release_tag();
-            tag_resolver_type::resolve_tag(tag_name, mp_meta);
+            tag_resolver_type::resolve_tag(tag_name, m_document_state.get_meta());
             node.add_tag_name(std::string(tag_name.begin(), tag_name.end()));
         }
     }
@@ -2521,18 +2588,10 @@ private:
     basic_node_type* mp_current_node {nullptr};
     /// The stack of parse contexts.
     std::deque<parse_context> m_context_stack {};
+    /// The current state of the document being parsed.
+    document_state m_document_state {};
     /// The current state of the flow context.
     flow_context_state m_flow_context_state {};
-    /// The set of YAML directives.
-    std::shared_ptr<doc_metainfo_type> mp_meta {};
-    /// Whether the document being parsed exists at all: it has contents or an explicit "---".
-    bool m_has_document {false};
-    /// Whether a provisional root mapping still requires a separator after its flow collection key.
-    bool m_expects_root_flow_key_separator {false};
-    /// Whether the current document begins with an explicit document start marker.
-    bool m_has_explicit_document_start {false};
-    /// The line where the explicit document start marker was found.
-    uint32_t m_explicit_document_start_line {0};
     /// Node properties which precede their node and are not bound yet.
     pending_node_properties m_deferred_properties {};
     /// Node properties read for the current node and waiting to be applied.
