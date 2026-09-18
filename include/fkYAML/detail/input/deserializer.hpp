@@ -308,7 +308,7 @@ public:
             if (type == lexical_token_t::END_OF_DOCUMENT) {
                 // A next document may start from the directive part. Ensure '%' is lexed as a directive token
                 // during the lookahead; otherwise it can be cached as a plain scalar and break parsing.
-                lexer.set_document_state(true);
+                lexer.enter_directives();
                 const lexical_token_t next_type = lexer.peek_next_token().type;
                 if (next_type == lexical_token_t::END_OF_BUFFER) {
                     break;
@@ -392,7 +392,7 @@ private:
         }
         case lexical_token_t::SEQUENCE_FLOW_BEGIN:
             m_flow_context_state.begin();
-            lexer.set_context_state(true);
+            lexer.enter_flow_context();
             root = basic_node_type::sequence();
             apply_directive_set(root);
             apply_deferred_properties(root);
@@ -405,7 +405,7 @@ private:
             break;
         case lexical_token_t::MAPPING_FLOW_BEGIN:
             m_flow_context_state.begin();
-            lexer.set_context_state(true);
+            lexer.enter_flow_context();
             root = basic_node_type::mapping();
             apply_directive_set(root);
             apply_deferred_properties(root);
@@ -516,7 +516,7 @@ private:
     /// @param last_token Storage for last lexical token type.
     void deserialize_directives(lexer_type& lexer, lexical_token& last_token) {
         bool lacks_end_of_directives_marker = false;
-        lexer.set_document_state(true);
+        lexer.enter_directives();
 
         for (;;) {
             const lexical_token token = lexer.get_next_token();
@@ -595,7 +595,7 @@ private:
                     // ```
                     m_explicit_document_start_line = lexer.get_lines_processed();
                     last_token = token;
-                    lexer.set_document_state(false);
+                    lexer.exit_directives();
                     return;
                 }
 
@@ -613,7 +613,7 @@ private:
                 }
                 // end the parsing of directives if the other tokens are found.
                 last_token = token;
-                lexer.set_document_state(false);
+                lexer.exit_directives();
                 return;
             }
         }
@@ -1196,7 +1196,7 @@ private:
             }
             case lexical_token_t::SEQUENCE_FLOW_BEGIN:
                 if (!m_flow_context_state.is_active()) {
-                    lexer.set_context_state(true);
+                    lexer.enter_flow_context();
 
                     if FK_YAML_UNLIKELY (m_context_stack.empty()) {
                         if (!defers_props()) {
@@ -1273,7 +1273,7 @@ private:
                 }
 
                 if (m_flow_context_state.end()) {
-                    lexer.set_context_state(false);
+                    lexer.exit_flow_context();
                 }
 
                 close_empty_flow_sequence_entry(line, indent);
@@ -1370,7 +1370,7 @@ private:
             }
             case lexical_token_t::MAPPING_FLOW_BEGIN:
                 if (!m_flow_context_state.is_active()) {
-                    lexer.set_context_state(true);
+                    lexer.enter_flow_context();
 
                     if FK_YAML_UNLIKELY (m_context_stack.empty()) {
                         if (!defers_props()) {
@@ -1450,7 +1450,7 @@ private:
                 }
 
                 if (m_flow_context_state.end()) {
-                    lexer.set_context_state(false);
+                    lexer.exit_flow_context();
                 }
 
                 close_omitted_mapping_value(line, indent);
