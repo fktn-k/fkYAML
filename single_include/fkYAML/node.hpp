@@ -3270,9 +3270,9 @@ public:
     explicit lexical_analyzer(str_view input_buffer) noexcept
         : m_begin_itr(input_buffer.begin()),
           m_cur_itr(input_buffer.begin()),
-          m_end_itr(input_buffer.end()),
-          m_last_token_begin_itr(input_buffer.begin()) {
+          m_end_itr(input_buffer.end()) {
         m_pos_tracker.set_target_buffer(input_buffer);
+        m_last_token.begin_itr = input_buffer.begin();
     }
 
     /// @brief Get the next lexical token by scanning the left of the input buffer.
@@ -3287,10 +3287,7 @@ public:
             info = process_token();
         }
 
-        m_last_token_begin_pos = info.begin_pos;
-        m_last_token_begin_line = info.begin_line;
-        m_last_token_begin_itr = info.begin_itr;
-        m_last_token_type = info.token.type;
+        m_last_token = info;
         return info.token;
     }
 
@@ -3308,7 +3305,7 @@ public:
     /// @brief Get the beginning position of a last token.
     /// @return uint32_t The beginning position of a last token.
     uint32_t get_last_token_begin_pos() const noexcept {
-        return m_last_token_begin_pos;
+        return m_last_token.begin_pos;
     }
 
     /// @brief Check whether a tab character is used within the indentation of the last token line.
@@ -3318,13 +3315,13 @@ public:
     /// @param indent The indentation width required at the beginning of the last token line.
     /// @return true if a tab appears before the required indentation, false otherwise.
     bool has_tab_in_indentation(uint32_t indent) const noexcept {
-        return has_tab_before(m_last_token_begin_itr, indent);
+        return has_tab_before(m_last_token.begin_itr, indent);
     }
 
     /// @brief Get the number of lines already processed.
     /// @return uint32_t The number of lines already processed.
     uint32_t get_lines_processed() const noexcept {
-        return m_last_token_begin_line;
+        return m_last_token.begin_line;
     }
 
     /// @brief Get the YAML version specification.
@@ -3389,7 +3386,7 @@ private:
         }
 
         const bool continues_flow_line =
-            m_scan_context.is_in_flow_context() && info.begin_line > m_last_token_begin_line;
+            m_scan_context.is_in_flow_context() && info.begin_line > m_last_token.begin_line;
         if FK_YAML_UNLIKELY (continues_flow_line && has_tab_before(m_token_begin_itr, m_flow_required_indent)) {
             emit_error("A tab character cannot be used as indentation.");
         }
@@ -3463,7 +3460,7 @@ private:
                     //   {[1,2,3]:null}:"baz"
                     // }
                     // ```
-                    switch (m_last_token_type) {
+                    switch (m_last_token.token.type) {
                     case lexical_token_t::SINGLE_QUOTED_SCALAR:
                     case lexical_token_t::DOUBLE_QUOTED_SCALAR:
                     case lexical_token_t::SEQUENCE_FLOW_END:
@@ -4982,16 +4979,10 @@ private:
     str_view m_tag_prefix;
     /// The last block scalar header.
     block_scalar_header m_block_scalar_header {};
-    /// The beginning of the last lexical token, used to inspect the indentation of its line.
-    const char* m_last_token_begin_itr;
     /// The indentation which the lines of the current flow collection must have.
     uint32_t m_flow_required_indent {0};
-    /// The beginning position of the last lexical token. (zero origin)
-    uint32_t m_last_token_begin_pos {0};
-    /// The beginning line of the last lexical token. (zero origin)
-    uint32_t m_last_token_begin_line {0};
-    /// The type of the last lexical token.
-    lexical_token_t m_last_token_type {lexical_token_t::END_OF_BUFFER};
+    /// The information of the last lexical token.
+    token_info m_last_token;
     /// The current depth of flow context.
     scan_context m_scan_context {};
     /// The queue of pending tokens.
