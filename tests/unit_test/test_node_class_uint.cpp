@@ -132,6 +132,48 @@ TEST_CASE("Node_AsInt_ThrowsForUintFlaggedNode") {
     REQUIRE_THROWS_AS(const_int_node.as_int(), fkyaml::type_error);
 }
 
+TEST_CASE("Node_CompareUInt64") {
+    const fkyaml::node uint_max = fkyaml::node::deserialize(std::string("18446744073709551615"));
+    const fkyaml::node uint_min = fkyaml::node::deserialize(std::string("9223372036854775808"));
+    const fkyaml::node minus_one = fkyaml::node::deserialize(std::string("-1"));
+    const fkyaml::node one = fkyaml::node::deserialize(std::string("1"));
+
+    SUBCASE("equality") {
+        REQUIRE_FALSE(uint_max == minus_one);
+        REQUIRE(uint_max != minus_one);
+        REQUIRE(uint_max == fkyaml::node::deserialize(std::string("18446744073709551615")));
+    }
+
+    SUBCASE("ordering") {
+        REQUIRE(minus_one < uint_max);
+        REQUIRE_FALSE(uint_max < minus_one);
+        REQUIRE(one < uint_min);
+        REQUIRE_FALSE(uint_min < one);
+        REQUIRE(uint_min < uint_max);
+        REQUIRE_FALSE(uint_max < uint_min);
+    }
+
+    SUBCASE("mapping keys which share a bit pattern") {
+        fkyaml::node root;
+        REQUIRE_NOTHROW(root = fkyaml::node::deserialize(std::string("18446744073709551615: a\n-1: b\n")));
+        REQUIRE(root.size() == 2);
+    }
+}
+
+TEST_CASE("Node_GetValueBooleanAndFloatFromIntegers") {
+    SUBCASE("an unsigned integer above the signed range") {
+        const fkyaml::node node = fkyaml::node::deserialize(std::string("18446744073709551615"));
+        REQUIRE(node.get_value<bool>() == true);
+        REQUIRE(node.get_value<double>() == static_cast<double>(std::numeric_limits<uint64_t>::max()));
+    }
+
+    SUBCASE("a negative integer") {
+        const fkyaml::node node = fkyaml::node::deserialize(std::string("-1"));
+        REQUIRE(node.get_value<bool>() == true);
+        REQUIRE(node.get_value<double>() == -1.0);
+    }
+}
+
 TEST_CASE("Node_UintBit_ClearedOnReassignment") {
     // After assigning a new signed integer value the uint_bit must be cleared.
     fkyaml::node n = fkyaml::node::deserialize("v: 15745692345339290292")["v"];

@@ -726,7 +726,9 @@ public:
             ret = (lhs.m_value.boolean == act_rhs.m_value.boolean);
             break;
         case detail::node_attr_bits::int_bit:
-            ret = (lhs.m_value.integer == act_rhs.m_value.integer);
+            // An unsigned integer beyond the signed range has the same bit pattern as a negative integer.
+            ret = (lhs.m_value.integer == act_rhs.m_value.integer) &&
+                  (lhs.m_attrs.is_uint() == act_rhs.m_attrs.is_uint());
             break;
         case detail::node_attr_bits::float_bit:
             ret =
@@ -789,9 +791,21 @@ public:
             // false < true
             ret = (!lhs.m_value.boolean && act_rhs.m_value.boolean);
             break;
-        case detail::node_attr_bits::int_bit:
-            ret = (lhs.m_value.integer < act_rhs.m_value.integer);
+        case detail::node_attr_bits::int_bit: {
+            const bool lhs_is_uint = lhs.m_attrs.is_uint();
+            const bool rhs_is_uint = act_rhs.m_attrs.is_uint();
+            if (lhs_is_uint != rhs_is_uint) {
+                // An unsigned integer beyond the signed range is greater than any signed integer.
+                ret = rhs_is_uint;
+            }
+            else if (lhs_is_uint) {
+                ret = (static_cast<uint64_t>(lhs.m_value.integer) < static_cast<uint64_t>(act_rhs.m_value.integer));
+            }
+            else {
+                ret = (lhs.m_value.integer < act_rhs.m_value.integer);
+            }
             break;
+        }
         case detail::node_attr_bits::float_bit:
             ret = (lhs.m_value.float_val < act_rhs.m_value.float_val);
             break;

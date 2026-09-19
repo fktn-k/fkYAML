@@ -332,7 +332,13 @@ inline void from_node(const BasicNodeType& n, bool& b) {
         break;
     case node_type::INTEGER:
         // true: non-zero, false: zero
-        b = (n.as_int() != 0);
+        if (n.is_uint()) {
+            // An unsigned integer may exceed the range of the signed integer type.
+            b = (n.as_uint() != 0);
+        }
+        else {
+            b = (n.as_int() != 0);
+        }
         break;
     case node_type::FLOAT:
         // true: non-zero, false: zero
@@ -523,7 +529,13 @@ inline void from_node(const BasicNodeType& n, FloatType& f) {
         f = static_cast<bool>(n.as_bool()) ? static_cast<FloatType>(1.) : static_cast<FloatType>(0.);
         break;
     case node_type::INTEGER:
-        f = static_cast<FloatType>(n.as_int());
+        if (n.is_uint()) {
+            // An unsigned integer may exceed the range of the signed integer type.
+            f = static_cast<FloatType>(n.as_uint());
+        }
+        else {
+            f = static_cast<FloatType>(n.as_int());
+        }
         break;
     case node_type::FLOAT:
         f = from_node_float_helper<BasicNodeType, FloatType>::convert(n);
