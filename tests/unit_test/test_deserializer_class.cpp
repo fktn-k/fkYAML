@@ -5223,6 +5223,68 @@ TEST_CASE("Deserializer_NodePropertiesBeforeBlockMapping") {
         std::string input = "--- a: b\n";
         REQUIRE_THROWS_AS(root = deserializer.deserialize(fkyaml::detail::input_adapter(input)), fkyaml::parse_error);
     }
+
+    SUBCASE("a flow sequence key on the next line does not take them") {
+        std::string input = "&mapping\n[a]: value\n";
+        REQUIRE_NOTHROW(root = deserializer.deserialize(fkyaml::detail::input_adapter(input)));
+        REQUIRE(root.is_mapping());
+        REQUIRE(root.get_anchor_name() == "mapping");
+
+        auto itr = root.begin();
+        REQUIRE(itr.key().is_sequence());
+        REQUIRE_FALSE(itr.key().has_anchor_name());
+        REQUIRE(itr.value().as_str() == "value");
+    }
+
+    SUBCASE("a flow mapping key on the next line does not take them") {
+        std::string input = "foo: !!map\n  {a: b}: c\n";
+        REQUIRE_NOTHROW(root = deserializer.deserialize(fkyaml::detail::input_adapter(input)));
+
+        fkyaml::node& foo_node = root["foo"];
+        REQUIRE(foo_node.is_mapping());
+        REQUIRE(foo_node.get_tag_name() == "!!map");
+
+        auto itr = foo_node.begin();
+        REQUIRE(itr.key().is_mapping());
+        REQUIRE_FALSE(itr.key().has_tag_name());
+        REQUIRE(itr.value().as_str() == "c");
+    }
+
+    SUBCASE("a flow collection on the next line which is not a key still takes them") {
+        std::string input = "- &anchor\n  [a]\n";
+        REQUIRE_NOTHROW(root = deserializer.deserialize(fkyaml::detail::input_adapter(input)));
+        REQUIRE(root[0].is_sequence());
+        REQUIRE(root[0].get_anchor_name() == "anchor");
+    }
+
+    SUBCASE("a flow collection on the next line as an explicit key still takes them") {
+        std::string input = "? &anchor\n  [a]\n: b\n";
+        REQUIRE_NOTHROW(root = deserializer.deserialize(fkyaml::detail::input_adapter(input)));
+        REQUIRE(root.is_mapping());
+        REQUIRE_FALSE(root.has_anchor_name());
+
+        auto itr = root.begin();
+        REQUIRE(itr.key().is_sequence());
+        REQUIRE(itr.key().get_anchor_name() == "anchor");
+        REQUIRE(itr.value().as_str() == "b");
+    }
+
+    SUBCASE("a flow collection key on the next line of an explicit key does not take them") {
+        std::string input = "? &anchor\n  [a]: c\n: b\n";
+        REQUIRE_NOTHROW(root = deserializer.deserialize(fkyaml::detail::input_adapter(input)));
+        REQUIRE(root.is_mapping());
+        REQUIRE(root.size() == 1);
+
+        auto itr = root.begin();
+        REQUIRE(itr.key().is_mapping());
+        REQUIRE(itr.key().get_anchor_name() == "anchor");
+        REQUIRE(itr.value().as_str() == "b");
+
+        auto key_itr = itr.key().begin();
+        REQUIRE(key_itr.key().is_sequence());
+        REQUIRE_FALSE(key_itr.key().has_anchor_name());
+        REQUIRE(key_itr.value().as_str() == "c");
+    }
 }
 
 TEST_CASE("Deserializer_WhiteSpaceInsidePlainScalar") {
