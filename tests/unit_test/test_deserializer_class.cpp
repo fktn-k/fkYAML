@@ -1227,6 +1227,11 @@ TEST_CASE("Deserializer_BlockSequence") {
         std::string input = "- &anchor - foo\n";
         REQUIRE_THROWS_AS(root = deserializer.deserialize(fkyaml::detail::input_adapter(input)), fkyaml::parse_error);
     }
+
+    SUBCASE("block sequence on the line of the properties of an explicit mapping key value") {
+        auto input = GENERATE(std::string("? foo\n: &anchor - bar\n"), std::string("? foo\n: !!seq - bar\n"));
+        REQUIRE_THROWS_AS(root = deserializer.deserialize(fkyaml::detail::input_adapter(input)), fkyaml::parse_error);
+    }
 }
 
 TEST_CASE("Deserializer_BlockMapping") {
@@ -2347,6 +2352,68 @@ TEST_CASE("Deserializer_ExplicitBlockMapping") {
         REQUIRE(corge_node.size() == 1);
         REQUIRE(corge_node.contains("grault"));
         REQUIRE(corge_node["grault"].is_null());
+    }
+
+    SUBCASE("explicit mapping keys with properties before block values on the following lines") {
+        std::string input = "? foo\n"
+                            ": &anchor\n"
+                            "  - bar\n"
+                            "? baz\n"
+                            ": !!map\n"
+                            "  qux: quux\n"
+                            "? corge\n"
+                            ": &both !!seq\n"
+                            "  - grault\n";
+        REQUIRE_NOTHROW(root = deserializer.deserialize(fkyaml::detail::input_adapter(input)));
+
+        REQUIRE(root.is_mapping());
+        REQUIRE(root.size() == 3);
+
+        REQUIRE(root.contains("foo"));
+        fkyaml::node& foo_node = root["foo"];
+        REQUIRE(foo_node.is_sequence());
+        REQUIRE(foo_node.has_anchor_name());
+        REQUIRE(foo_node.get_anchor_name() == "anchor");
+        REQUIRE(foo_node.size() == 1);
+        REQUIRE(foo_node[0].as_str() == "bar");
+
+        REQUIRE(root.contains("baz"));
+        fkyaml::node& baz_node = root["baz"];
+        REQUIRE(baz_node.is_mapping());
+        REQUIRE(baz_node.has_tag_name());
+        REQUIRE(baz_node.get_tag_name() == "!!map");
+        REQUIRE(baz_node.size() == 1);
+        REQUIRE(baz_node.contains("qux"));
+        REQUIRE(baz_node["qux"].as_str() == "quux");
+
+        REQUIRE(root.contains("corge"));
+        fkyaml::node& corge_node = root["corge"];
+        REQUIRE(corge_node.is_sequence());
+        REQUIRE(corge_node.has_anchor_name());
+        REQUIRE(corge_node.get_anchor_name() == "both");
+        REQUIRE(corge_node.has_tag_name());
+        REQUIRE(corge_node.get_tag_name() == "!!seq");
+        REQUIRE(corge_node.size() == 1);
+        REQUIRE(corge_node[0].as_str() == "grault");
+    }
+
+    SUBCASE("anchored explicit mapping key values are resolvable by aliases") {
+        std::string input = "? foo\n"
+                            ": &anchor\n"
+                            "  - bar\n"
+                            "baz: *anchor\n";
+        REQUIRE_NOTHROW(root = deserializer.deserialize(fkyaml::detail::input_adapter(input)));
+
+        REQUIRE(root.is_mapping());
+        REQUIRE(root.size() == 2);
+
+        fkyaml::node& baz_node = root["baz"];
+        REQUIRE(baz_node.is_alias());
+        REQUIRE(baz_node.has_anchor_name());
+        REQUIRE(baz_node.get_anchor_name() == "anchor");
+        REQUIRE(baz_node.is_sequence());
+        REQUIRE(baz_node.size() == 1);
+        REQUIRE(baz_node[0].as_str() == "bar");
     }
 
     SUBCASE("Explicit block mapping as block sequence entry") {
