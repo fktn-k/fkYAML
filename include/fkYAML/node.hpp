@@ -142,6 +142,9 @@ private:
     template <typename BasicNodeType>
     friend class fkyaml::detail::basic_serializer;
 
+    template <typename BasicNodeType>
+    friend class fkyaml::detail::node_builder;
+
     /// @brief A type for YAML docs deserializers.
     using deserializer_type = detail::basic_deserializer<basic_node>;
     /// @brief A type for YAML docs serializers.

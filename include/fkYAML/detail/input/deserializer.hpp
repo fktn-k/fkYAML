@@ -17,6 +17,7 @@
 #include <fkYAML/detail/macros/define_macros.hpp>
 #include <fkYAML/detail/document_metainfo.hpp>
 #include <fkYAML/detail/input/lexical_analyzer.hpp>
+#include <fkYAML/detail/input/node_builder.hpp>
 #include <fkYAML/detail/input/scalar_parser.hpp>
 #include <fkYAML/detail/input/tag_resolver.hpp>
 #include <fkYAML/detail/meta/input_adapter_traits.hpp>
@@ -403,6 +404,7 @@ private:
         mp_current_node = &root;
         // One metainfo object is created per document and shared by all of its nodes.
         root.mp_meta = m_document_state.get_meta();
+        node_builder<basic_node_type> builder(root);
 
         // parse directives first.
         deserialize_directives(lexer, token);

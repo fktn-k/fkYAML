@@ -46,6 +46,7 @@ add_executable(
   test_lexical_analyzer_class.cpp
   test_node_attrs.cpp
   test_node_attrs_uint.cpp
+  test_node_builder_class.cpp
   test_node_class.cpp
   test_node_class_uint.cpp
   test_node_ref_storage_class.cpp
