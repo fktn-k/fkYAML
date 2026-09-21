@@ -962,6 +962,20 @@ private:
                     // value. They must not be deferred here, or they would overwrite the properties
                     // of the key which are already deferred.
                     settle_explicit_key_value_with_props(old_line, old_indent);
+                    if (line < lexer.get_lines_processed()) {
+                        // The value begins on a line after its properties, so which node they belong
+                        // to is not known yet; a block collection, whose entries cannot share the
+                        // line of the separator, is among the possibilities.
+                        // ```yaml
+                        // ? foo
+                        // : &anchor
+                        //   - bar
+                        // # -> {foo: &anchor [bar]}
+                        // ```
+                        defer_node_properties();
+                        line = lexer.get_lines_processed();
+                        indent = lexer.get_last_token_begin_pos();
+                    }
                     continue;
                 }
 
