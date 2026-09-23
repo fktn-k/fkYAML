@@ -37,6 +37,7 @@ target_compile_options(
 
 add_executable(
   unit_test
+  test_chunked_arena_class.cpp
   test_custom_from_node.cpp
   test_deserializer_class.cpp
   test_exception_class.cpp

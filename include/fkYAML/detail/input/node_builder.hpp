@@ -12,6 +12,7 @@
 #include <iterator>
 #include <memory>
 #include <stack>
+#include <vector>
 
 #include <fkYAML/detail/macros/define_macros.hpp>
 #include <fkYAML/detail/input/scalar_parser.hpp>
@@ -62,7 +63,11 @@ class node_builder {
 
 public:
     explicit node_builder(BasicNodeType& root)
-        : m_root(root) {
+        : mp_root(&root) {
+    }
+
+    explicit node_builder(std::vector<BasicNodeType>& roots)
+        : mp_roots(&roots) {
     }
 
     void on_stream_start(const stream_start_event& /*unused*/) {
@@ -76,6 +81,7 @@ public:
             mp_meta = std::make_shared<document_metainfo<BasicNodeType>>();
         }
         mp_meta->version = event.version == "1.1" ? yaml_version_type::VERSION_1_1 : yaml_version_type::VERSION_1_2;
+        mp_meta->is_version_specified = true;
     }
 
     void on_tag_directive(const tag_directive_event& event) {
@@ -97,26 +103,32 @@ public:
         if (!mp_meta) {
             mp_meta = std::make_shared<document_metainfo<BasicNodeType>>();
         }
+        if (mp_roots) {
+            mp_roots->emplace_back();
+            mp_root = &mp_roots->back();
+        }
         m_has_root = false;
     }
 
     void on_document_end(const document_end_event& /*unused*/) {
         if (!m_has_root) {
-            m_root = BasicNodeType();
-            apply_meta(m_root);
+            root() = BasicNodeType();
+            apply_meta(root());
         }
+        mp_meta.reset();
     }
 
     void on_sequence_start(const sequence_start_event& event) {
         auto node = BasicNodeType::sequence();
         apply_meta(node);
+        resolve_tag(event.tag);
         apply_tag(node, event.tag);
-        apply_anchor(node, event.anchor);
 
         if (m_node_stack.empty()) {
-            m_root = std::move(node);
+            root() = std::move(node);
+            apply_anchor(root(), event.anchor);
             m_has_root = true;
-            m_node_stack.emplace(m_root);
+            m_node_stack.emplace(root());
             return;
         }
 
@@ -126,11 +138,12 @@ public:
         case node_type::SEQUENCE: {
             auto& parent_seq = parent_node.as_seq();
             parent_seq.emplace_back(std::move(node));
+            apply_anchor(parent_seq.back(), event.anchor);
             m_node_stack.emplace(parent_seq.back());
             break;
         }
         case node_type::MAPPING:
-            handle_collection_event(parent_slot, std::move(node));
+            handle_collection_event(parent_slot, std::move(node), event.anchor);
             break;
         default:
             // Handle other types or error
@@ -145,13 +158,14 @@ public:
     void on_mapping_start(const mapping_start_event& event) {
         auto node = BasicNodeType::mapping();
         apply_meta(node);
+        resolve_tag(event.tag);
         apply_tag(node, event.tag);
-        apply_anchor(node, event.anchor);
 
         if (m_node_stack.empty()) {
-            m_root = std::move(node);
+            root() = std::move(node);
+            apply_anchor(root(), event.anchor);
             m_has_root = true;
-            m_node_stack.emplace(m_root);
+            m_node_stack.emplace(root());
             return;
         }
 
@@ -161,11 +175,12 @@ public:
         case node_type::SEQUENCE: {
             auto& parent_seq = parent_node.as_seq();
             parent_seq.emplace_back(std::move(node));
+            apply_anchor(parent_seq.back(), event.anchor);
             m_node_stack.emplace(parent_seq.back());
             break;
         }
         case node_type::MAPPING:
-            handle_collection_event(parent_slot, std::move(node));
+            handle_collection_event(parent_slot, std::move(node), event.anchor);
             break;
         default:
             // Handle other types or error
@@ -214,20 +229,12 @@ public:
         node.m_attrs.set_anchor_offset(anchor_counts - 1);
         apply_meta(node);
 
-        auto& parent_slot = m_node_stack.top();
-        auto& parent_node = parent_slot.get();
-        switch (parent_node.get_type()) {
-        case node_type::SEQUENCE: {
-            auto& parent_seq = parent_node.as_seq();
-            parent_seq.emplace_back(std::move(node));
-            break;
+        if (m_node_stack.empty()) {
+            root() = std::move(node);
+            m_has_root = true;
         }
-        case node_type::MAPPING:
-            // Handle mapping parent node
-            break;
-        default:
-            // Handle other types or error
-            break;
+        else {
+            handle_scalar_event(std::move(node), {}, {});
         }
 
         // Check if the alias node is self-referential.
@@ -243,6 +250,10 @@ public:
     }
 
 private:
+    BasicNodeType& root() {
+        return *mp_root;
+    }
+
     void apply_meta(BasicNodeType& node) {
         node.mp_meta = mp_meta;
     }
@@ -270,8 +281,9 @@ private:
         return tag_resolver<BasicNodeType>::resolve_tag(tag, mp_meta);
     }
 
-    void handle_collection_event(node_slot& parent_slot, BasicNodeType node) {
+    void handle_collection_event(node_slot& parent_slot, BasicNodeType node, const str_view& anchor) {
         if (!parent_slot.has_mapping_key()) {
+            apply_anchor(node, anchor);
             parent_slot.set_mapping_key(std::move(node));
             m_node_stack.emplace(parent_slot.get_mapping_key());
             return;
@@ -279,12 +291,34 @@ private:
 
         auto& parent_map = parent_slot.get().as_map();
         auto itr = parent_map.emplace(parent_slot.take_mapping_key(), std::move(node));
+        if FK_YAML_UNLIKELY (!itr.second) {
+            throw parse_error("Detected duplication in mapping keys.", 0, 0);
+        }
+        apply_anchor(itr.first->second, anchor);
         m_node_stack.emplace(itr.first->second);
     }
 
     void handle_flow_scalar_event(
         lexical_token_t type, const str_view& value, const str_view& tag, const str_view& anchor) {
         tag_t tag_type = resolve_tag(tag);
+        ensure_scalar_tag(tag_type);
+        if (type == lexical_token_t::PLAIN_SCALAR && value.empty()) {
+            BasicNodeType node;
+            switch (tag_type) {
+            case tag_t::STRING:
+            case tag_t::NON_SPECIFIC:
+            case tag_t::CUSTOM_TAG:
+                node = BasicNodeType(typename BasicNodeType::string_type());
+                break;
+            case tag_t::NONE:
+            case tag_t::NULL_VALUE:
+                break;
+            default:
+                throw parse_error("Unsupported tag for an empty node.", 0, 0);
+            }
+            handle_scalar_event(std::move(node), tag, anchor);
+            return;
+        }
         auto node = scalar_parser<BasicNodeType>(0, 0).parse_flow(type, tag_type, value);
         handle_scalar_event(std::move(node), tag, anchor);
     }
@@ -293,14 +327,27 @@ private:
         lexical_token_t type, const str_view& value, const str_view& tag, const str_view& anchor,
         const block_scalar_header& header) {
         tag_t tag_type = resolve_tag(tag);
+        ensure_scalar_tag(tag_type);
         auto node = scalar_parser<BasicNodeType>(0, 0).parse_block(type, tag_type, value, header);
         handle_scalar_event(std::move(node), tag, anchor);
+    }
+
+    static void ensure_scalar_tag(const tag_t tag_type) {
+        if FK_YAML_UNLIKELY (tag_type == tag_t::SEQUENCE || tag_type == tag_t::MAPPING) {
+            throw parse_error("A sequence or mapping tag cannot be specified to a scalar node.", 0, 0);
+        }
     }
 
     void handle_scalar_event(BasicNodeType node, const str_view& tag, const str_view& anchor) {
         apply_meta(node);
         apply_tag(node, tag);
-        apply_anchor(node, anchor);
+
+        if (m_node_stack.empty()) {
+            root() = std::move(node);
+            apply_anchor(root(), anchor);
+            m_has_root = true;
+            return;
+        }
 
         auto& parent_slot = m_node_stack.top();
         auto& parent_node = parent_slot.get();
@@ -308,16 +355,22 @@ private:
         case node_type::SEQUENCE: {
             auto& parent_seq = parent_node.as_seq();
             parent_seq.emplace_back(std::move(node));
+            apply_anchor(parent_seq.back(), anchor);
             break;
         }
         case node_type::MAPPING: {
             if (!parent_slot.has_mapping_key()) {
+                apply_anchor(node, anchor);
                 parent_slot.set_mapping_key(std::move(node));
                 break;
             }
 
             auto& parent_map = parent_node.as_map();
-            parent_map.emplace(parent_slot.take_mapping_key(), std::move(node));
+            const auto result = parent_map.emplace(parent_slot.take_mapping_key(), std::move(node));
+            if FK_YAML_UNLIKELY (!result.second) {
+                throw parse_error("Detected duplication in mapping keys.", 0, 0);
+            }
+            apply_anchor(result.first->second, anchor);
             break;
         }
         default:
@@ -326,7 +379,8 @@ private:
         }
     }
 
-    BasicNodeType& m_root;
+    BasicNodeType* mp_root {nullptr};
+    std::vector<BasicNodeType>* mp_roots {nullptr};
     bool m_has_root {false};
     std::shared_ptr<document_metainfo<BasicNodeType>> mp_meta;
     std::stack<node_slot> m_node_stack;

@@ -25,6 +25,7 @@
 #include <fkYAML/detail/exception_safe_allocation.hpp>
 #include <fkYAML/detail/input/deserializer.hpp>
 #include <fkYAML/detail/input/input_adapter.hpp>
+#include <fkYAML/detail/input/node_builder.hpp>
 #include <fkYAML/detail/iterator.hpp>
 #include <fkYAML/detail/map_range_proxy.hpp>
 #include <fkYAML/detail/meta/node_traits.hpp>
@@ -137,16 +138,15 @@ private:
     friend struct fkyaml::detail::external_node_constructor;
 
     template <typename BasicNodeType>
-    friend class fkyaml::detail::basic_deserializer;
-
-    template <typename BasicNodeType>
     friend class fkyaml::detail::basic_serializer;
 
     template <typename BasicNodeType>
     friend class fkyaml::detail::node_builder;
 
     /// @brief A type for YAML docs deserializers.
-    using deserializer_type = detail::basic_deserializer<basic_node>;
+    using node_builder_type = detail::node_builder<basic_node>;
+    /// @brief A type for YAML docs deserializers.
+    using deserializer_type = detail::basic_deserializer<node_builder_type>;
     /// @brief A type for YAML docs serializers.
     using serializer_type = detail::basic_serializer<basic_node>;
     /// @brief A helper type alias for std::initializer_list.
@@ -424,7 +424,10 @@ public:
     /// @sa https://fktn-k.github.io/fkYAML/api/basic_node/deserialize/
     template <typename InputType>
     static basic_node deserialize(InputType&& input) {
-        return deserializer_type().deserialize(detail::input_adapter(std::forward<InputType>(input)));
+        basic_node root;
+        node_builder_type builder(root);
+        deserializer_type().deserialize(detail::input_adapter(std::forward<InputType>(input)), builder);
+        return root;
     }
 
     /// @brief Deserialize the first YAML document in the input ranged by the iterators into a basic_node object.
@@ -438,8 +441,11 @@ public:
     /// @sa https://fktn-k.github.io/fkYAML/api/basic_node/deserialize/
     template <typename ItrType>
     static basic_node deserialize(ItrType begin, ItrType end) {
-        return deserializer_type().deserialize(
-            detail::input_adapter(std::forward<ItrType>(begin), std::forward<ItrType>(end)));
+        basic_node root;
+        node_builder_type builder(root);
+        deserializer_type().deserialize(
+            detail::input_adapter(std::forward<ItrType>(begin), std::forward<ItrType>(end)), builder);
+        return root;
     }
 
     /// @brief Deserialize all YAML documents in the input into basic_node objects.
@@ -449,7 +455,10 @@ public:
     /// @sa https://fktn-k.github.io/fkYAML/api/basic_node/deserialize_docs/
     template <typename InputType>
     static std::vector<basic_node> deserialize_docs(InputType&& input) {
-        return deserializer_type().deserialize_docs(detail::input_adapter(std::forward<InputType>(input)));
+        std::vector<basic_node> roots;
+        node_builder_type builder(roots);
+        deserializer_type().deserialize_docs(detail::input_adapter(std::forward<InputType>(input)), builder);
+        return roots;
     }
 
     /// @brief Deserialize all YAML documents in the input ranged by the iterators into basic_node objects.
@@ -460,8 +469,11 @@ public:
     /// @sa https://fktn-k.github.io/fkYAML/api/basic_node/deserialize_docs/
     template <typename ItrType>
     static std::vector<basic_node> deserialize_docs(ItrType&& begin, ItrType&& end) {
-        return deserializer_type().deserialize_docs(
-            detail::input_adapter(std::forward<ItrType>(begin), std::forward<ItrType>(end)));
+        std::vector<basic_node> roots;
+        node_builder_type builder(roots);
+        deserializer_type().deserialize_docs(
+            detail::input_adapter(std::forward<ItrType>(begin), std::forward<ItrType>(end)), builder);
+        return roots;
     }
 
     /// @brief Serialize a basic_node object into a string.

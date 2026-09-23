@@ -10,6 +10,32 @@
 
 #include <fkYAML/node.hpp>
 
+TEST_CASE("Deserializer_NodeBuilderEventHandler") {
+    const std::string input = "foo: [bar, &anchor 42, *anchor]";
+
+    fkyaml::node root;
+    fkyaml::detail::node_builder<fkyaml::node> builder(root);
+    fkyaml::detail::basic_deserializer<fkyaml::detail::node_builder<fkyaml::node>> deserializer;
+    REQUIRE_NOTHROW(deserializer.deserialize(fkyaml::detail::input_adapter(input), builder));
+
+    REQUIRE(root["foo"].size() == 3);
+    REQUIRE(root["foo"][0].as_str() == "bar");
+    REQUIRE(root["foo"][1].is_anchor());
+    REQUIRE(root["foo"][2].is_alias());
+}
+
+TEST_CASE("Deserializer_DispatchesCommittedEventsIncrementally") {
+    const std::string input = "foo: bar\nbaz: qux\n  invalid: value";
+
+    fkyaml::node root;
+    fkyaml::detail::node_builder<fkyaml::node> builder(root);
+    fkyaml::detail::basic_deserializer<fkyaml::detail::node_builder<fkyaml::node>> deserializer;
+    REQUIRE_THROWS_AS(deserializer.deserialize(fkyaml::detail::input_adapter(input), builder), fkyaml::parse_error);
+
+    REQUIRE(root.contains("foo"));
+    REQUIRE(root["foo"].as_str() == "bar");
+}
+
 TEST_CASE("Deserializer_EmptyInput") {
     fkyaml::detail::basic_deserializer<fkyaml::node> deserializer;
     fkyaml::node root;
@@ -252,7 +278,12 @@ TEST_CASE("Deserializer_InvalidStructureAfterRootScalar") {
 
 TEST_CASE("Deserializer_InvalidStructureAfterRootFlowCollection") {
     const auto input = GENERATE(
-        std::string("[]\n? foo"), std::string("[]\n- foo"), std::string("[]\n[foo]"), std::string("[]\n{foo}"));
+        std::string("[]\n? foo"),
+        std::string("[]\n- foo"),
+        std::string("[]\n[foo]"),
+        std::string("[]\n{foo}"),
+        std::string("[\nsequence item\n]\ninvalid item"),
+        std::string("{}\ninvalid item"));
 
     REQUIRE_THROWS_AS(fkyaml::node::deserialize(input), fkyaml::parse_error);
 }
