@@ -39,26 +39,28 @@ class node_builder {
         }
 
         bool has_mapping_key() const {
-            return static_cast<bool>(mp_mapping_key);
+            return m_has_mapping_key;
         }
 
         void set_mapping_key(BasicNodeType node) {
-            mp_mapping_key = std::unique_ptr<BasicNodeType>(new BasicNodeType(std::move(node)));
+            m_mapping_key = std::move(node);
+            m_has_mapping_key = true;
         }
 
         BasicNodeType& get_mapping_key() {
-            return *mp_mapping_key;
+            return m_mapping_key;
         }
 
         BasicNodeType take_mapping_key() {
-            auto key = std::move(*mp_mapping_key);
-            mp_mapping_key.reset();
+            auto key = std::move(m_mapping_key);
+            m_has_mapping_key = false;
             return key;
         }
 
     private:
         BasicNodeType* mp_borrowed_node {nullptr};
-        std::unique_ptr<BasicNodeType> mp_mapping_key;
+        BasicNodeType m_mapping_key {};
+        bool m_has_mapping_key {false};
     };
 
 public:

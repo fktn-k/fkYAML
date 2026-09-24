@@ -9,13 +9,15 @@
 #ifndef FKYAML_DETAIL_INPUT_STREAM_EVENTS_HPP
 #define FKYAML_DETAIL_INPUT_STREAM_EVENTS_HPP
 
+#include <cstdint>
+
 #include <fkYAML/detail/macros/define_macros.hpp>
 #include <fkYAML/detail/input/block_scalar_header.hpp>
 #include <fkYAML/detail/str_view.hpp>
 
 FK_YAML_DETAIL_NAMESPACE_BEGIN
 
-enum class collection_type {
+enum class collection_type : std::uint8_t {
     BLOCK,
     FLOW,
 };

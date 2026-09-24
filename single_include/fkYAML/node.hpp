@@ -1245,6 +1245,7 @@ FK_YAML_DETAIL_NAMESPACE_END
 #include <deque>
 #include <list>
 #include <memory>
+#include <new>
 #include <string>
 #include <utility>
 #include <vector>
@@ -7892,6 +7893,8 @@ FK_YAML_DETAIL_NAMESPACE_END
 #ifndef FKYAML_DETAIL_INPUT_STREAM_EVENTS_HPP
 #define FKYAML_DETAIL_INPUT_STREAM_EVENTS_HPP
 
+#include <cstdint>
+
 // #include <fkYAML/detail/macros/define_macros.hpp>
 
 // #include <fkYAML/detail/input/block_scalar_header.hpp>
@@ -7901,7 +7904,7 @@ FK_YAML_DETAIL_NAMESPACE_END
 
 FK_YAML_DETAIL_NAMESPACE_BEGIN
 
-enum class collection_type {
+enum class collection_type : std::uint8_t {
     BLOCK,
     FLOW,
 };
@@ -8269,26 +8272,28 @@ class node_builder {
         }
 
         bool has_mapping_key() const {
-            return static_cast<bool>(mp_mapping_key);
+            return m_has_mapping_key;
         }
 
         void set_mapping_key(BasicNodeType node) {
-            mp_mapping_key = std::unique_ptr<BasicNodeType>(new BasicNodeType(std::move(node)));
+            m_mapping_key = std::move(node);
+            m_has_mapping_key = true;
         }
 
         BasicNodeType& get_mapping_key() {
-            return *mp_mapping_key;
+            return m_mapping_key;
         }
 
         BasicNodeType take_mapping_key() {
-            auto key = std::move(*mp_mapping_key);
-            mp_mapping_key.reset();
+            auto key = std::move(m_mapping_key);
+            m_has_mapping_key = false;
             return key;
         }
 
     private:
         BasicNodeType* mp_borrowed_node {nullptr};
-        std::unique_ptr<BasicNodeType> mp_mapping_key;
+        BasicNodeType m_mapping_key {};
+        bool m_has_mapping_key {false};
     };
 
 public:
@@ -8935,23 +8940,170 @@ enum class kind_type : std::uint8_t {
     MAPPING,
 };
 
-struct buffered_event {
-    kind_type kind {kind_type::EMPTY};
-    str_view tag;
-    str_view anchor;
+struct scalar_event_data {
+    str_view value;
+    block_scalar_header header {};
+    lexical_token_t type {lexical_token_t::PLAIN_SCALAR};
+};
 
-    lexical_token_t scalar_type {lexical_token_t::PLAIN_SCALAR};
-    str_view scalar_value;
-    block_scalar_header scalar_header {};
-
-    collection_type collection_style {collection_type::BLOCK};
+struct collection_event_data {
     node_id first_child_id {invalid_node_id};
     node_id last_child_id {invalid_node_id};
-    node_id next_sibling_id {invalid_node_id};
     node_id streaming_mapping_value_id {invalid_node_id};
-
+    collection_type style {collection_type::BLOCK};
     bool is_streaming {false};
+};
+
+union event_payload {
+    event_payload() noexcept {
+    }
+
+    ~event_payload() noexcept {
+    }
+
+    scalar_event_data scalar;
+    collection_event_data collection;
+};
+
+struct buffered_event {
+    buffered_event()
+        : payload() {
+        new (&payload.scalar) scalar_event_data();
+    }
+
+    buffered_event(const buffered_event& other) noexcept
+        : tag(other.tag),
+          anchor(other.anchor),
+          next_sibling_id(other.next_sibling_id),
+          kind(other.kind),
+          is_released(other.is_released),
+          payload() {
+        construct_payload(other);
+    }
+
+    buffered_event(buffered_event&& other) noexcept
+        : buffered_event(other) {
+    }
+
+    buffered_event& operator=(const buffered_event& other) noexcept {
+        if (this == &other) {
+            return *this;
+        }
+
+        tag = other.tag;
+        anchor = other.anchor;
+        next_sibling_id = other.next_sibling_id;
+        is_released = other.is_released;
+        if (is_collection() == other.is_collection()) {
+            if (is_collection()) {
+                payload.collection = other.payload.collection;
+            }
+            else {
+                payload.scalar = other.payload.scalar;
+            }
+            kind = other.kind;
+        }
+        else {
+            destroy_payload();
+            kind = other.kind;
+            construct_payload(other);
+        }
+        return *this;
+    }
+
+    buffered_event& operator=(buffered_event&& other) noexcept {
+        return operator=(other);
+    }
+
+    ~buffered_event() noexcept {
+        destroy_payload();
+    }
+
+    void set_kind(const kind_type new_kind) {
+        const bool was_collection = is_collection();
+        const bool becomes_collection = is_collection_kind(new_kind);
+        if (was_collection != becomes_collection) {
+            destroy_payload();
+            if (becomes_collection) {
+                new (&payload.collection) collection_event_data();
+            }
+            else {
+                new (&payload.scalar) scalar_event_data();
+            }
+        }
+        kind = new_kind;
+    }
+
+    bool is_collection() const noexcept {
+        return is_collection_kind(kind);
+    }
+
+    str_view tag;
+    str_view anchor;
+    node_id next_sibling_id {invalid_node_id};
+    kind_type kind {kind_type::EMPTY};
     bool is_released {false};
+    event_payload payload;
+
+private:
+    static bool is_collection_kind(const kind_type event_kind) noexcept {
+        return event_kind == kind_type::SEQUENCE || event_kind == kind_type::MAPPING;
+    }
+
+    void construct_payload(const buffered_event& other) {
+        if (other.is_collection()) {
+            new (&payload.collection) collection_event_data(other.payload.collection);
+        }
+        else {
+            new (&payload.scalar) scalar_event_data(other.payload.scalar);
+        }
+    }
+
+    void destroy_payload() noexcept {
+        if (is_collection()) {
+            payload.collection.~collection_event_data();
+        }
+        else {
+            payload.scalar.~scalar_event_data();
+        }
+    }
+};
+
+class event_leaf {
+public:
+    static event_leaf scalar(const lexical_token_t type, const str_view value, const block_scalar_header& header = {}) {
+        event_leaf leaf;
+        leaf.m_event.set_kind(kind_type::SCALAR);
+        leaf.m_event.payload.scalar.type = type;
+        leaf.m_event.payload.scalar.value = value;
+        leaf.m_event.payload.scalar.header = header;
+        return leaf;
+    }
+
+    static event_leaf alias(const str_view value) {
+        event_leaf leaf;
+        leaf.m_event.set_kind(kind_type::ALIAS);
+        leaf.m_event.payload.scalar.value = value;
+        return leaf;
+    }
+
+    bool is_alias() const noexcept {
+        return m_event.kind == kind_type::ALIAS;
+    }
+
+    void set_tag(const str_view tag) {
+        m_event.tag = tag;
+    }
+
+    void set_anchor(const str_view anchor) {
+        m_event.anchor = anchor;
+    }
+
+private:
+    template <typename>
+    friend class event_node;
+
+    buffered_event m_event {};
 };
 
 class event_arena {
@@ -8972,17 +9124,18 @@ public:
 
     void append_child(const node_id parent_id, const node_id child_id) {
         buffered_event& parent = m_arena.get(parent_id);
-        if (parent.first_child_id == invalid_node_id) {
-            parent.first_child_id = child_id;
+        if (parent.payload.collection.first_child_id == invalid_node_id) {
+            parent.payload.collection.first_child_id = child_id;
         }
         else {
-            m_arena.get(parent.last_child_id).next_sibling_id = child_id;
+            m_arena.get(parent.payload.collection.last_child_id).next_sibling_id = child_id;
         }
-        parent.last_child_id = child_id;
+        parent.payload.collection.last_child_id = child_id;
     }
 
     void release_subtree(const node_id root_id) {
-        node_id child_id = m_arena.get(root_id).first_child_id;
+        buffered_event& root = m_arena.get(root_id);
+        node_id child_id = root.is_collection() ? root.payload.collection.first_child_id : invalid_node_id;
         while (child_id != invalid_node_id) {
             const auto& child_event = m_arena.get(child_id);
             const node_id next_id = child_event.next_sibling_id;
@@ -8992,19 +9145,28 @@ public:
         m_arena.deallocate(root_id);
     }
 
+    void release(const node_id id) {
+        m_arena.deallocate(id);
+    }
+
     void replace(const node_id destination_id, const node_id source_id) {
         FK_YAML_ASSERT(destination_id != source_id);
 
+        replace(destination_id, m_arena.get(source_id));
+        m_arena.deallocate(source_id);
+    }
+
+    void replace(const node_id destination_id, const buffered_event& source_event) {
         buffered_event& destination_event = m_arena.get(destination_id);
-        node_id child_id = destination_event.first_child_id;
+        node_id child_id =
+            destination_event.is_collection() ? destination_event.payload.collection.first_child_id : invalid_node_id;
         while (child_id != invalid_node_id) {
             const node_id next_id = m_arena.get(child_id).next_sibling_id;
             release_subtree(child_id);
             child_id = next_id;
         }
 
-        destination_event = m_arena.get(source_id);
-        m_arena.deallocate(source_id);
+        destination_event = source_event;
     }
 
     void swap(const node_id lhs, const node_id rhs) noexcept {
@@ -9023,6 +9185,8 @@ private:
 template <typename EventHandler>
 class event_node {
 public:
+    event_node() = default;
+
     explicit event_node(event_arena& arena)
         : mp_arena(&arena),
           m_id(mp_arena->create()) {
@@ -9048,62 +9212,61 @@ public:
 
         FK_YAML_ASSERT(mp_arena == other.mp_arena);
         mp_arena->replace(m_id, other.m_id);
-        get_event().is_streaming = false;
+        if (get_event().is_collection()) {
+            get_event().payload.collection.is_streaming = false;
+        }
 
         other.mp_arena = nullptr;
         other.m_id = invalid_node_id;
         return *this;
     }
 
+    event_node& operator=(event_leaf&& leaf) noexcept {
+        mp_arena->replace(m_id, leaf.m_event);
+        return *this;
+    }
+
     static event_node block_sequence(event_arena& arena) {
         event_node node(arena);
         auto& event = node.get_event();
-        event.kind = kind_type::SEQUENCE;
-        event.collection_style = collection_type::BLOCK;
+        event.set_kind(kind_type::SEQUENCE);
+        event.payload.collection.style = collection_type::BLOCK;
         return node;
     }
 
     static event_node flow_sequence(event_arena& arena) {
         event_node node(arena);
         auto& event = node.get_event();
-        event.kind = kind_type::SEQUENCE;
-        event.collection_style = collection_type::FLOW;
+        event.set_kind(kind_type::SEQUENCE);
+        event.payload.collection.style = collection_type::FLOW;
         return node;
     }
 
     static event_node block_mapping(event_arena& arena) {
         event_node node(arena);
         auto& event = node.get_event();
-        event.kind = kind_type::MAPPING;
-        event.collection_style = collection_type::BLOCK;
+        event.set_kind(kind_type::MAPPING);
+        event.payload.collection.style = collection_type::BLOCK;
         return node;
     }
 
     static event_node flow_mapping(event_arena& arena) {
         event_node node(arena);
         auto& event = node.get_event();
-        event.kind = kind_type::MAPPING;
-        event.collection_style = collection_type::FLOW;
+        event.set_kind(kind_type::MAPPING);
+        event.payload.collection.style = collection_type::FLOW;
         return node;
     }
 
-    static event_node scalar(
+    static event_leaf scalar(
         event_arena& arena, const lexical_token_t type, const str_view value, const block_scalar_header& header = {}) {
-        event_node node(arena);
-        auto& event = node.get_event();
-        event.kind = kind_type::SCALAR;
-        event.scalar_type = type;
-        event.scalar_value = value;
-        event.scalar_header = header;
-        return node;
+        static_cast<void>(arena);
+        return event_leaf::scalar(type, value, header);
     }
 
-    static event_node alias(event_arena& arena, const str_view value) {
-        event_node node(arena);
-        auto& event = node.get_event();
-        event.kind = kind_type::ALIAS;
-        event.scalar_value = value;
-        return node;
+    static event_leaf alias(event_arena& arena, const str_view value) {
+        static_cast<void>(arena);
+        return event_leaf::alias(value);
     }
 
     event_node reference() const noexcept {
@@ -9145,21 +9308,26 @@ public:
 
     void start_streaming() {
         auto& event = get_event();
-        if (mp_handler == nullptr || event.is_streaming || event.collection_style == collection_type::FLOW) {
+        if (mp_handler == nullptr || !event.is_collection()) {
+            return;
+        }
+
+        auto& collection = event.payload.collection;
+        if (collection.is_streaming || collection.style == collection_type::FLOW) {
             return;
         }
 
         switch (event.kind) {
         case kind_type::SEQUENCE:
-            mp_handler->on_sequence_start({event.tag, event.anchor, event.collection_style});
+            mp_handler->on_sequence_start({event.tag, event.anchor, collection.style});
             break;
         case kind_type::MAPPING:
-            mp_handler->on_mapping_start({event.tag, event.anchor, event.collection_style});
+            mp_handler->on_mapping_start({event.tag, event.anchor, collection.style});
             break;
         default:
             return;
         }
-        event.is_streaming = true;
+        collection.is_streaming = true;
     }
 
     void release() {
@@ -9167,63 +9335,102 @@ public:
             return;
         }
 
-        if (get_event().is_streaming) {
+        if (get_event().is_collection() && get_event().payload.collection.is_streaming) {
             finish_streaming();
         }
         else {
-            dispatch(*mp_handler);
+            dispatch_events_and_release(*mp_arena, m_id, *mp_handler, false);
         }
         mp_handler = nullptr;
         get_event().is_released = true;
     }
 
     event_node get_last_sequence_element() {
-        return event_node(mp_arena, get_event().last_child_id);
+        return event_node(mp_arena, get_event().payload.collection.last_child_id);
     }
 
     event_node add_sequence_entry(event_node&& node) {
         auto& event = get_event();
-        if (event.is_streaming && event.first_child_id != invalid_node_id && event.last_child_id != invalid_node_id) {
-            const node_id child_id = event.last_child_id;
+        auto& collection = event.payload.collection;
+        if (collection.is_streaming && collection.first_child_id != invalid_node_id &&
+            collection.last_child_id != invalid_node_id) {
+            const node_id child_id = collection.last_child_id;
             event_node child(mp_arena, child_id);
             child.set_handler(mp_handler);
             child.release();
             mp_arena->release_subtree(child_id);
-            auto& event = get_event();
-            event.first_child_id = invalid_node_id;
-            event.last_child_id = invalid_node_id;
+            collection.first_child_id = invalid_node_id;
+            collection.last_child_id = invalid_node_id;
         }
-        node.set_handler(event.is_streaming ? mp_handler : nullptr);
+        node.set_handler(collection.is_streaming ? mp_handler : nullptr);
         mp_arena->append_child(m_id, node.m_id);
-        return event_node(mp_arena, event.last_child_id);
+        return event_node(mp_arena, collection.last_child_id);
+    }
+
+    event_node add_sequence_entry(event_leaf&& leaf) {
+        const node_id child_id = mp_arena->create();
+        mp_arena->get(child_id) = leaf.m_event;
+        mp_arena->append_child(m_id, child_id);
+        return event_node(mp_arena, child_id);
     }
 
     event_node add_mapping_entry(event_node&& key) {
         auto& event = get_event();
-        if (event.is_streaming) {
-            if (event.streaming_mapping_value_id != invalid_node_id) {
-                event_node value(mp_arena, event.streaming_mapping_value_id);
+        auto& collection = event.payload.collection;
+        if (collection.is_streaming) {
+            if (collection.streaming_mapping_value_id != invalid_node_id) {
+                event_node value(mp_arena, collection.streaming_mapping_value_id);
                 value.set_handler(mp_handler);
                 value.release();
-                mp_arena->get(event.streaming_mapping_value_id) = buffered_event {};
+                mp_arena->get(collection.streaming_mapping_value_id) = buffered_event {};
             }
             else {
-                event.streaming_mapping_value_id = mp_arena->create();
+                collection.streaming_mapping_value_id = mp_arena->create();
             }
 
             key.set_handler(mp_handler);
             key.release();
-            mp_arena->release_subtree(key.m_id);
+            if (key.m_id != invalid_node_id) {
+                mp_arena->release_subtree(key.m_id);
+            }
             key.m_id = invalid_node_id;
             key.mp_arena = nullptr;
 
-            event_node value(mp_arena, event.streaming_mapping_value_id);
+            event_node value(mp_arena, collection.streaming_mapping_value_id);
             value.set_handler(mp_handler);
             return value;
         }
 
         mp_arena->append_child(m_id, key.m_id);
         auto value_id = mp_arena->create();
+        mp_arena->append_child(m_id, value_id);
+        return event_node(mp_arena, value_id);
+    }
+
+    event_node add_mapping_entry(event_leaf&& key) {
+        auto& event = get_event();
+        auto& collection = event.payload.collection;
+        if (collection.is_streaming) {
+            if (collection.streaming_mapping_value_id != invalid_node_id) {
+                event_node value(mp_arena, collection.streaming_mapping_value_id);
+                value.set_handler(mp_handler);
+                value.release();
+                mp_arena->get(collection.streaming_mapping_value_id) = buffered_event {};
+            }
+            else {
+                collection.streaming_mapping_value_id = mp_arena->create();
+            }
+
+            dispatch_leaf_event(*mp_handler, key.m_event);
+            event_node value(mp_arena, collection.streaming_mapping_value_id);
+            value.set_handler(mp_handler);
+            return value;
+        }
+
+        const node_id key_id = mp_arena->create();
+        mp_arena->get(key_id) = key.m_event;
+        mp_arena->append_child(m_id, key_id);
+        const node_id value_id = mp_arena->create();
         mp_arena->append_child(m_id, value_id);
         return event_node(mp_arena, value_id);
     }
@@ -9256,27 +9463,28 @@ private:
 
     void finish_streaming() {
         auto& event = get_event();
+        auto& collection = event.payload.collection;
         switch (event.kind) {
         case kind_type::SEQUENCE:
-            if (event.first_child_id != invalid_node_id && event.last_child_id != invalid_node_id) {
-                const node_id child_id = event.last_child_id;
+            if (collection.first_child_id != invalid_node_id && collection.last_child_id != invalid_node_id) {
+                const node_id child_id = collection.last_child_id;
                 event_node child(mp_arena, child_id);
                 child.set_handler(mp_handler);
                 child.release();
                 mp_arena->release_subtree(child_id);
-                event.first_child_id = invalid_node_id;
-                event.last_child_id = invalid_node_id;
+                collection.first_child_id = invalid_node_id;
+                collection.last_child_id = invalid_node_id;
             }
             mp_handler->on_sequence_end({});
             break;
         case kind_type::MAPPING:
-            if (event.streaming_mapping_value_id != invalid_node_id) {
-                const node_id value_id = event.streaming_mapping_value_id;
+            if (collection.streaming_mapping_value_id != invalid_node_id) {
+                const node_id value_id = collection.streaming_mapping_value_id;
                 event_node value(mp_arena, value_id);
                 value.set_handler(mp_handler);
                 value.release();
                 mp_arena->release_subtree(value_id);
-                event.streaming_mapping_value_id = invalid_node_id;
+                collection.streaming_mapping_value_id = invalid_node_id;
             }
             mp_handler->on_mapping_end({});
             break;
@@ -9295,12 +9503,12 @@ private:
             dispatch_scalar_event(handler, event);
             break;
         case kind_type::ALIAS:
-            handler.on_alias({event.scalar_value});
+            handler.on_alias({event.payload.scalar.value});
             break;
         case kind_type::SEQUENCE: {
-            handler.on_sequence_start({event.tag, event.anchor, event.collection_style});
+            handler.on_sequence_start({event.tag, event.anchor, event.payload.collection.style});
 
-            node_id child_id = event.first_child_id;
+            node_id child_id = event.payload.collection.first_child_id;
             while (child_id != invalid_node_id) {
                 dispatch_events(arena, child_id, handler);
                 child_id = arena.get(child_id).next_sibling_id;
@@ -9310,9 +9518,9 @@ private:
             break;
         }
         case kind_type::MAPPING:
-            handler.on_mapping_start({event.tag, event.anchor, event.collection_style});
+            handler.on_mapping_start({event.tag, event.anchor, event.payload.collection.style});
 
-            node_id child_id = event.first_child_id;
+            node_id child_id = event.payload.collection.first_child_id;
             while (child_id != invalid_node_id) {
                 node_id key_id = child_id;
                 node_id value_id = arena.get(key_id).next_sibling_id;
@@ -9326,27 +9534,96 @@ private:
         }
     }
 
+    void dispatch_events_and_release(
+        event_arena& arena, const node_id root, EventHandler& handler, const bool release_root) {
+        buffered_event& event = arena.get(root);
+        switch (event.kind) {
+        case kind_type::EMPTY:
+            handler.on_plain_scalar({{}, event.tag, event.anchor});
+            break;
+        case kind_type::SCALAR:
+            dispatch_scalar_event(handler, event);
+            break;
+        case kind_type::ALIAS:
+            handler.on_alias({event.payload.scalar.value});
+            break;
+        case kind_type::SEQUENCE: {
+            handler.on_sequence_start({event.tag, event.anchor, event.payload.collection.style});
+
+            node_id child_id = event.payload.collection.first_child_id;
+            while (child_id != invalid_node_id) {
+                const node_id next_id = arena.get(child_id).next_sibling_id;
+                dispatch_events_and_release(arena, child_id, handler, true);
+                child_id = next_id;
+            }
+
+            handler.on_sequence_end({});
+            break;
+        }
+        case kind_type::MAPPING:
+            handler.on_mapping_start({event.tag, event.anchor, event.payload.collection.style});
+
+            node_id child_id = event.payload.collection.first_child_id;
+            while (child_id != invalid_node_id) {
+                const node_id key_id = child_id;
+                const node_id value_id = arena.get(key_id).next_sibling_id;
+                const node_id next_id = arena.get(value_id).next_sibling_id;
+                dispatch_events_and_release(arena, key_id, handler, true);
+                dispatch_events_and_release(arena, value_id, handler, true);
+                child_id = next_id;
+            }
+
+            handler.on_mapping_end({});
+            break;
+        }
+
+        if (release_root) {
+            arena.release(root);
+        }
+        else if (event.is_collection()) {
+            event.payload.collection.first_child_id = invalid_node_id;
+            event.payload.collection.last_child_id = invalid_node_id;
+        }
+    }
+
     void dispatch_scalar_event(EventHandler& handler, const buffered_event& event) const {
-        switch (event.scalar_type) {
+        const auto& scalar = event.payload.scalar;
+        switch (scalar.type) {
         case lexical_token_t::SINGLE_QUOTED_SCALAR:
-            handler.on_single_quoted_scalar({event.scalar_value, event.tag, event.anchor});
+            handler.on_single_quoted_scalar({scalar.value, event.tag, event.anchor});
             break;
         case lexical_token_t::DOUBLE_QUOTED_SCALAR:
-            handler.on_double_quoted_scalar({event.scalar_value, event.tag, event.anchor});
+            handler.on_double_quoted_scalar({scalar.value, event.tag, event.anchor});
             break;
         case lexical_token_t::BLOCK_LITERAL_SCALAR:
-            handler.on_literal_scalar({event.scalar_value, event.tag, event.anchor, event.scalar_header});
+            handler.on_literal_scalar({scalar.value, event.tag, event.anchor, scalar.header});
             break;
         case lexical_token_t::BLOCK_FOLDED_SCALAR:
-            handler.on_folded_scalar({event.scalar_value, event.tag, event.anchor, event.scalar_header});
+            handler.on_folded_scalar({scalar.value, event.tag, event.anchor, scalar.header});
             break;
         default:
-            handler.on_plain_scalar({event.scalar_value, event.tag, event.anchor});
+            handler.on_plain_scalar({scalar.value, event.tag, event.anchor});
             break;
         }
     }
 
-    event_arena* mp_arena;
+    void dispatch_leaf_event(EventHandler& handler, const buffered_event& event) const {
+        switch (event.kind) {
+        case kind_type::EMPTY:
+            handler.on_plain_scalar({{}, event.tag, event.anchor});
+            break;
+        case kind_type::SCALAR:
+            dispatch_scalar_event(handler, event);
+            break;
+        case kind_type::ALIAS:
+            handler.on_alias({event.payload.scalar.value});
+            break;
+        default:
+            detail::unreachable();
+        }
+    }
+
+    event_arena* mp_arena {nullptr};
     node_id m_id {invalid_node_id};
     EventHandler* mp_handler {nullptr};
 };
@@ -10820,7 +11097,7 @@ private:
                     throw parse_error("Anchor cannot be specified to an alias node.", line, indent);
                 }
 
-                event_node_type node = event_node_type::alias(m_arena, token.str);
+                auto node = event_node_type::alias(m_arena, token.str);
 
                 deserialize_scalar(lexer, std::move(node), indent, line, token);
                 continue;
@@ -10828,15 +11105,14 @@ private:
             case lexical_token_t::PLAIN_SCALAR:
             case lexical_token_t::SINGLE_QUOTED_SCALAR:
             case lexical_token_t::DOUBLE_QUOTED_SCALAR: {
-                event_node_type node = event_node_type::scalar(m_arena, token.type, token.str);
+                auto node = event_node_type::scalar(m_arena, token.type, token.str);
 
                 deserialize_scalar(lexer, std::move(node), indent, line, token);
                 continue;
             }
             case lexical_token_t::BLOCK_LITERAL_SCALAR:
             case lexical_token_t::BLOCK_FOLDED_SCALAR: {
-                event_node_type node =
-                    event_node_type::scalar(m_arena, token.type, token.str, lexer.get_block_scalar_header());
+                auto node = event_node_type::scalar(m_arena, token.type, token.str, lexer.get_block_scalar_header());
 
                 deserialize_scalar(lexer, std::move(node), indent, line, token);
                 continue;
@@ -10975,7 +11251,8 @@ private:
     /// @param key a key string to be added to the current YAML node.
     /// @param line The line where the key is found.
     /// @param indent The indentation width in the current line where the key is found.
-    void add_new_key(event_node_type&& key, const uint32_t line, const uint32_t indent) {
+    template <typename NodeType>
+    void add_new_key(NodeType&& key, const uint32_t line, const uint32_t indent) {
         if (!m_flow_context_state.is_active()) {
             if FK_YAML_UNLIKELY (m_context_stack.empty()) {
                 throw parse_error("A mapping key is not allowed in this context.", line, indent);
@@ -11064,7 +11341,8 @@ private:
 
     /// @brief Assign node value to the current node.
     /// @param node_value A rvalue event_node_type object to be assigned to the current node.
-    void assign_node_value(event_node_type&& node_value, const uint32_t line, const uint32_t indent) {
+    template <typename NodeType>
+    void assign_node_value(NodeType&& node_value, const uint32_t line, const uint32_t indent) {
         if (mp_current_node->is_sequence()) {
             if FK_YAML_UNLIKELY (!m_flow_context_state.is_active()) {
                 throw parse_error("invalid block sequence entry is found.", line, indent);
@@ -11110,7 +11388,7 @@ private:
     /// @param token The storage for last lexical token.
     /// @return true if next token has already been got, false otherwise.
     void deserialize_scalar(
-        lexer_type& lexer, event_node_type&& node, uint32_t& indent, uint32_t& line, lexical_token& token) {
+        lexer_type& lexer, event_leaf&& node, uint32_t& indent, uint32_t& line, lexical_token& token) {
         token = lexer.get_next_token();
         const bool is_mapping_key = mp_current_node->is_mapping() || token.type == lexical_token_t::KEY_SEPARATOR;
         if (is_mapping_key) {
@@ -11637,7 +11915,8 @@ private:
 
     /// @brief Set the node properties which precede their node to the given node.
     /// @param node A node type object the deferred properties belong to.
-    void apply_deferred_properties(event_node_type& node) {
+    template <typename NodeType>
+    void apply_deferred_properties(NodeType& node) {
         apply_held_properties(take_deferred_properties(), node);
     }
 
@@ -11652,7 +11931,8 @@ private:
     /// @brief Set the given node properties to the given node.
     /// @param props The node properties to be set.
     /// @param node A node type object the properties belong to.
-    void apply_held_properties(const pending_node_properties& props, event_node_type& node) {
+    template <typename NodeType>
+    void apply_held_properties(const pending_node_properties& props, NodeType& node) {
         if (props.has_anchor()) {
             node.set_anchor(props.get_anchor());
         }
@@ -11664,7 +11944,8 @@ private:
 
     /// @brief Set YAML node properties (anchor and/or tag names) to the given node.
     /// @param node A node type object to be set YAML node properties.
-    void apply_node_properties(event_node_type& node) {
+    template <typename NodeType>
+    void apply_node_properties(NodeType& node) {
         if (m_pending_properties.has_anchor()) {
             node.set_anchor(m_pending_properties.release_anchor());
         }
