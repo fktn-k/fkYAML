@@ -9004,7 +9004,6 @@ public:
         }
 
         destination_event = m_arena.get(source_id);
-        m_arena.get(source_id) = buffered_event {};
         m_arena.deallocate(source_id);
     }
 
@@ -9174,7 +9173,8 @@ public:
         else {
             dispatch(*mp_handler);
         }
-        clear();
+        mp_handler = nullptr;
+        get_event().is_released = true;
     }
 
     event_node get_last_sequence_element() {
@@ -9184,9 +9184,11 @@ public:
     event_node add_sequence_entry(event_node&& node) {
         auto& event = get_event();
         if (event.is_streaming && event.first_child_id != invalid_node_id && event.last_child_id != invalid_node_id) {
-            event_node child(mp_arena, event.last_child_id);
+            const node_id child_id = event.last_child_id;
+            event_node child(mp_arena, child_id);
             child.set_handler(mp_handler);
             child.release();
+            mp_arena->release_subtree(child_id);
             auto& event = get_event();
             event.first_child_id = invalid_node_id;
             event.last_child_id = invalid_node_id;
@@ -9211,6 +9213,9 @@ public:
 
             key.set_handler(mp_handler);
             key.release();
+            mp_arena->release_subtree(key.m_id);
+            key.m_id = invalid_node_id;
+            key.mp_arena = nullptr;
 
             event_node value(mp_arena, event.streaming_mapping_value_id);
             value.set_handler(mp_handler);
@@ -9254,30 +9259,30 @@ private:
         switch (event.kind) {
         case kind_type::SEQUENCE:
             if (event.first_child_id != invalid_node_id && event.last_child_id != invalid_node_id) {
-                event_node child(mp_arena, event.last_child_id);
+                const node_id child_id = event.last_child_id;
+                event_node child(mp_arena, child_id);
                 child.set_handler(mp_handler);
                 child.release();
+                mp_arena->release_subtree(child_id);
+                event.first_child_id = invalid_node_id;
+                event.last_child_id = invalid_node_id;
             }
             mp_handler->on_sequence_end({});
             break;
         case kind_type::MAPPING:
             if (event.streaming_mapping_value_id != invalid_node_id) {
-                event_node value(mp_arena, event.streaming_mapping_value_id);
+                const node_id value_id = event.streaming_mapping_value_id;
+                event_node value(mp_arena, value_id);
                 value.set_handler(mp_handler);
                 value.release();
+                mp_arena->release_subtree(value_id);
+                event.streaming_mapping_value_id = invalid_node_id;
             }
             mp_handler->on_mapping_end({});
             break;
         default:
             break;
         }
-    }
-
-    void clear() {
-        mp_handler = nullptr;
-
-        get_event() = buffered_event {};
-        get_event().is_released = true;
     }
 
     void dispatch_events(const event_arena& arena, node_id root, EventHandler& handler) const {
@@ -9357,7 +9362,6 @@ class basic_deserializer {
 
     /// @brief Context information set for parsing.
     /// @note
-    /// A context either borrows a node which the result tree already owns, or owns a node of its own until that
     /// A context stores an arena node handle. Detached keys remain arena-owned and are tracked separately until
     /// they are attached to their parent collection.
     struct parse_context {
@@ -11674,7 +11678,7 @@ private:
     /// The currently focused YAML node.
     event_node_type* mp_current_node {nullptr};
     /// The stack of parse contexts.
-    std::vector<parse_context> m_context_stack {};
+    std::deque<parse_context> m_context_stack {};
     /// The current state of the document being parsed.
     document_state m_document_state {};
     /// The current state of the flow context.
