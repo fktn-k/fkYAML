@@ -12,13 +12,31 @@
 
 #include <fkYAML/node.hpp>
 
+/// @brief A helper function to serialize a fkyaml::node object into a string.
+/// @param node A fkyaml::node object to be serialized.
+/// @return The resulting string object from the serialization of the given node.
+std::string serialize(const fkyaml::node& node) {
+    std::string serialized;
+    fkyaml::detail::string_writer writer(serialized);
+    fkyaml::detail::output_adapter adapter(writer);
+    REQUIRE_NOTHROW(fkyaml::detail::basic_serializer<fkyaml::node>().serialize(node, adapter));
+    return serialized;
+}
+
+std::string serialize_docs(const std::vector<fkyaml::node>& docs) {
+    std::string serialized;
+    fkyaml::detail::string_writer writer(serialized);
+    fkyaml::detail::output_adapter adapter(writer);
+    REQUIRE_NOTHROW(fkyaml::detail::basic_serializer<fkyaml::node>().serialize_docs(docs, adapter));
+    return serialized;
+}
+
 TEST_CASE("Serializer_SequenceNode") {
     using node_str_pair_t = std::pair<fkyaml::node, std::string>;
     auto node_str_pair = GENERATE(
         node_str_pair_t({true, false}, "- true\n- false\n"),
         node_str_pair_t({{{"foo", -1234}, {"bar", nullptr}}}, "-\n  bar: null\n  foo: -1234\n"));
-    fkyaml::detail::basic_serializer<fkyaml::node> serializer;
-    REQUIRE(serializer.serialize(node_str_pair.first) == node_str_pair.second);
+    REQUIRE(serialize(node_str_pair.first) == node_str_pair.second);
 }
 
 TEST_CASE("Serializer_MappingNode") {
@@ -26,8 +44,7 @@ TEST_CASE("Serializer_MappingNode") {
     auto node_str_pair = GENERATE(
         node_str_pair_t({{"foo", -1234}, {"bar", nullptr}}, "bar: null\nfoo: -1234\n"),
         node_str_pair_t({{"foo", {true, false}}}, "foo:\n  - true\n  - false\n"));
-    fkyaml::detail::basic_serializer<fkyaml::node> serializer;
-    REQUIRE(serializer.serialize(node_str_pair.first) == node_str_pair.second);
+    REQUIRE(serialize(node_str_pair.first) == node_str_pair.second);
 }
 
 TEST_CASE("Serializer_EmptyCollectionNode") {
@@ -38,49 +55,47 @@ TEST_CASE("Serializer_EmptyCollectionNode") {
     SUBCASE("child sequence item is an empty sequence node") {
         seq.as_seq().emplace_back(fkyaml::node::sequence());
         std::string expected = "- []\n";
-        REQUIRE(serializer.serialize(seq) == expected);
+        REQUIRE(serialize(seq) == expected);
     }
 
     SUBCASE("child sequence item is an empty mapping node") {
         seq.as_seq().emplace_back(fkyaml::node::mapping());
         std::string expected = "- {}\n";
-        REQUIRE(serializer.serialize(seq) == expected);
+        REQUIRE(serialize(seq) == expected);
     }
 
     SUBCASE("mapping value is an empty sequence node") {
         map["foo"] = seq;
         std::string expected = "foo: []\n";
-        REQUIRE(serializer.serialize(map) == expected);
+        REQUIRE(serialize(map) == expected);
     }
 
     SUBCASE("mapping value is an empty mapping node") {
         map["foo"] = fkyaml::node::mapping();
         std::string expected = "foo: {}\n";
-        REQUIRE(serializer.serialize(map) == expected);
+        REQUIRE(serialize(map) == expected);
     }
 
     SUBCASE("root empty sequence") {
         std::string expected = "[]\n";
-        REQUIRE(serializer.serialize(seq) == expected);
+        REQUIRE(serialize(seq) == expected);
     }
 
     SUBCASE("root empty mapping") {
         std::string expected = "{}\n";
-        REQUIRE(serializer.serialize(map) == expected);
+        REQUIRE(serialize(map) == expected);
     }
 }
 
 TEST_CASE("Serializer_NullNode") {
-    fkyaml::detail::basic_serializer<fkyaml::node> serializer;
     fkyaml::node node;
-    REQUIRE(serializer.serialize(node) == "null");
+    REQUIRE(serialize(node) == "null");
 }
 
 TEST_CASE("Serializer_BooleanNode") {
     using node_str_pair_t = std::pair<fkyaml::node, std::string>;
     auto node_str_pair = GENERATE(node_str_pair_t(false, "false"), node_str_pair_t(true, "true"));
-    fkyaml::detail::basic_serializer<fkyaml::node> serializer;
-    REQUIRE(serializer.serialize(node_str_pair.first) == node_str_pair.second);
+    REQUIRE(serialize(node_str_pair.first) == node_str_pair.second);
 }
 
 TEST_CASE("Serializer_IntegerNode") {
@@ -89,15 +104,13 @@ TEST_CASE("Serializer_IntegerNode") {
         node_str_pair_t(-1234, "-1234"),
         node_str_pair_t(5678, "5678"),
         node_str_pair_t(std::numeric_limits<uint64_t>::max(), "18446744073709551615"));
-    fkyaml::detail::basic_serializer<fkyaml::node> serializer;
-    REQUIRE(serializer.serialize(node_str_pair.first) == node_str_pair.second);
+    REQUIRE(serialize(node_str_pair.first) == node_str_pair.second);
 }
 
 TEST_CASE("Serializer_UInt64IntegerNode") {
     auto input = GENERATE(std::string("9223372036854775808"), std::string("18446744073709551615"));
     fkyaml::node node = fkyaml::node::deserialize(input);
-    fkyaml::detail::basic_serializer<fkyaml::node> serializer;
-    REQUIRE(serializer.serialize(node) == input);
+    REQUIRE(serialize(node) == input);
 }
 
 TEST_CASE("SerializeClassTest_FloatNode") {
@@ -115,8 +128,7 @@ TEST_CASE("SerializeClassTest_FloatNode") {
         node_str_pair_t(std::numeric_limits<fkyaml::node::float_number_type>::infinity(), ".inf"),
         node_str_pair_t(-1 * std::numeric_limits<fkyaml::node::float_number_type>::infinity(), "-.inf"),
         node_str_pair_t(std::nan(""), ".nan"));
-    fkyaml::detail::basic_serializer<fkyaml::node> serializer;
-    REQUIRE(serializer.serialize(node_str_pair.first) == node_str_pair.second);
+    REQUIRE(serialize(node_str_pair.first) == node_str_pair.second);
 }
 
 TEST_CASE("Serializer_StringNode") {
@@ -192,8 +204,7 @@ TEST_CASE("Serializer_StringNode") {
             fkyaml::node::string_type({char(0xE2u), char(0x80u), char(0xAAu)}),
             std::string({char(0xE2u), char(0x80u), char(0xAAu)})));
 
-    fkyaml::detail::basic_serializer<fkyaml::node> serializer;
-    REQUIRE(serializer.serialize(node_str_pair.first) == node_str_pair.second);
+    REQUIRE(serialize(node_str_pair.first) == node_str_pair.second);
 }
 
 TEST_CASE("Serializer_StringNodeStartingWithDirectiveIndicatorInMapping") {
@@ -203,11 +214,10 @@ TEST_CASE("Serializer_StringNodeStartingWithDirectiveIndicatorInMapping") {
 
     const fkyaml::node node = fkyaml::node::deserialize(yaml);
 
-    fkyaml::detail::basic_serializer<fkyaml::node> serializer;
     REQUIRE(
-        serializer.serialize(node) == "percent: \"%\"\n"
-                                      "project: fkYAML\n"
-                                      "startingChar: \"%test\"\n");
+        serialize(node) == "percent: \"%\"\n"
+                           "project: fkYAML\n"
+                           "startingChar: \"%test\"\n");
 }
 
 TEST_CASE("Serializer_MappingKeyNode") {
@@ -220,8 +230,7 @@ TEST_CASE("Serializer_MappingKeyNode") {
                            "? true: 123\n"
                            ": 3.14\n";
 
-    fkyaml::detail::basic_serializer<fkyaml::node> serializer;
-    REQUIRE(serializer.serialize(node) == expected);
+    REQUIRE(serialize(node) == expected);
 }
 
 TEST_CASE("Serializer_AnchorNode") {
@@ -241,8 +250,7 @@ TEST_CASE("Serializer_AnchorNode") {
                            "&C baz: qux\n"
                            "foo: 123\n";
 
-    fkyaml::detail::basic_serializer<fkyaml::node> serializer;
-    REQUIRE(serializer.serialize(node) == expected);
+    REQUIRE(serialize(node) == expected);
 }
 
 TEST_CASE("Serializer_AliasNode") {
@@ -253,8 +261,7 @@ TEST_CASE("Serializer_AliasNode") {
                            "true: *A\n"
                            "*A : 3.14\n";
     const fkyaml::node node = fkyaml::node::deserialize(expected);
-    fkyaml::detail::basic_serializer<fkyaml::node> serializer;
-    REQUIRE(serializer.serialize(node) == expected);
+    REQUIRE(serialize(node) == expected);
 }
 
 TEST_CASE("Serializer_ShouldPreserveAnchorAliasResolutionOrder") {
@@ -264,8 +271,7 @@ TEST_CASE("Serializer_ShouldPreserveAnchorAliasResolutionOrder") {
                                   "    value: &anchor 456\n"
                                   "  a_alias: *anchor\n";
         const fkyaml::node node = fkyaml::node::deserialize(input);
-        fkyaml::detail::basic_serializer<fkyaml::node> serializer;
-        const std::string output = serializer.serialize(node);
+        const std::string output = serialize(node);
         REQUIRE(output == input);
 
         const fkyaml::node redeserialized_node = fkyaml::node::deserialize(output);
@@ -283,8 +289,7 @@ TEST_CASE("Serializer_ShouldPreserveAnchorAliasResolutionOrder") {
                                   "    value: &anchor 456\n"
                                   "  a_second_ref: *anchor\n";
         const fkyaml::node node = fkyaml::node::deserialize(input);
-        fkyaml::detail::basic_serializer<fkyaml::node> serializer;
-        const std::string output = serializer.serialize(node);
+        const std::string output = serialize(node);
         REQUIRE(output == input);
 
         const fkyaml::node redeserialized_node = fkyaml::node::deserialize(output);
@@ -320,8 +325,7 @@ TEST_CASE("Serializer_ShouldPreserveAnchorAliasResolutionOrder") {
         //   *anchor : baz       # *anchor=789
         //   bar: &anchor false
         // ```
-        fkyaml::detail::basic_serializer<fkyaml::node> serializer;
-        const std::string output = serializer.serialize(node);
+        const std::string output = serialize(node);
         const fkyaml::node roundtrip = fkyaml::node::deserialize(output);
 
         REQUIRE(roundtrip.is_sequence());
@@ -381,8 +385,7 @@ TEST_CASE("Serializer_ShouldPreserveAnchorAliasResolutionOrder") {
                                   "  - &anchor d\n"
                                   "*anchor : qux\n";
         const fkyaml::node node = fkyaml::node::deserialize(input);
-        fkyaml::detail::basic_serializer<fkyaml::node> serializer;
-        const std::string output = serializer.serialize(node);
+        const std::string output = serialize(node);
         REQUIRE(output == input);
     }
 
@@ -396,8 +399,7 @@ TEST_CASE("Serializer_ShouldPreserveAnchorAliasResolutionOrder") {
                                   "    a: 4\n"
                                   "  c: *A\n";
         const fkyaml::node node = fkyaml::node::deserialize(input);
-        fkyaml::detail::basic_serializer<fkyaml::node> serializer;
-        const std::string output = serializer.serialize(node);
+        const std::string output = serialize(node);
         REQUIRE(
             output == "root:\n"
                       "  a:\n"
@@ -419,9 +421,7 @@ TEST_CASE("Serializer_AnchorDefinitionOrderDiffersFromMapOrder") {
                               "  z_first_ref: *first\n"
                               "  a_second_ref: *second\n";
     const fkyaml::node node = fkyaml::node::deserialize(input);
-    fkyaml::detail::basic_serializer<fkyaml::node> serializer;
-
-    const std::string output = serializer.serialize(node);
+    const std::string output = serialize(node);
     REQUIRE(
         output == "root:\n"
                   "  a_second:\n"
@@ -441,9 +441,7 @@ TEST_CASE("Serializer_AliasAfterAnchorInSameMappingEntry") {
                               "  &anchor z_key: *anchor\n"
                               "  a_reference: *anchor\n";
     const fkyaml::node node = fkyaml::node::deserialize(input);
-    fkyaml::detail::basic_serializer<fkyaml::node> serializer;
-
-    const std::string output = serializer.serialize(node);
+    const std::string output = serialize(node);
     REQUIRE(output == input);
 
     const fkyaml::node serialized_node = fkyaml::node::deserialize(output);
@@ -456,9 +454,7 @@ TEST_CASE("Serializer_AliasAfterAnchorInFirstMappingEntry") {
                               "  &anchor a_key: *anchor\n"
                               "  b_reference: *anchor\n";
     const fkyaml::node node = fkyaml::node::deserialize(input);
-    fkyaml::detail::basic_serializer<fkyaml::node> serializer;
-
-    const std::string output = serializer.serialize(node);
+    const std::string output = serialize(node);
     REQUIRE(output == input);
 
     const fkyaml::node serialized_node = fkyaml::node::deserialize(output);
@@ -472,9 +468,7 @@ TEST_CASE("Serializer_ExternalAliasesDoNotRequireMappingReordering") {
                               "  z_local: &local 456\n"
                               "  a_external_ref: *external\n";
     const fkyaml::node node = fkyaml::node::deserialize(input);
-    fkyaml::detail::basic_serializer<fkyaml::node> serializer;
-
-    const std::string output = serializer.serialize(node);
+    const std::string output = serialize(node);
     REQUIRE(
         output == "external: &external 123\n"
                   "root:\n"
@@ -521,9 +515,7 @@ TEST_CASE("Serializer_TaggedNode") {
                            "seq: !!seq\n"
                            "  - null\n"
                            "  - 456\n";
-
-    fkyaml::detail::basic_serializer<fkyaml::node> serializer;
-    REQUIRE(serializer.serialize(root) == expected);
+    REQUIRE(serialize(root) == expected);
 }
 
 TEST_CASE("Serializer_RootNodeWithDirectivesAndNodeProperties") {
@@ -535,9 +527,7 @@ TEST_CASE("Serializer_RootNodeWithDirectivesAndNodeProperties") {
                            "foo: bar\n";
 
     REQUIRE_NOTHROW(root = deserializer.deserialize(fkyaml::detail::input_adapter(expected)));
-
-    fkyaml::detail::basic_serializer<fkyaml::node> serializer;
-    REQUIRE(serializer.serialize(root) == expected);
+    REQUIRE(serialize(root) == expected);
 }
 
 TEST_CASE("Serializer_NodesWithDirectives") {
@@ -549,9 +539,8 @@ TEST_CASE("Serializer_NodesWithDirectives") {
         std::string expected = "%YAML 1.1\n"
                                "---\n"
                                "foo: 123\n";
-
         REQUIRE_NOTHROW(root = deserializer.deserialize(fkyaml::detail::input_adapter(expected)));
-        REQUIRE(serializer.serialize(root) == expected);
+        REQUIRE(serialize(root) == expected);
     }
 
     SUBCASE("YAML version 1.2") {
@@ -560,7 +549,7 @@ TEST_CASE("Serializer_NodesWithDirectives") {
                                "foo: 123\n";
 
         REQUIRE_NOTHROW(root = deserializer.deserialize(fkyaml::detail::input_adapter(expected)));
-        REQUIRE(serializer.serialize(root) == expected);
+        REQUIRE(serialize(root) == expected);
     }
 
     SUBCASE("primary handle prefix") {
@@ -569,7 +558,7 @@ TEST_CASE("Serializer_NodesWithDirectives") {
                                "foo: 123\n";
 
         REQUIRE_NOTHROW(root = deserializer.deserialize(fkyaml::detail::input_adapter(expected)));
-        REQUIRE(serializer.serialize(root) == expected);
+        REQUIRE(serialize(root) == expected);
     }
 
     SUBCASE("secondary handle prefix") {
@@ -578,7 +567,7 @@ TEST_CASE("Serializer_NodesWithDirectives") {
                                "foo: 123\n";
 
         REQUIRE_NOTHROW(root = deserializer.deserialize(fkyaml::detail::input_adapter(expected)));
-        REQUIRE(serializer.serialize(root) == expected);
+        REQUIRE(serialize(root) == expected);
     }
 
     SUBCASE("named handles") {
@@ -588,14 +577,13 @@ TEST_CASE("Serializer_NodesWithDirectives") {
                                "foo: 123\n";
 
         REQUIRE_NOTHROW(root = deserializer.deserialize(fkyaml::detail::input_adapter(expected)));
-        REQUIRE(serializer.serialize(root) == expected);
+        REQUIRE(serialize(root) == expected);
     }
 }
 
 TEST_CASE("Serializer_MultipleDocuments") {
     std::vector<fkyaml::node> docs;
     fkyaml::detail::basic_deserializer<fkyaml::node> deserializer;
-    fkyaml::detail::basic_serializer<fkyaml::node> serializer;
 
     SUBCASE("bare documents") {
         std::string expected = "foo: bar\n"
@@ -603,7 +591,7 @@ TEST_CASE("Serializer_MultipleDocuments") {
                                "123: true\n";
 
         REQUIRE_NOTHROW(docs = deserializer.deserialize_docs(fkyaml::detail::input_adapter(expected)));
-        REQUIRE(serializer.serialize_docs(docs) == expected);
+        REQUIRE(serialize_docs(docs) == expected);
     }
 
     SUBCASE("with directives") {
@@ -616,6 +604,6 @@ TEST_CASE("Serializer_MultipleDocuments") {
                                "test: !t!result success\n";
 
         REQUIRE_NOTHROW(docs = deserializer.deserialize_docs(fkyaml::detail::input_adapter(expected)));
-        REQUIRE(serializer.serialize_docs(docs) == expected);
+        REQUIRE(serialize_docs(docs) == expected);
     }
 }

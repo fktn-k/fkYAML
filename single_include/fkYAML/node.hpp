@@ -13259,6 +13259,122 @@ FK_YAML_DETAIL_NAMESPACE_END
 
 // #include <fkYAML/detail/node_attrs.hpp>
 
+// #include <fkYAML/detail/output/output_adapter.hpp>
+//  _______   __ __   __  _____   __  __  __
+// |   __| |_/  |  \_/  |/  _  \ /  \/  \|  |     fkYAML: A C++ header-only YAML library
+// |   __|  _  < \_   _/|  ___  |    _   |  |___  version 0.5.0
+// |__|  |_| \__|  |_|  |_|   |_|___||___|______| https://github.com/fktn-k/fkYAML
+//
+// SPDX-FileCopyrightText: 2023-2026 Kensuke Fukutani <fktn.dev@gmail.com>
+// SPDX-License-Identifier: MIT
+
+#ifndef FK_YAML_DETAIL_OUTPUT_OUTPUT_ADAPTER_HPP
+#define FK_YAML_DETAIL_OUTPUT_OUTPUT_ADAPTER_HPP
+
+#include <cstdio>
+#include <ostream>
+#include <string>
+
+// #include <fkYAML/detail/macros/define_macros.hpp>
+
+
+FK_YAML_DETAIL_NAMESPACE_BEGIN
+
+/// @brief A writer class that writes YAML content to a string.
+class string_writer {
+public:
+    /// @brief Construct a new string_writer object for the given output string.
+    /// @param output A reference to a string object representing the output destination.
+    explicit string_writer(std::string& output) noexcept
+        : m_output(output) {
+    }
+
+    /// @brief Write the given data to the output string.
+    /// @param p_data Pointer to the data to be written.
+    /// @param size The size of the data to be written.
+    void write(const char* p_data, std::size_t size) {
+        m_output.append(p_data, size);
+    }
+
+private:
+    /// @brief Reference to the output string representing the output destination.
+    std::string& m_output;
+};
+
+/// @brief A writer class that writes YAML content to a file.
+class file_writer {
+public:
+    /// @brief Construct a new file_writer object for the given output file.
+    /// @param p_file A pointer to a FILE object representing the output file.
+    explicit file_writer(std::FILE* p_file) noexcept
+        : mp_file(p_file) {
+    }
+
+    /// @brief Write the given data to the output file.
+    /// @param p_data Pointer to the data to be written.
+    /// @param size The size of the data to be written.
+    void write(const char* p_data, std::size_t size) {
+        std::fwrite(p_data, 1, size, mp_file);
+    }
+
+private:
+    /// @brief Pointer to the output file.
+    std::FILE* mp_file;
+};
+
+/// @brief A writer class that writes YAML content to an output stream.
+class ostream_writer {
+public:
+    /// @brief Construct a new ostream_writer object for the given output stream.
+    /// @param os A reference to an output stream representing the output destination.
+    explicit ostream_writer(std::ostream& os) noexcept
+        : m_os(os) {
+    }
+
+    /// @brief Write the given data to the output stream.
+    /// @param p_data Pointer to the data to be written.
+    /// @param size The size of the data to be written.
+    void write(const char* p_data, std::size_t size) {
+        m_os.write(p_data, static_cast<std::streamsize>(size));
+    }
+
+private:
+    /// @brief Reference to the output stream representing the output destination.
+    std::ostream& m_os;
+};
+
+/// @brief An adapter class to unify different output targets for writing YAML content.
+class output_adapter {
+public:
+    /// @brief Construct a new output_adapter object for the given writer.
+    /// @tparam Writer The type of the underlying writer. It must provide a write(const char*, std::size_t) method.
+    /// @param writer The underlying writer object to which YAML content will be written.
+    template <typename Writer>
+    explicit output_adapter(Writer& writer)
+        : mp_writer(static_cast<void*>(&writer)),
+          m_write([](void* p_writer, const char* p_data, std::size_t size) {
+              static_cast<Writer*>(p_writer)->write(p_data, size);
+          }) {
+    }
+
+    /// @brief Write the given data to the underlying writer.
+    /// @param p_data Pointer to the data to be written.
+    /// @param size The size of the data to be written.
+    void write(const char* p_data, std::size_t size) {
+        m_write(mp_writer, p_data, size);
+    }
+
+private:
+    /// @brief Pointer to the underlying writer object.
+    void* mp_writer;
+    /// @brief Function pointer to the write method of the underlying writer.
+    void (*m_write)(void*, const char*, std::size_t);
+};
+
+FK_YAML_DETAIL_NAMESPACE_END
+
+#endif /* FK_YAML_DETAIL_OUTPUT_OUTPUT_ADAPTER_HPP */
+
 // #include <fkYAML/exception.hpp>
 
 // #include <fkYAML/node_type.hpp>
@@ -13267,6 +13383,16 @@ FK_YAML_DETAIL_NAMESPACE_END
 
 
 FK_YAML_DETAIL_NAMESPACE_BEGIN
+
+/// @brief Predefined spaces for indentation in YAML serialization.
+static const str_view indentation_spaces = "        "
+                                           "        "
+                                           "        "
+                                           "        "
+                                           "        "
+                                           "        "
+                                           "        "
+                                           "        ";
 
 /// @brief A basic implementation of serialization feature for YAML nodes.
 /// @tparam BasicNodeType A BasicNode template class instantiation.
@@ -13320,30 +13446,28 @@ public:
 
     /// @brief Serialize the given Node value.
     /// @param node A Node object to be serialized.
-    /// @return std::string A serialization result of the given Node value.
-    std::string serialize(const BasicNodeType& node) {
-        std::string str {};
-        serialize_document(node, str);
-        return str;
-    } // LCOV_EXCL_LINE
+    /// @param adapter An output_adapter object to write the serialized YAML content.
+    void serialize(const BasicNodeType& node, output_adapter& adapter) {
+        m_output_adapter = &adapter;
+        m_current_indent = 0;
+        serialize_document(node);
+    }
 
-    std::string serialize_docs(const std::vector<BasicNodeType>& docs) {
-        std::string str {};
-
+    void serialize_docs(const std::vector<BasicNodeType>& docs, output_adapter& adapter) {
+        m_output_adapter = &adapter;
+        m_current_indent = 0;
         const auto size = static_cast<uint32_t>(docs.size());
         for (uint32_t i = 0; i < size; i++) {
-            serialize_document(docs[i], str);
+            serialize_document(docs[i]);
             if (i + 1 < size) {
                 // Append the end-of-document marker for the next document.
-                str += "...\n";
+                write("...\n", 4);
             }
         }
-
-        return str;
-    } // LCOV_EXCL_LINE
+    }
 
 private:
-    void serialize_document(const BasicNodeType& node, std::string& str) {
+    void serialize_document(const BasicNodeType& node) {
         m_has_anchor_table = (node.mp_meta && !node.mp_meta->anchor_table.empty());
 
         m_anchor_reference_events.clear();
@@ -13357,27 +13481,29 @@ private:
             collect_anchor_alias_names(node, position);
         }
 
-        const bool dirs_serialized = serialize_directives(node, str);
+        const bool dirs_serialized = serialize_directives(node);
 
         // the root node cannot be an alias node.
         const bool root_has_props = node.is_anchor() || node.has_tag_name();
 
         if (root_has_props) {
             if (dirs_serialized) {
-                str.back() = ' '; // replace the last LF with a white space
+                write(" ", 1);
             }
-            bool is_anchor_appended = try_append_anchor(node, false, str);
-            try_append_tag(node, is_anchor_appended, str);
-            str += "\n";
+            bool is_anchor_appended = try_append_anchor(node, false);
+            try_append_tag(node, is_anchor_appended);
+            write("\n", 1);
         }
-        serialize_node(node, 0, str);
+        else if (dirs_serialized) {
+            write("\n", 1);
+        }
+        serialize_node(node, 0);
     }
 
     /// @brief Serialize the directives if any is applied to the node.
     /// @param node The target node.
-    /// @param str A string to hold serialization result.
     /// @return bool true if any directive is serialized, false otherwise.
-    bool serialize_directives(const BasicNodeType& node, std::string& str) {
+    bool serialize_directives(const BasicNodeType& node) {
         const auto& p_meta = node.mp_meta;
         if (!p_meta) {
             // A node which was never part of a parsed document carries no directives.
@@ -13387,45 +13513,49 @@ private:
         bool needs_directive_end = false;
 
         if (p_meta->is_version_specified) {
-            str += "%YAML ";
+            write("%YAML ", 6);
             switch (p_meta->version) {
             case yaml_version_type::VERSION_1_1:
-                str += "1.1\n";
+                write("1.1\n", 4);
                 break;
             case yaml_version_type::VERSION_1_2:
-                str += "1.2\n";
+                write("1.2\n", 4);
                 break;
             }
             needs_directive_end = true;
         }
 
         if (!p_meta->primary_handle_prefix.empty()) {
-            str += "%TAG ! ";
-            str += p_meta->primary_handle_prefix;
-            str += "\n";
+            const auto& primary_handle_prefix = p_meta->primary_handle_prefix;
+            write("%TAG ! ", 7);
+            write(primary_handle_prefix.data(), primary_handle_prefix.size());
+            write("\n", 1);
             needs_directive_end = true;
         }
 
         if (!p_meta->secondary_handle_prefix.empty()) {
-            str += "%TAG !! ";
-            str += p_meta->secondary_handle_prefix;
-            str += "\n";
+            const auto& secondary_handle_prefix = p_meta->secondary_handle_prefix;
+            write("%TAG !! ", 8);
+            write(secondary_handle_prefix.data(), secondary_handle_prefix.size());
+            write("\n", 1);
             needs_directive_end = true;
         }
 
         if (!p_meta->named_handle_map.empty()) {
             for (const auto& itr : p_meta->named_handle_map) {
-                str += "%TAG ";
-                str += itr.first;
-                str += " ";
-                str += itr.second;
-                str += "\n";
+                const auto& handle = itr.first;
+                const auto& prefix = itr.second;
+                write("%TAG ", 5);
+                write(handle.data(), handle.size());
+                write(" ", 1);
+                write(prefix.data(), prefix.size());
+                write("\n", 1);
             }
             needs_directive_end = true;
         }
 
         if (needs_directive_end) {
-            str += "---\n";
+            write("---", 3);
         }
 
         return needs_directive_end;
@@ -13434,75 +13564,74 @@ private:
     /// @brief Recursively serialize each Node object.
     /// @param node A Node object to be serialized.
     /// @param cur_indent The current indent width
-    /// @param str A string to hold serialization result.
-    void serialize_node(const BasicNodeType& node, const uint32_t cur_indent, std::string& str) {
+    void serialize_node(const BasicNodeType& node, const uint32_t cur_indent) {
         switch (node.get_type()) {
         case node_type::SEQUENCE:
             if (node.size() == 0) {
-                str += "[]\n";
+                write("[]\n", 3);
                 return;
             }
             for (const auto& seq_item : node) {
-                insert_indentation(cur_indent, str);
-                str += "-";
+                insert_indentation(cur_indent);
+                write("-", 1);
 
-                const bool is_appended = try_append_alias(seq_item, true, str);
+                const bool is_appended = try_append_alias(seq_item, true);
                 if (is_appended) {
-                    str += "\n";
+                    write("\n", 1);
                     continue;
                 }
 
-                try_append_anchor(seq_item, true, str);
-                try_append_tag(seq_item, true, str);
+                try_append_anchor(seq_item, true);
+                try_append_tag(seq_item, true);
 
                 const bool is_scalar = seq_item.is_scalar();
                 if (is_scalar) {
-                    str += " ";
-                    serialize_node(seq_item, cur_indent, str);
-                    str += "\n";
+                    write(" ", 1);
+                    serialize_node(seq_item, cur_indent);
+                    write("\n", 1);
                     continue;
                 }
 
                 const bool is_empty = seq_item.empty();
                 if (!is_empty) {
-                    str += "\n";
-                    serialize_node(seq_item, cur_indent + 2, str);
+                    write("\n", 1);
+                    serialize_node(seq_item, cur_indent + 2);
                     continue;
                 }
 
                 // an empty sequence or mapping
                 if (seq_item.is_sequence()) {
-                    str += " []\n";
+                    write(" []\n", 4);
                 }
                 else /*seq_item.is_mapping()*/ {
-                    str += " {}\n";
+                    write(" {}\n", 4);
                 }
             }
             break;
         case node_type::MAPPING:
             if (node.size() == 0) {
-                str += "{}\n";
+                write("{}\n", 3);
                 return;
             }
 
             // If there is any anchor defined for this document and the mapping has more than one entry,
             // reorder the mapping entries so the anchor resolution order is preserved.
             // Only a document which defines an anchor can ever need its mapping entries reordered.
-            if (m_has_anchor_table && node.size() > 1 && serialize_reordered_mapping(node, cur_indent, str)) {
+            if (m_has_anchor_table && node.size() > 1 && serialize_reordered_mapping(node, cur_indent)) {
                 break;
             }
 
             for (const auto& itr : node.map_items()) {
-                serialize_mapping_entry(itr, cur_indent, str);
+                serialize_mapping_entry(itr, cur_indent);
             }
             break;
         case node_type::NULL_OBJECT:
             to_string(nullptr, m_tmp_str_buff);
-            str += m_tmp_str_buff;
+            write(m_tmp_str_buff.c_str(), m_tmp_str_buff.size());
             break;
         case node_type::BOOLEAN:
             to_string(node.template get_value<typename BasicNodeType::boolean_type>(), m_tmp_str_buff);
-            str += m_tmp_str_buff;
+            write(m_tmp_str_buff.c_str(), m_tmp_str_buff.size());
             break;
         case node_type::INTEGER:
             if (node.is_uint()) {
@@ -13512,11 +13641,11 @@ private:
             else {
                 to_string(node.template get_value<typename BasicNodeType::integer_type>(), m_tmp_str_buff);
             }
-            str += m_tmp_str_buff;
+            write(m_tmp_str_buff.c_str(), m_tmp_str_buff.size());
             break;
         case node_type::FLOAT:
             to_string(node.template get_value<typename BasicNodeType::float_number_type>(), m_tmp_str_buff);
-            str += m_tmp_str_buff;
+            write(m_tmp_str_buff.c_str(), m_tmp_str_buff.size());
             break;
         case node_type::STRING: {
             bool is_escaped = false;
@@ -13525,9 +13654,9 @@ private:
             if (is_escaped) {
                 // There's no other token type with escapes than strings.
                 // Also, escapes must be in double-quoted strings.
-                str += '\"';
-                str += str_val;
-                str += '\"';
+                write("\"", 1);
+                write(str_val.c_str(), str_val.size());
+                write("\"", 1);
                 break;
             }
 
@@ -13540,78 +13669,81 @@ private:
             if (type_if_plain != node_type::STRING || !is_valid_plain_scalar(str_val)) {
                 // Surround a string value with double quotes to keep semantic equality.
                 // Without them, serialized values will become non-string. (e.g., "1" -> 1)
-                str += '\"';
-                str += str_val;
-                str += '\"';
+                write("\"", 1);
+                write(str_val.c_str(), str_val.size());
+                write("\"", 1);
             }
             else {
-                str += str_val;
+                write(str_val.c_str(), str_val.size());
             }
             break;
         }
         }
     }
 
-    void serialize_mapping_entry(const map_iterator& itr, const uint32_t cur_indent, std::string& str) {
-        insert_indentation(cur_indent, str);
+    /// @brief Serialize a single mapping entry (key-value pair) in a YAML mapping node.
+    /// @param itr An iterator pointing to the mapping entry to serialize.
+    /// @param cur_indent The current indentation level for the serialized output.
+    void serialize_mapping_entry(const map_iterator& itr, const uint32_t cur_indent) {
+        insert_indentation(cur_indent);
 
         // serialize a mapping key node.
         const auto& key_node = itr.key();
 
-        bool is_appended = try_append_alias(key_node, false, str);
+        bool is_appended = try_append_alias(key_node, false);
         if (is_appended) {
             // The trailing white space is necessary since anchor names can contain a colon (:) at its end.
-            str += " ";
+            write(" ", 1);
         }
         else {
-            const bool is_anchor_appended = try_append_anchor(key_node, false, str);
-            const bool is_tag_appended = try_append_tag(key_node, is_anchor_appended, str);
+            const bool is_anchor_appended = try_append_anchor(key_node, false);
+            const bool is_tag_appended = try_append_tag(key_node, is_anchor_appended);
             if (is_anchor_appended || is_tag_appended) {
-                str += " ";
+                write(" ", 1);
             }
 
             const bool is_container = !key_node.is_scalar();
             if (is_container) {
-                str += "? ";
+                write("? ", 2);
             }
-            const auto indent = static_cast<uint32_t>(get_cur_indent(str));
-            serialize_node(key_node, indent, str);
+            const auto indent = m_current_indent;
+            serialize_node(key_node, indent);
             if (is_container) {
                 // a newline code is already inserted in the above serialize_node() call.
-                insert_indentation(indent - 2, str);
+                insert_indentation(indent - 2);
             }
         }
 
-        str += ":";
+        write(":", 1);
 
         // serialize a mapping value node.
         const auto& value_node = itr.value();
 
-        is_appended = try_append_alias(value_node, true, str);
+        is_appended = try_append_alias(value_node, true);
         if (is_appended) {
-            str += "\n";
+            write("\n", 1);
             return;
         }
 
-        try_append_anchor(value_node, true, str);
-        try_append_tag(value_node, true, str);
+        try_append_anchor(value_node, true);
+        try_append_tag(value_node, true);
 
         const bool is_scalar = value_node.is_scalar();
         if (is_scalar) {
-            str += " ";
-            serialize_node(value_node, cur_indent, str);
-            str += "\n";
+            write(" ", 1);
+            serialize_node(value_node, cur_indent);
+            write("\n", 1);
             return;
         }
 
         const bool is_empty = value_node.empty();
         if (is_empty) {
-            str += " ";
+            write(" ", 1);
         }
         else {
-            str += "\n";
+            write("\n", 1);
         }
-        serialize_node(value_node, cur_indent + 2, str);
+        serialize_node(value_node, cur_indent + 2);
     }
 
     /// @brief Check whether two anchor references identify the same anchor.
@@ -13784,9 +13916,8 @@ private:
     /// @brief Serialize a mapping whose entries have to be reordered for anchor resolution.
     /// @param node The mapping to serialize.
     /// @param cur_indent The current indent width.
-    /// @param str A string to hold the serialization result.
     /// @return true if the mapping was serialized here, false if it needs no reordering.
-    bool serialize_reordered_mapping(const BasicNodeType& node, const uint32_t cur_indent, std::string& str) {
+    bool serialize_reordered_mapping(const BasicNodeType& node, const uint32_t cur_indent) {
         std::vector<map_iterator> ordered_items;
         const bool is_reordered = get_mapping_items_in_serialization_order(node, ordered_items);
         if (!is_reordered) {
@@ -13794,7 +13925,7 @@ private:
         }
 
         for (const auto& itr : ordered_items) {
-            serialize_mapping_entry(itr, cur_indent, str);
+            serialize_mapping_entry(itr, cur_indent);
         }
         return true;
     }
@@ -13926,41 +14057,45 @@ private:
             first_event_index, static_cast<uint32_t>(m_anchor_reference_events.size()) - first_event_index};
     }
 
-    /// @brief Get the current indentation width.
-    /// @param s The target string object.
-    /// @return The current indentation width.
-    std::size_t get_cur_indent(const std::string& s) const noexcept {
-        const bool is_empty = s.empty();
-        if (is_empty) {
-            return 0;
-        }
+    void write(const char* p_data, const std::size_t size) {
+        m_output_adapter->write(p_data, size);
 
-        const std::size_t last_lf_pos = s.rfind('\n');
-        return (last_lf_pos != std::string::npos) ? s.size() - last_lf_pos - 1 : s.size();
+        for (std::size_t i = size; i > 0; --i) {
+            if (p_data[i - 1] == '\n') {
+                m_current_indent = static_cast<uint32_t>(size - i);
+                return;
+            }
+        }
+        m_current_indent += static_cast<uint32_t>(size);
     }
 
     /// @brief Insert indentation to the serialization result.
     /// @param indent The indent width to be inserted.
-    /// @param str A string to hold serialization result.
-    void insert_indentation(const uint32_t indent, std::string& str) const noexcept {
-        if (indent == 0) {
+    void insert_indentation(const uint32_t indent) {
+        if (indent <= m_current_indent) {
             return;
         }
 
-        str.append(indent - get_cur_indent(str), ' ');
+        uint32_t remaining_spaces = indent - m_current_indent;
+        while (remaining_spaces > 0) {
+            const auto size = std::min<std::size_t>(remaining_spaces, indentation_spaces.size());
+            write(indentation_spaces.data(), size);
+            remaining_spaces -= static_cast<uint32_t>(size);
+        }
     }
 
     /// @brief Append an anchor property if it's available. Do nothing otherwise.
     /// @param node The target node which is possibly an anchor node.
     /// @param prepends_space Whether to prepend a space before an anchor property.
-    /// @param str A string to hold serialization result.
     /// @return true if an anchor property has been appended, false otherwise.
-    bool try_append_anchor(const BasicNodeType& node, bool prepends_space, std::string& str) const {
+    bool try_append_anchor(const BasicNodeType& node, bool prepends_space) {
         if (node.is_anchor()) {
             if (prepends_space) {
-                str += " ";
+                write(" ", 1);
             }
-            str += "&" + node.get_anchor_name();
+            const auto& anchor = node.get_anchor_name();
+            write("&", 1);
+            write(anchor.data(), anchor.size());
             return true;
         }
         return false;
@@ -13969,14 +14104,15 @@ private:
     /// @brief Append an alias property if it's available. Do nothing otherwise.
     /// @param node The target node which is possibly an alias node.
     /// @param prepends_space Whether to prepend a space before an alias property.
-    /// @param str A string to hold serialization result.
     /// @return true if an alias property has been appended, false otherwise.
-    bool try_append_alias(const BasicNodeType& node, bool prepends_space, std::string& str) const {
+    bool try_append_alias(const BasicNodeType& node, bool prepends_space) {
         if (node.is_alias()) {
             if (prepends_space) {
-                str += " ";
+                write(" ", 1);
             }
-            str += "*" + node.get_anchor_name();
+            const auto& anchor = node.get_anchor_name();
+            write("*", 1);
+            write(anchor.data(), anchor.size());
             return true;
         }
         return false;
@@ -13984,14 +14120,15 @@ private:
 
     /// @brief Append a tag name if it's available. Do nothing otherwise.
     /// @param[in] node The target node which possibly has a tag name.
-    /// @param[out] str A string to hold serialization result.
+    /// @param[out] prepends_space Whether to prepend a space before a tag name.
     /// @return true if a tag name has been appended, false otherwise.
-    bool try_append_tag(const BasicNodeType& node, bool prepends_space, std::string& str) const {
+    bool try_append_tag(const BasicNodeType& node, bool prepends_space) {
         if (node.has_tag_name()) {
             if (prepends_space) {
-                str += " ";
+                write(" ", 1);
             }
-            str += node.get_tag_name();
+            const auto& tag = node.get_tag_name();
+            write(tag.data(), tag.size());
             return true;
         }
         return false;
@@ -14054,6 +14191,10 @@ private:
     std::unordered_map<const BasicNodeType*, mapping_item_span> m_anchor_reference_cache;
     /// A temporal buffer for conversion from a scalar to a string.
     std::string m_tmp_str_buff;
+    /// Output adapter for writing serialized YAML content.
+    output_adapter* m_output_adapter {nullptr};
+    /// Current indentation width after the last line feed.
+    uint32_t m_current_indent {0};
 };
 
 FK_YAML_DETAIL_NAMESPACE_END
@@ -15699,7 +15840,31 @@ public:
     /// @return The resulting string object from the serialization of the given node.
     /// @sa https://fktn-k.github.io/fkYAML/api/basic_node/serialize/
     static std::string serialize(const basic_node& node) {
-        return serializer_type().serialize(node);
+        std::string result;
+        detail::string_writer writer(result);
+        detail::output_adapter adapter(writer);
+        serializer_type().serialize(node, adapter);
+        return result;
+    }
+
+    /// @brief Serialize a basic_node object into a file.
+    /// @param[in] node A basic_node object to be serialized.
+    /// @param[in] p_file A pointer to a FILE object representing the output file.
+    /// @sa https://fktn-k.github.io/fkYAML/api/basic_node/serialize/
+    static void serialize(const basic_node& node, std::FILE* p_file) {
+        detail::file_writer writer(p_file);
+        detail::output_adapter adapter(writer);
+        serializer_type().serialize(node, adapter);
+    }
+
+    /// @brief Serialize a basic_node object into an output stream.
+    /// @param[in] node A basic_node object to be serialized.
+    /// @param[in] os An output stream representing the output destination.
+    /// @sa https://fktn-k.github.io/fkYAML/api/basic_node/serialize/
+    static void serialize(const basic_node& node, std::ostream& os) {
+        detail::ostream_writer writer(os);
+        detail::output_adapter adapter(writer);
+        serializer_type().serialize(node, adapter);
     }
 
     /// @brief Serialize basic_node objects into a string.
@@ -15707,7 +15872,31 @@ public:
     /// @return The resulting string object from the serialization of the given nodes.
     /// @sa https://fktn-k.github.io/fkYAML/api/basic_node/serialize_docs/
     static std::string serialize_docs(const std::vector<basic_node>& docs) {
-        return serializer_type().serialize_docs(docs);
+        std::string result;
+        detail::string_writer writer(result);
+        detail::output_adapter adapter(writer);
+        serializer_type().serialize_docs(docs, adapter);
+        return result;
+    }
+
+    /// @brief Serialize basic_node objects into a file.
+    /// @param[in] docs basic_node objects to be serialized.
+    /// @param[in] p_file A pointer to a FILE object representing the output file.
+    /// @sa https://fktn-k.github.io/fkYAML/api/basic_node/serialize_docs/
+    static void serialize_docs(const std::vector<basic_node>& docs, std::FILE* p_file) {
+        detail::file_writer writer(p_file);
+        detail::output_adapter adapter(writer);
+        serializer_type().serialize_docs(docs, adapter);
+    }
+
+    /// @brief Serialize basic_node objects into an output stream.
+    /// @param[in] docs basic_node objects to be serialized.
+    /// @param[in] os An output stream representing the output destination.
+    /// @sa https://fktn-k.github.io/fkYAML/api/basic_node/serialize_docs/
+    static void serialize_docs(const std::vector<basic_node>& docs, std::ostream& os) {
+        detail::ostream_writer writer(os);
+        detail::output_adapter adapter(writer);
+        serializer_type().serialize_docs(docs, adapter);
     }
 
     /// @brief A factory method for sequence basic_node objects without sequence_type objects.
@@ -17198,8 +17387,8 @@ inline std::ostream& operator<<(
     std::ostream& os,
     const basic_node<SequenceType, MappingType, BooleanType, IntegerType, FloatNumberType, StringType, ConverterType>&
         n) {
-    os << basic_node<SequenceType, MappingType, BooleanType, IntegerType, FloatNumberType, StringType, ConverterType>::
-            serialize(n);
+    basic_node<SequenceType, MappingType, BooleanType, IntegerType, FloatNumberType, StringType, ConverterType>::
+        serialize(n, os);
     return os;
 }
 
