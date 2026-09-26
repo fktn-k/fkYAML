@@ -10,6 +10,8 @@ configure_file(
   @ONLY
 )
 
+file(MAKE_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/test_output")
+
 #################################
 #   Configure compile options   #
 #################################
@@ -51,6 +53,7 @@ add_executable(
   test_node_ref_storage_class.cpp
   test_node_type.cpp
   test_ordered_map_class.cpp
+  test_output_adapter.cpp
   test_position_tracker_class.cpp
   test_reverse_iterator_class.cpp
   test_scalar_conv.cpp

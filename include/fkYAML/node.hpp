@@ -466,7 +466,31 @@ public:
     /// @return The resulting string object from the serialization of the given node.
     /// @sa https://fktn-k.github.io/fkYAML/api/basic_node/serialize/
     static std::string serialize(const basic_node& node) {
-        return serializer_type().serialize(node);
+        std::string result;
+        detail::string_writer writer(result);
+        detail::output_adapter adapter(writer);
+        serializer_type().serialize(node, adapter);
+        return result;
+    }
+
+    /// @brief Serialize a basic_node object into a file.
+    /// @param[in] node A basic_node object to be serialized.
+    /// @param[in] p_file A pointer to a FILE object representing the output file.
+    /// @sa https://fktn-k.github.io/fkYAML/api/basic_node/serialize/
+    static void serialize(const basic_node& node, std::FILE* p_file) {
+        detail::file_writer writer(p_file);
+        detail::output_adapter adapter(writer);
+        serializer_type().serialize(node, adapter);
+    }
+
+    /// @brief Serialize a basic_node object into an output stream.
+    /// @param[in] node A basic_node object to be serialized.
+    /// @param[in] os An output stream representing the output destination.
+    /// @sa https://fktn-k.github.io/fkYAML/api/basic_node/serialize/
+    static void serialize(const basic_node& node, std::ostream& os) {
+        detail::ostream_writer writer(os);
+        detail::output_adapter adapter(writer);
+        serializer_type().serialize(node, adapter);
     }
 
     /// @brief Serialize basic_node objects into a string.
@@ -474,7 +498,31 @@ public:
     /// @return The resulting string object from the serialization of the given nodes.
     /// @sa https://fktn-k.github.io/fkYAML/api/basic_node/serialize_docs/
     static std::string serialize_docs(const std::vector<basic_node>& docs) {
-        return serializer_type().serialize_docs(docs);
+        std::string result;
+        detail::string_writer writer(result);
+        detail::output_adapter adapter(writer);
+        serializer_type().serialize_docs(docs, adapter);
+        return result;
+    }
+
+    /// @brief Serialize basic_node objects into a file.
+    /// @param[in] docs basic_node objects to be serialized.
+    /// @param[in] p_file A pointer to a FILE object representing the output file.
+    /// @sa https://fktn-k.github.io/fkYAML/api/basic_node/serialize_docs/
+    static void serialize_docs(const std::vector<basic_node>& docs, std::FILE* p_file) {
+        detail::file_writer writer(p_file);
+        detail::output_adapter adapter(writer);
+        serializer_type().serialize_docs(docs, adapter);
+    }
+
+    /// @brief Serialize basic_node objects into an output stream.
+    /// @param[in] docs basic_node objects to be serialized.
+    /// @param[in] os An output stream representing the output destination.
+    /// @sa https://fktn-k.github.io/fkYAML/api/basic_node/serialize_docs/
+    static void serialize_docs(const std::vector<basic_node>& docs, std::ostream& os) {
+        detail::ostream_writer writer(os);
+        detail::output_adapter adapter(writer);
+        serializer_type().serialize_docs(docs, adapter);
     }
 
     /// @brief A factory method for sequence basic_node objects without sequence_type objects.
@@ -1965,8 +2013,8 @@ inline std::ostream& operator<<(
     std::ostream& os,
     const basic_node<SequenceType, MappingType, BooleanType, IntegerType, FloatNumberType, StringType, ConverterType>&
         n) {
-    os << basic_node<SequenceType, MappingType, BooleanType, IntegerType, FloatNumberType, StringType, ConverterType>::
-            serialize(n);
+    basic_node<SequenceType, MappingType, BooleanType, IntegerType, FloatNumberType, StringType, ConverterType>::
+        serialize(n, os);
     return os;
 }
 

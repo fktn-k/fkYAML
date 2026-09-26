@@ -3,7 +3,9 @@
 # <small>fkyaml::basic_node::</small>serialize_docs
 
 ```cpp
-static std::string serialize_docs(const std::vector<basic_node>& docs);
+static std::string serialize_docs(const std::vector<basic_node>& docs); // (1)
+static void serialize_docs(const std::vector<basic_node>& docs, std::FILE* file); // (2)
+static void serialize_docs(const std::vector<basic_node>& docs, std::ostream& os) // (3)
 ```
 
 Serializes YAML documents into a string.  
@@ -22,6 +24,12 @@ Just as the [`serialize()`](serialize.md) function does, fkYAML unconditionally 
 
 ***`docs`*** [in]
 :   `basic_node` objects to be serialized.
+
+***`p_file`*** [in]
+:   A pointer to a FILE object representing the output file.
+
+***os*** [in]
+:   An output stream representing the output destination.
 
 ## **Return Value**
 
