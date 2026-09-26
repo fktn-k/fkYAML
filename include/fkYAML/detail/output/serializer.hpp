@@ -24,6 +24,7 @@
 #include <fkYAML/detail/meta/node_traits.hpp>
 #include <fkYAML/detail/node_attrs.hpp>
 #include <fkYAML/detail/output/output_adapter.hpp>
+#include <fkYAML/detail/str_view.hpp>
 #include <fkYAML/exception.hpp>
 #include <fkYAML/node_type.hpp>
 #include <fkYAML/yaml_version_type.hpp>
