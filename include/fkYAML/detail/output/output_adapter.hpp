@@ -23,19 +23,19 @@ public:
     /// @brief Construct a new string_writer object for the given output string.
     /// @param output A reference to a string object representing the output destination.
     explicit string_writer(std::string& output) noexcept
-        : m_output(output) {
+        : mp_output(&output) {
     }
 
     /// @brief Write the given data to the output string.
     /// @param p_data Pointer to the data to be written.
     /// @param size The size of the data to be written.
     void write(const char* p_data, std::size_t size) {
-        m_output.append(p_data, size);
+        mp_output->append(p_data, size);
     }
 
 private:
     /// @brief Reference to the output string representing the output destination.
-    std::string& m_output;
+    std::string* mp_output;
 };
 
 /// @brief A writer class that writes YAML content to a file.
@@ -51,7 +51,7 @@ public:
     /// @param p_data Pointer to the data to be written.
     /// @param size The size of the data to be written.
     void write(const char* p_data, std::size_t size) {
-        std::fwrite(p_data, 1, size, mp_file);
+        std::fwrite(p_data, 1, size, mp_file); // NOLINT(cert-err33-c)
     }
 
 private:
@@ -65,19 +65,19 @@ public:
     /// @brief Construct a new ostream_writer object for the given output stream.
     /// @param os A reference to an output stream representing the output destination.
     explicit ostream_writer(std::ostream& os) noexcept
-        : m_os(os) {
+        : mp_os(&os) {
     }
 
     /// @brief Write the given data to the output stream.
     /// @param p_data Pointer to the data to be written.
     /// @param size The size of the data to be written.
     void write(const char* p_data, std::size_t size) {
-        m_os.write(p_data, static_cast<std::streamsize>(size));
+        mp_os->write(p_data, static_cast<std::streamsize>(size));
     }
 
 private:
-    /// @brief Reference to the output stream representing the output destination.
-    std::ostream& m_os;
+    /// @brief Pointer to the output stream representing the output destination.
+    std::ostream* mp_os;
 };
 
 /// @brief An adapter class to unify different output targets for writing YAML content.

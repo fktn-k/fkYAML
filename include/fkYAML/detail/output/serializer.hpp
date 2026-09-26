@@ -31,7 +31,7 @@
 FK_YAML_DETAIL_NAMESPACE_BEGIN
 
 /// @brief Predefined spaces for indentation in YAML serialization.
-static const str_view indentation_spaces = "        "
+static const str_view INDENTATION_SPACES = "        "
                                            "        "
                                            "        "
                                            "        "
@@ -724,8 +724,8 @@ private:
 
         uint32_t remaining_spaces = indent - m_current_indent;
         while (remaining_spaces > 0) {
-            const auto size = std::min<std::size_t>(remaining_spaces, indentation_spaces.size());
-            write(indentation_spaces.data(), size);
+            const auto size = std::min<std::size_t>(remaining_spaces, INDENTATION_SPACES.size());
+            write(INDENTATION_SPACES.data(), size);
             remaining_spaces -= static_cast<uint32_t>(size);
         }
     }
