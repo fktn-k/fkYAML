@@ -3,13 +3,12 @@
 # <small>fkyaml::basic_node::</small>serialize
 
 ```cpp
-static std::string serialize(const basic_node& node);
+static std::string serialize(const basic_node& node); // (1)
+static void serialize(const basic_node& node, std::FILE* p_file); // (2)
+static void serialize(const basic_node& node, std::ostream& os); // (3)
 ```
 
-Serializes YAML node values recursively.  
-Currently, the serialization of mappings and sequences only supports block styles.  
-That means that, even if an original YAML document contains container nodes written in the flow style, this function forces them to be emitted in the block style.  
-Moreover, fkYAML unconditionally uses LFs (Unix Style) as the line break format in serialization outputs, and there is currently no way to change it to use CR+LFs (Windows Style) instead.  
+Serializes YAML node values recursively to a string, a file or an output stream.  
 This function serializes the given `node` parameter in the following format.  
 
 ```yaml
@@ -47,10 +46,22 @@ This function serializes the given `node` parameter in the following format.
     <child mapping scalar key>: <child mapping scalar value>
 ```
 
+Currently, there are some limitations:
+* **Mappings and sequences are unconditionally emitted in the block styles.**  
+  Even if an original YAML document contains flow style collection nodes, this function forces them to be emitted in the block style.  
+* **Serialization unconditionally uses LFs (Unix Style) as the line break format.**  
+  There is currently no way to change it to use CR+LFs (Windows Style) instead.  
+
 ## **Parameters**
 
 ***`node`*** [in]
 :   A `basic_node` object to be serialized.
+
+***`p_file`*** [in]
+:   A pointer to a FILE object representing the output file.
+
+***os*** [in]
+:   An output stream representing the output destination.
 
 ## **Return Value**
 
