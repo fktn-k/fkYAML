@@ -471,7 +471,7 @@ public:
         detail::output_adapter adapter(writer);
         serializer_type().serialize(node, adapter);
         return result;
-    }
+    } // LCOV_EXCL_LINE
 
     /// @brief Serialize a basic_node object into a file.
     /// @param[in] node A basic_node object to be serialized.
@@ -503,7 +503,7 @@ public:
         detail::output_adapter adapter(writer);
         serializer_type().serialize_docs(docs, adapter);
         return result;
-    }
+    } // LCOV_EXCL_LINE
 
     /// @brief Serialize basic_node objects into a file.
     /// @param[in] docs basic_node objects to be serialized.

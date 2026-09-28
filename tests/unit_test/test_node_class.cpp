@@ -30,6 +30,14 @@
 #include <string_view>
 #endif
 
+#ifdef _MSC_VER
+#define DISABLE_C4996 __pragma(warning(push)) __pragma(warning(disable : 4996))
+#define ENABLE_C4996 __pragma(warning(pop))
+#else
+#define DISABLE_C4996
+#define ENABLE_C4996
+#endif
+
 //
 // test cases for constructors
 //
@@ -1168,14 +1176,72 @@ TEST_CASE("Node_UserDefinedLiteralYaml") {
 
 TEST_CASE("Node_Serialize") {
     fkyaml::node node = fkyaml::node::deserialize("foo: bar");
-    REQUIRE(fkyaml::node::serialize(node) == "foo: bar\n");
+
+    SUBCASE("to std::string") {
+        REQUIRE(fkyaml::node::serialize(node) == "foo: bar\n");
+    }
+
+    SUBCASE("to std::FILE*") {
+        DISABLE_C4996
+        std::FILE* file = std::fopen(FK_YAML_TEST_OUTPUT_DIR "/test_output_node_serialize_file.yaml", "w");
+        ENABLE_C4996
+        REQUIRE(file != nullptr);
+        fkyaml::node::serialize(node, file);
+        std::fclose(file);
+
+        std::ifstream ifs(FK_YAML_TEST_OUTPUT_DIR "/test_output_node_serialize_file.yaml");
+        REQUIRE(ifs.is_open());
+        std::string content((std::istreambuf_iterator<char>(ifs)), std::istreambuf_iterator<char>());
+        REQUIRE(content == "foo: bar\n");
+    }
+
+    SUBCASE("to std::ostream") {
+        std::ofstream ofs(FK_YAML_TEST_OUTPUT_DIR "/test_output_node_serialize_ostream.yaml");
+        REQUIRE(ofs.is_open());
+        fkyaml::node::serialize(node, ofs);
+        ofs.close();
+
+        std::ifstream ifs(FK_YAML_TEST_OUTPUT_DIR "/test_output_node_serialize_ostream.yaml");
+        REQUIRE(ifs.is_open());
+        std::string content((std::istreambuf_iterator<char>(ifs)), std::istreambuf_iterator<char>());
+        REQUIRE(content == "foo: bar\n");
+    }
 }
 
 TEST_CASE("Node_SerializeDocs") {
     std::vector<fkyaml::node> docs = fkyaml::node::deserialize_docs("foo: bar\n"
                                                                     "...\n"
                                                                     "123: true");
-    REQUIRE(fkyaml::node::serialize_docs(docs) == "foo: bar\n...\n123: true\n");
+
+    SUBCASE("to std::string") {
+        REQUIRE(fkyaml::node::serialize_docs(docs) == "foo: bar\n...\n123: true\n");
+    }
+
+    SUBCASE("to std::FILE*") {
+        DISABLE_C4996
+        std::FILE* file = std::fopen(FK_YAML_TEST_OUTPUT_DIR "/test_output_node_serialize_docs_file.yaml", "w");
+        ENABLE_C4996
+        REQUIRE(file != nullptr);
+        fkyaml::node::serialize_docs(docs, file);
+        std::fclose(file);
+
+        std::ifstream ifs(FK_YAML_TEST_OUTPUT_DIR "/test_output_node_serialize_docs_file.yaml");
+        REQUIRE(ifs.is_open());
+        std::string content((std::istreambuf_iterator<char>(ifs)), std::istreambuf_iterator<char>());
+        REQUIRE(content == "foo: bar\n...\n123: true\n");
+    }
+
+    SUBCASE("to std::ostream") {
+        std::ofstream ofs(FK_YAML_TEST_OUTPUT_DIR "/test_output_node_serialize_docs_ostream.yaml");
+        REQUIRE(ofs.is_open());
+        fkyaml::node::serialize_docs(docs, ofs);
+        ofs.close();
+
+        std::ifstream ifs(FK_YAML_TEST_OUTPUT_DIR "/test_output_node_serialize_docs_ostream.yaml");
+        REQUIRE(ifs.is_open());
+        std::string content((std::istreambuf_iterator<char>(ifs)), std::istreambuf_iterator<char>());
+        REQUIRE(content == "foo: bar\n...\n123: true\n");
+    }
 }
 
 TEST_CASE("Node_InsertionOperator") {
