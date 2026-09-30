@@ -2002,6 +2002,15 @@ TEST_CASE("InputAdapter_GetBufferView_UTF8NewlineCodeNormalization") {
     }
 }
 
+TEST_CASE("InputAdapter_GetBufferView_ContiguousInput") {
+    // contiguous input without CR is viewed in place.
+    const std::string input = "0123456789abcdef: value\n";
+    auto input_adapter = fkyaml::detail::input_adapter(input);
+    fkyaml::detail::str_view buffer = input_adapter.get_buffer_view();
+    REQUIRE(buffer.begin() == input.data());
+    REQUIRE(buffer.size() == input.size());
+}
+
 TEST_CASE("InputAdapter_GetBufferView_UTF16BENewlineCodeNormalization") {
     SUBCASE("iterator_input_adapter (char) with a standalone CR") {
         std::string input {0, char(0x0D)};
