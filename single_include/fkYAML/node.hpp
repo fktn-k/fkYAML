@@ -11251,14 +11251,17 @@ IterType skip_ascii_without_cr(IterType current, IterType /*unused*/) noexcept {
 /// @param p_end The end of the buffer.
 /// @return The first position of a word which contains a non-ASCII character or CR.
 inline const char* skip_ascii_without_cr(const char* p_current, const char* p_end) noexcept {
-    constexpr uint64_t ones = 0x0101010101010101ull;
+    constexpr uint64_t crs = 0x0D0D0D0D0D0D0D0Dull;
+    constexpr uint64_t lows = 0x7F7F7F7F7F7F7F7Full;
     constexpr uint64_t highs = 0x8080808080808080ull;
     while (p_end - p_current >= 8) {
         uint64_t word = 0;
         std::memcpy(&word, p_current, sizeof(word));
-        // bytes equal to CR become zero, which sets their high bits in `(x - ones) & ~x`.
-        const uint64_t x = word ^ (ones * 0x0Du);
-        if (((word | ((x - ones) & ~x)) & highs) != 0) {
+        // bytes equal to CR become zero in `x`, and only zero bytes have their high bits clear in `non_zero`.
+        // `(x & lows) + lows` never carries across bytes, so no unsigned overflow happens here.
+        const uint64_t x = word ^ crs;
+        const uint64_t non_zero = ((x & lows) + lows) | x;
+        if (((word | ~non_zero) & highs) != 0) {
             break;
         }
         p_current += sizeof(word);
@@ -11336,14 +11339,9 @@ private:
     /// @return View into the UTF-8 encoded input buffer contents.
     template <typename Itr>
     str_view get_buffer_view_utf8(Itr begin, Itr end) {
-        Itr current = begin;
+        Itr current = skip_ascii_without_cr(begin, end);
         std::deque<Itr> cr_itrs {};
         while (current != end) {
-            current = skip_ascii_without_cr(current, end);
-            if (current == end) {
-                break;
-            }
-
             const Itr char_itr = current;
             const auto first = static_cast<uint8_t>(*current);
             ++current;
@@ -11385,6 +11383,8 @@ private:
             default:           // LCOV_EXCL_LINE
                 unreachable(); // LCOV_EXCL_LINE
             }
+
+            current = skip_ascii_without_cr(current, end);
         }
 
         const bool is_contiguous_no_cr = cr_itrs.empty() && m_is_contiguous;
@@ -11908,14 +11908,9 @@ private:
             return {};
         }
 
-        const char* current = m_buffer.data();
-        const char* end = current + m_buffer.size();
+        const char* end = m_buffer.data() + m_buffer.size();
+        const char* current = skip_ascii_without_cr(m_buffer.data(), end);
         while (current != end) {
-            current = skip_ascii_without_cr(current, end);
-            if (current == end) {
-                break;
-            }
-
             const auto first = static_cast<uint8_t>(*current);
             ++current;
             const uint32_t num_bytes = utf8::get_num_bytes(first);
@@ -11953,6 +11948,8 @@ private:
             default:           // LCOV_EXCL_LINE
                 unreachable(); // LCOV_EXCL_LINE
             }
+
+            current = skip_ascii_without_cr(current, end);
         }
 
         return m_buffer;
@@ -12150,14 +12147,9 @@ private:
             return {};
         }
 
-        const char* current = m_buffer.data();
-        const char* end = current + m_buffer.size();
+        const char* end = m_buffer.data() + m_buffer.size();
+        const char* current = skip_ascii_without_cr(m_buffer.data(), end);
         while (current != end) {
-            current = skip_ascii_without_cr(current, end);
-            if (current == end) {
-                break;
-            }
-
             const auto first = static_cast<uint8_t>(*current);
             ++current;
             const uint32_t num_bytes = utf8::get_num_bytes(first);
@@ -12195,6 +12187,8 @@ private:
             default:           // LCOV_EXCL_LINE
                 unreachable(); // LCOV_EXCL_LINE
             }
+
+            current = skip_ascii_without_cr(current, end);
         }
 
         return m_buffer;
