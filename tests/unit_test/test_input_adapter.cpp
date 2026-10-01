@@ -8,6 +8,7 @@
 
 #include <cstdio>
 #include <fstream>
+#include <list>
 #include <sstream>
 #include <string>
 
@@ -1999,6 +2000,31 @@ TEST_CASE("InputAdapter_GetBufferView_UTF8NewlineCodeNormalization") {
         REQUIRE(buffer[7] == 't');
         REQUIRE(buffer[8] == 'a');
         REQUIRE(buffer[9] == '\n');
+    }
+}
+
+TEST_CASE("InputAdapter_GetBufferView_ContiguousInput") {
+    // contiguous input without CR is viewed in place.
+    const std::string input = "0123456789abcdef: value\n";
+    auto input_adapter = fkyaml::detail::input_adapter(input);
+    fkyaml::detail::str_view buffer = input_adapter.get_buffer_view();
+    REQUIRE(buffer.begin() == input.data());
+    REQUIRE(buffer.size() == input.size());
+}
+
+TEST_CASE("InputAdapter_GetBufferView_NonContiguousInput") {
+    SUBCASE("without CR") {
+        const std::string str = "0123456789\nabcdefgh\xC3\xA9\n";
+        const std::list<char> input(str.begin(), str.end());
+        auto input_adapter = fkyaml::detail::input_adapter(input.begin(), input.end());
+        REQUIRE(input_adapter.get_buffer_view() == "0123456789\nabcdefgh\xC3\xA9\n");
+    }
+
+    SUBCASE("with CRs") {
+        const std::string str = "0123456789\r\nabcdefgh\xC3\xA9\r\n";
+        const std::list<char> input(str.begin(), str.end());
+        auto input_adapter = fkyaml::detail::input_adapter(input.begin(), input.end());
+        REQUIRE(input_adapter.get_buffer_view() == "0123456789\nabcdefgh\xC3\xA9\n");
     }
 }
 

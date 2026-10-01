@@ -1106,7 +1106,7 @@ inline iterator_input_adapter<ItrType> input_adapter(ItrType begin, ItrType end)
         using char_ptr_t = remove_cvref_t<typename std::iterator_traits<ItrType>::pointer>;
         char_ptr_t p_begin = &*begin;
         char_ptr_t p_second_last = &*std::next(begin, size - 1);
-        is_contiguous = (p_second_last - p_begin == size);
+        is_contiguous = (p_second_last - p_begin == size - 1);
     }
     return create_iterator_input_adapter(begin, end, is_contiguous);
 }
