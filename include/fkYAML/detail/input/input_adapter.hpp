@@ -47,6 +47,36 @@ uint8_t read_utf8_byte_or_throw(IterType& current, IterType end, std::initialize
     return byte;
 }
 
+/// @brief Skips a run of ASCII characters other than CR. Only raw pointers are skipped in bulk.
+/// @return The first position not skipped.
+template <typename IterType>
+IterType skip_ascii_without_cr(IterType current, IterType /*unused*/) noexcept {
+    return current;
+}
+
+/// @brief Skips a run of ASCII characters other than CR, 8 bytes at a time.
+/// @param p_current The position to start from.
+/// @param p_end The end of the buffer.
+/// @return The first position of a word which contains a non-ASCII character or CR.
+inline const char* skip_ascii_without_cr(const char* p_current, const char* p_end) noexcept {
+    constexpr uint64_t crs = 0x0D0D0D0D0D0D0D0Dull;
+    constexpr uint64_t lows = 0x7F7F7F7F7F7F7F7Full;
+    constexpr uint64_t highs = 0x8080808080808080ull;
+    while (p_end - p_current >= 8) {
+        uint64_t word = 0;
+        std::memcpy(&word, p_current, sizeof(word));
+        // bytes equal to CR become zero in `x`, and only zero bytes have their high bits clear in `non_zero`.
+        // `(x & lows) + lows` never carries across bytes, so no unsigned overflow happens here.
+        const uint64_t x = word ^ crs;
+        const uint64_t non_zero = ((x & lows) + lows) | x;
+        if (((word | ~non_zero) & highs) != 0) {
+            break;
+        }
+        p_current += sizeof(word);
+    }
+    return p_current;
+}
+
 /// @brief An input adapter for iterators of type char.
 /// @tparam IterType An iterator type.
 template <typename IterType>
@@ -103,10 +133,24 @@ private:
     str_view get_buffer_view_utf8() {
         FK_YAML_ASSERT(m_encode_type == utf_encode_t::UTF_8);
 
-        IterType current = m_begin;
-        std::deque<IterType> cr_itrs {};
-        while (current != m_end) {
-            const IterType char_itr = current;
+        if FK_YAML_LIKELY (m_is_contiguous) {
+            // scan through raw pointers so that ASCII runs can be skipped in bulk.
+            const char* p_begin = &*m_begin;
+            return get_buffer_view_utf8(p_begin, p_begin + std::distance(m_begin, m_end));
+        }
+        return get_buffer_view_utf8(m_begin, m_end);
+    }
+
+    /// @brief Validates UTF-8 encoded contents in [begin, end) and drops CRs if any.
+    /// @param begin The beginning of the contents.
+    /// @param end The end of the contents.
+    /// @return View into the UTF-8 encoded input buffer contents.
+    template <typename Itr>
+    str_view get_buffer_view_utf8(Itr begin, Itr end) {
+        Itr current = skip_ascii_without_cr(begin, end);
+        std::deque<Itr> cr_itrs {};
+        while (current != end) {
+            const Itr char_itr = current;
             const auto first = static_cast<uint8_t>(*current);
             ++current;
             const uint32_t num_bytes = utf8::get_num_bytes(first);
@@ -118,7 +162,7 @@ private:
                 }
                 break;
             case 2: {
-                const auto second = read_utf8_byte_or_throw(current, m_end, {first});
+                const auto second = read_utf8_byte_or_throw(current, end, {first});
                 const bool is_valid = utf8::validate(first, second);
                 if FK_YAML_UNLIKELY (!is_valid) {
                     throw fkyaml::invalid_encoding("Invalid UTF-8 encoding.", {first, second});
@@ -126,8 +170,8 @@ private:
                 break;
             }
             case 3: {
-                const auto second = read_utf8_byte_or_throw(current, m_end, {first});
-                const auto third = read_utf8_byte_or_throw(current, m_end, {first, second});
+                const auto second = read_utf8_byte_or_throw(current, end, {first});
+                const auto third = read_utf8_byte_or_throw(current, end, {first, second});
                 const bool is_valid = utf8::validate(first, second, third);
                 if FK_YAML_UNLIKELY (!is_valid) {
                     throw fkyaml::invalid_encoding("Invalid UTF-8 encoding.", {first, second, third});
@@ -135,9 +179,9 @@ private:
                 break;
             }
             case 4: {
-                const auto second = read_utf8_byte_or_throw(current, m_end, {first});
-                const auto third = read_utf8_byte_or_throw(current, m_end, {first, second});
-                const auto fourth = read_utf8_byte_or_throw(current, m_end, {first, second, third});
+                const auto second = read_utf8_byte_or_throw(current, end, {first});
+                const auto third = read_utf8_byte_or_throw(current, end, {first, second});
+                const auto fourth = read_utf8_byte_or_throw(current, end, {first, second, third});
                 const bool is_valid = utf8::validate(first, second, third, fourth);
                 if FK_YAML_UNLIKELY (!is_valid) {
                     throw fkyaml::invalid_encoding("Invalid UTF-8 encoding.", {first, second, third, fourth});
@@ -147,23 +191,25 @@ private:
             default:           // LCOV_EXCL_LINE
                 unreachable(); // LCOV_EXCL_LINE
             }
+
+            current = skip_ascii_without_cr(current, end);
         }
 
         const bool is_contiguous_no_cr = cr_itrs.empty() && m_is_contiguous;
         if FK_YAML_LIKELY (is_contiguous_no_cr) {
             // The input iterators (begin, end) can be used as-is during parsing.
-            FK_YAML_ASSERT(m_begin != m_end);
-            return str_view {&*m_begin, static_cast<std::size_t>(std::distance(m_begin, m_end))};
+            FK_YAML_ASSERT(begin != end);
+            return str_view {&*begin, static_cast<std::size_t>(std::distance(begin, end))};
         }
 
-        m_buffer.reserve(std::distance(m_begin, m_end) - cr_itrs.size());
+        m_buffer.reserve(std::distance(begin, end) - cr_itrs.size());
 
-        current = m_begin;
+        current = begin;
         for (const auto& cr_itr : cr_itrs) {
             m_buffer.append(current, cr_itr);
             current = std::next(cr_itr);
         }
-        m_buffer.append(current, m_end);
+        m_buffer.append(current, end);
 
         return m_buffer;
     }
@@ -670,8 +716,8 @@ private:
             return {};
         }
 
-        auto current = m_buffer.begin();
-        auto end = m_buffer.end();
+        const char* end = m_buffer.data() + m_buffer.size();
+        const char* current = skip_ascii_without_cr(m_buffer.data(), end);
         while (current != end) {
             const auto first = static_cast<uint8_t>(*current);
             ++current;
@@ -710,6 +756,8 @@ private:
             default:           // LCOV_EXCL_LINE
                 unreachable(); // LCOV_EXCL_LINE
             }
+
+            current = skip_ascii_without_cr(current, end);
         }
 
         return m_buffer;
@@ -907,8 +955,8 @@ private:
             return {};
         }
 
-        auto current = m_buffer.begin();
-        auto end = m_buffer.end();
+        const char* end = m_buffer.data() + m_buffer.size();
+        const char* current = skip_ascii_without_cr(m_buffer.data(), end);
         while (current != end) {
             const auto first = static_cast<uint8_t>(*current);
             ++current;
@@ -947,6 +995,8 @@ private:
             default:           // LCOV_EXCL_LINE
                 unreachable(); // LCOV_EXCL_LINE
             }
+
+            current = skip_ascii_without_cr(current, end);
         }
 
         return m_buffer;

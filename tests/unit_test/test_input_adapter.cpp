@@ -1914,6 +1914,21 @@ TEST_CASE("InputAdapter_GetBufferView_UTF8CharsValidation") {
     }
 }
 
+TEST_CASE("InputAdapter_GetBufferView_UTF8LongInput") {
+    // inputs longer than a word so that ASCII runs are skipped in bulk.
+    SUBCASE("CRs and multi-byte characters after ASCII runs") {
+        char input[] = "0123456789\r\nabcdefgh\xC3\xA9\r\n";
+        auto input_adapter = fkyaml::detail::input_adapter(input);
+        REQUIRE(input_adapter.get_buffer_view() == "0123456789\nabcdefgh\xC3\xA9\n");
+    }
+
+    SUBCASE("invalid byte after an ASCII run") {
+        char input[] = "0123456789abcdef\x80";
+        auto input_adapter = fkyaml::detail::input_adapter(input);
+        REQUIRE_THROWS_AS(input_adapter.get_buffer_view(), fkyaml::invalid_encoding);
+    }
+}
+
 TEST_CASE("InputAdapter_GetBufferView_UTF8NewlineCodeNormalization") {
     SUBCASE("iterator_input_adapter (char)") {
         char input[] = "test\r\ndata\r\n";
