@@ -1,0 +1,98 @@
+name: Android
+
+on:
+  push:
+    branches:
+      - develop
+      - main
+    paths:
+      - .github/workflows/android.yml
+      - cmake/**
+      - include/**
+      - single_include/**
+      - tests/**
+      - CMakeLists.txt
+  pull_request:
+    paths:
+      - .github/workflows/android.yml
+      - cmake/**
+      - include/**
+      - single_include/**
+      - tests/**
+      - CMakeLists.txt
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  DEVICE_DIR: /data/local/tmp/fkyaml
+
+jobs:
+  cross-build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    strategy:
+      fail-fast: false
+      matrix:
+        ndk: [ 25.2.9519653, 27.2.12479018, 30.0.16248370 ]
+        abi: [ armeabi-v7a, arm64-v8a, x86, x86_64 ]
+
+    steps:
+    - uses: actions/checkout@v7
+
+    - name: Set up Android SDK
+      uses: android-actions/setup-android@v4
+      with:
+        packages: ''
+
+    - name: Install NDK
+      run: sdkmanager "ndk;${{ matrix.ndk }}"
+
+    - name: Configure CMake
+      run: cmake -S . -B build_android -G Ninja -DCMAKE_BUILD_TYPE=Debug -DCMAKE_TOOLCHAIN_FILE="$ANDROID_HOME/ndk/${{ matrix.ndk }}/build/cmake/android.toolchain.cmake" -DANDROID_ABI=${{ matrix.abi }} -DANDROID_PLATFORM=android-21 -DANDROID_STL=c++_static -DFK_YAML_BUILD_TEST=ON
+
+    - name: Build unit tests
+      run: cmake --build build_android --target unit_test -j 3
+
+  emulator-test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - ndk: 25.2.9519653
+            api-level: 21
+          - ndk: 30.0.16248370
+            api-level: 35
+
+    steps:
+    - uses: actions/checkout@v7
+
+    - name: Enable KVM
+      run: |
+        echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
+        sudo udevadm control --reload-rules
+        sudo udevadm trigger --name-match=kvm
+
+    - name: Build and run unit tests
+      uses: reactivecircus/android-emulator-runner@v2
+      with:
+        api-level: ${{ matrix.api-level }}
+        arch: x86_64
+        target: default
+        emulator-options: -no-snapshot -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -camera-back none
+        ndk: ${{ matrix.ndk }}
+        # Since android-emulator-runner interprets each line of the script separately ignoring `\` for line continuation,
+        # we need to write the full commands on single lines.
+        # https://github.com/ReactiveCircus/android-emulator-runner/issues/391
+        script: |
+          cmake -S . -B build_android -G Ninja -DCMAKE_BUILD_TYPE=Debug -DCMAKE_TOOLCHAIN_FILE="$ANDROID_HOME/ndk/${{ matrix.ndk }}/build/cmake/android.toolchain.cmake" -DANDROID_ABI=x86_64 -DANDROID_PLATFORM=android-21 -DANDROID_STL=c++_static -DFK_YAML_BUILD_TEST=ON -DFK_YAML_TEST_DATA_DIR=${{ env.DEVICE_DIR }}/test_data -DFK_YAML_TEST_OUTPUT_DIR=${{ env.DEVICE_DIR }}/test_output
+          cmake --build build_android --target unit_test -j 3
+          adb shell "mkdir -p ${{ env.DEVICE_DIR }}/test_output"
+          adb push tests/unit_test/test_data "${{ env.DEVICE_DIR }}/"
+          adb push build_android/tests/unit_test/unit_test "${{ env.DEVICE_DIR }}/unit_test"
+          adb shell "chmod 755 ${{ env.DEVICE_DIR }}/unit_test"
+          adb shell "cd ${{ env.DEVICE_DIR }} && ./unit_test"

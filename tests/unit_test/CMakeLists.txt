@@ -4,13 +4,18 @@
 
 # While executing CTest on Windows, just specifying a relative path seems not working.
 # So, define the absolute path in this file to open test data files.
+set(FK_YAML_TEST_DATA_DIR "${CMAKE_CURRENT_SOURCE_DIR}/test_data" CACHE PATH "Unit test data directory")
+set(FK_YAML_TEST_OUTPUT_DIR "${CMAKE_CURRENT_BINARY_DIR}/test_output" CACHE PATH "Unit test output directory")
+
 configure_file(
   "${CMAKE_CURRENT_SOURCE_DIR}/test_data.hpp.in"
   "${CMAKE_CURRENT_SOURCE_DIR}/test_data.hpp"
   @ONLY
 )
 
-file(MAKE_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/test_output")
+if(NOT CMAKE_CROSSCOMPILING)
+  file(MAKE_DIRECTORY "${FK_YAML_TEST_OUTPUT_DIR}")
+endif()
 
 #################################
 #   Configure compile options   #
@@ -99,4 +104,6 @@ if(FK_YAML_RUN_MSVC_SANITIZERS)
   endif()
 endif()
 
-doctest_discover_tests(unit_test)
+if(NOT CMAKE_CROSSCOMPILING)
+  doctest_discover_tests(unit_test)
+endif()
