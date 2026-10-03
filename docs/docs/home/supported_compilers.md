@@ -1,6 +1,10 @@
 # Supported Compilers
 
-Currently, the following compilers are known to work and used in GitHub Actions workflows:
+Compilers with complete C++11 support should compile the library without warnings.  
+Actually, fkYAML is compiled and tested with 40+ different C++ compilers with different operating systems and C++ standards in GitHub Actions workflows.
+
+Requests for new compiler supports are welcome.  
+If you encounter a problem regarding compilers, please let us know by [creating an issue](https://github.com/fktn-k/fkYAML/issues/new?assignees=&labels=kind%3A+bug&projects=&template=bug-report.yml) or a PR with the information of your Operating System so that the same issue can be reproduced.  
 
 | Compiler              | Operating System                                                                                               |
 | --------------------- | -------------------------------------------------------------------------------------------------------------- |
@@ -50,5 +54,14 @@ Currently, the following compilers are known to work and used in GitHub Actions 
 | Visual Studio 17 2022 | [Windows Server 2022](https://github.com/actions/runner-images/blob/main/images/windows/Windows2022-Readme.md) |
 | Visual Studio 18 2026 | [Windows Server 2025](https://github.com/actions/runner-images/blob/main/images/windows/Windows2025-Readme.md) |
 
-Requests for new compiler supports are welcome.  
-If you encounter a problem regarding compilers, please let us know by [creating an issue](https://github.com/fktn-k/fkYAML/issues/new?assignees=&labels=kind%3A+bug&projects=&template=bug-report.yml) or a PR with the information of your Operating System so that the same situation can be reproduced.  
+## Android NDK
+
+Android NDK builds are tested with the following configurations in [the Android workflow](https://github.com/fktn-k/fkYAML/blob/develop/.github/workflows/android.yml):
+
+| NDK                    | ABIs                                        |
+| ---------------------- | ------------------------------------------- |
+| r25c (`25.2.9519653`)  | `armeabi-v7a`, `arm64-v8a`, `x86`, `x86_64` |
+| r27c (`27.2.12479018`) | `armeabi-v7a`, `arm64-v8a`, `x86`, `x86_64` |
+| r30 (`30.0.16248370`)  | `armeabi-v7a`, `arm64-v8a`, `x86`, `x86_64` |
+
+The C++ unit tests are also executed on x86_64 Android emulators using NDK r25c with API level 21 and NDK r30 with API level 35. Other ABI configurations are verified by cross-compiling the same unit-test executable.

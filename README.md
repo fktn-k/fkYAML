@@ -1,6 +1,7 @@
 [![Ubuntu](https://github.com/fktn-k/fkYAML/workflows/Ubuntu/badge.svg)](https://github.com/fktn-k/fkYAML/actions?query=workflow%3AUbuntu)
 [![Windows](https://github.com/fktn-k/fkYAML/workflows/Windows/badge.svg)](https://github.com/fktn-k/fkYAML/actions?query=workflow%3AWindows)
 [![macOS](https://github.com/fktn-k/fkYAML/workflows/macOS/badge.svg)](https://github.com/fktn-k/fkYAML/actions?query=workflow%3AmacOS)
+[![Android](https://github.com/fktn-k/fkYAML/workflows/Android/badge.svg)](https://github.com/fktn-k/fkYAML/actions?query=workflow%3AAndroid)
 [![Coverage Status](https://coveralls.io/repos/github/fktn-k/fkYAML/badge.svg?branch=develop)](https://coveralls.io/github/fktn-k/fkYAML?branch=develop)
 [![YAML test suite](https://github.com/fktn-k/fkYAML/workflows/YAML%20Test%20Suite/badge.svg)](https://github.com/fktn-k/fkYAML/actions?query=branch%3Adevelop+workflow%3A%22%22YAML+Test+Suite%22%22++)
 [![Codacy Badge](https://app.codacy.com/project/badge/Grade/cded6969c7344ea5be60ab472e13000f)](https://app.codacy.com/gh/fktn-k/fkYAML/dashboard?utm_source=gh&utm_medium=referral&utm_content=&utm_campaign=Badge_grade)
@@ -97,7 +98,7 @@ See the [supported compilers](#supported-compilers) section for more details.
 * General
     * Cross-platforms
         * Compilers: GCC, Clang, Visual Studio, etc.
-        * Operating systems: Linux, macOS, Windows.
+        * Operating systems: Linux, macOS, Windows, Android.
     * Easy integration
         * Header-only library. Just copy the headers to your project. CMake packages are also available in [the release page](https://github.com/fktn-k/fkYAML/releases/latest).
     * Self-contained, minimal dependencies
@@ -149,6 +150,9 @@ Here is the list you might want to know:
 Compilers with complete C++11 support should compile the library without warnings.  
 Actually, fkYAML is compiled and tested with 40+ different C++ compilers with different operating systems and C++ standards in GitHub Actions workflows.
 
+Requests for new compiler supports are welcome.  
+If you encounter a problem regarding compilers, please let us know by [creating an issue](https://github.com/fktn-k/fkYAML/issues/new?assignees=&labels=kind%3A+bug&projects=&template=bug-report.yml) or a PR with the information of your Operating System so that the same issue can be reproduced.  
+
 | Compiler              | Operating System                                                                                               |
 | --------------------- | -------------------------------------------------------------------------------------------------------------- |
 | AppleClang 15.0.0     | [macOS 14](https://github.com/actions/runner-images/blob/main/images/macos/macos-14-Readme.md)                 |
@@ -197,8 +201,17 @@ Actually, fkYAML is compiled and tested with 40+ different C++ compilers with di
 | Visual Studio 17 2022 | [Windows Server 2022](https://github.com/actions/runner-images/blob/main/images/windows/Windows2022-Readme.md) |
 | Visual Studio 18 2026 | [Windows Server 2025](https://github.com/actions/runner-images/blob/main/images/windows/Windows2025-Readme.md) |
 
-Requests for new compiler supports are welcome.  
-If you encounter a problem regarding compilers, please let us know by [creating an issue](https://github.com/fktn-k/fkYAML/issues/new?assignees=&labels=kind%3A+bug&projects=&template=bug-report.yml) or a PR with the information of your Operating System so that the same issue can be reproduced.  
+### Android NDK
+
+Android NDK builds are tested with the following configurations in [the Android workflow](https://github.com/fktn-k/fkYAML/blob/develop/.github/workflows/android.yml):
+
+| NDK                    | ABIs                                        |
+| ---------------------- | ------------------------------------------- |
+| r25c (`25.2.9519653`)  | `armeabi-v7a`, `arm64-v8a`, `x86`, `x86_64` |
+| r27c (`27.2.12479018`) | `armeabi-v7a`, `arm64-v8a`, `x86`, `x86_64` |
+| r30 (`30.0.16248370`)  | `armeabi-v7a`, `arm64-v8a`, `x86`, `x86_64` |
+
+The C++ unit tests are also executed on x86_64 Android emulators using NDK r25c with API level 21 and NDK r30 with API level 35. Other ABI configurations are verified by cross-compiling the same unit-test executable.
 
 ## Test suite status
 
