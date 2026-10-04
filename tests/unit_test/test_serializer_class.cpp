@@ -606,4 +606,13 @@ TEST_CASE("Serializer_MultipleDocuments") {
         REQUIRE_NOTHROW(docs = deserializer.deserialize_docs(fkyaml::detail::input_adapter(expected)));
         REQUIRE(serialize_docs(docs) == expected);
     }
+
+    SUBCASE("scalar documents") {
+        std::string expected = "scalar1\n"
+                               "...\n"
+                               "scalar2\n";
+
+        REQUIRE_NOTHROW(docs = deserializer.deserialize_docs(fkyaml::detail::input_adapter(expected)));
+        REQUIRE(serialize_docs(docs) == expected);
+    }
 }
