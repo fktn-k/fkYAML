@@ -223,8 +223,14 @@ TEST_CASE("Serializer_StringNodeStartingWithDirectiveIndicatorInMapping") {
 TEST_CASE("Serializer_MappingKeyNode") {
     fkyaml::node map_key = {{true, 123}};
     fkyaml::node seq_key = {3.14, nullptr};
-    fkyaml::node node = {{map_key, 3.14}, {seq_key, "foo"}};
-    std::string expected = "? - 3.14\n"
+    fkyaml::node seq_key2 = {1, 2};
+    seq_key2.add_tag_name("!!seq");
+    fkyaml::node node = {{map_key, 3.14}, {seq_key, "foo"}, {seq_key2, 3}};
+    std::string expected = "? !!seq\n"
+                           "  - 1\n"
+                           "  - 2\n"
+                           ": 3\n"
+                           "? - 3.14\n"
                            "  - null\n"
                            ": foo\n"
                            "? true: 123\n"
