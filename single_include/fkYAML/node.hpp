@@ -13745,6 +13745,11 @@ private:
         // serialize a mapping key node.
         const auto& key_node = itr.key();
 
+        const bool is_container = !key_node.is_scalar();
+        if (is_container) {
+            write("? ", 2);
+        }
+
         bool is_appended = try_append_alias(key_node, false);
         if (is_appended) {
             // The trailing white space is necessary since anchor names can contain a colon (:) at its end.
@@ -13754,14 +13759,15 @@ private:
             const bool is_anchor_appended = try_append_anchor(key_node, false);
             const bool is_tag_appended = try_append_tag(key_node, is_anchor_appended);
             if (is_anchor_appended || is_tag_appended) {
-                write(" ", 1);
+                if (is_container) {
+                    write("\n", 1);
+                }
+                else {
+                    write(" ", 1);
+                }
             }
 
-            const bool is_container = !key_node.is_scalar();
-            if (is_container) {
-                write("? ", 2);
-            }
-            const auto indent = m_current_indent;
+            const auto indent = is_container ? cur_indent + 2 : cur_indent;
             serialize_node(key_node, indent);
             if (is_container) {
                 // a newline code is already inserted in the above serialize_node() call.
