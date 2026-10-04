@@ -106,6 +106,9 @@ public:
         const auto size = static_cast<uint32_t>(docs.size());
         for (uint32_t i = 0; i < size; i++) {
             serialize_document(docs[i]);
+            if (docs[i].is_scalar()) {
+                write("\n", 1);
+            }
             if (i + 1 < size) {
                 // Append the end-of-document marker for the next document.
                 write("...\n", 4);
