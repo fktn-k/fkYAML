@@ -39,7 +39,13 @@
 #define FK_YAML_MINOR_VERSION 5
 #define FK_YAML_PATCH_VERSION 0
 
+// FK_YAML_ENABLE_NODE_LOCATION changes the layout of fkyaml::basic_node, so a distinct ABI namespace is used to detect
+// translation units configured differently at link time.
+#ifdef FK_YAML_ENABLE_NODE_LOCATION
+#define FK_YAML_NAMESPACE_VERSION_CONCAT_IMPL(major, minor, patch) v##major##_##minor##_##patch##_location
+#else
 #define FK_YAML_NAMESPACE_VERSION_CONCAT_IMPL(major, minor, patch) v##major##_##minor##_##patch
+#endif
 
 #define FK_YAML_NAMESPACE_VERSION_CONCAT(major, minor, patch) FK_YAML_NAMESPACE_VERSION_CONCAT_IMPL(major, minor, patch)
 

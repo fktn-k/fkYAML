@@ -4,6 +4,7 @@
 <!-- Edit ./tools/natvis_generator/fkYAML.natvis.j2 -->
 
 <AutoVisualizer xmlns="http://schemas.microsoft.com/vstudio/debugger/natvis/2010">
+{% for namespace in namespaces %}
     <!-- Namespace {{ namespace }} -->
     <Type Name="{{ namespace }}::basic_node&lt;*&gt;">
         <DisplayString Condition="m_attrs.is_sequence()">{*(m_value.p_seq)}</DisplayString>
@@ -29,4 +30,8 @@
             <ExpandedItem>second</ExpandedItem>
         </Expand>
     </Type>
+{% if not loop.last %}
+
+{% endif %}
+{% endfor %}
 </AutoVisualizer>

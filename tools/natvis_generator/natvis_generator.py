@@ -27,7 +27,7 @@ if __name__ == '__main__':
                                      keep_trailing_newline=True)
     template = environment.get_template('fkYAML.natvis.j2')
 
-    natvis = template.render(namespace=namespace)
+    natvis = template.render(namespaces=[namespace, namespace + '_location'])
 
     with open('../../fkYAML.natvis', 'w') as f:
         f.write(natvis)

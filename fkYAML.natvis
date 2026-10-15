@@ -29,4 +29,30 @@
             <ExpandedItem>second</ExpandedItem>
         </Expand>
     </Type>
+
+    <!-- Namespace fkyaml::v0_5_0_location -->
+    <Type Name="fkyaml::v0_5_0_location::basic_node&lt;*&gt;">
+        <DisplayString Condition="m_attrs.is_sequence()">{*(m_value.p_seq)}</DisplayString>
+        <DisplayString Condition="m_attrs.is_mapping()">{*(m_value.p_map)}</DisplayString>
+        <DisplayString Condition="m_attrs.is_null()">nullptr</DisplayString>
+        <DisplayString Condition="m_attrs.is_boolean()">{m_value.boolean}</DisplayString>
+        <DisplayString Condition="m_attrs.is_integer()">{m_value.integer}</DisplayString>
+        <DisplayString Condition="m_attrs.is_float_number()">{m_value.float_val}</DisplayString>
+        <DisplayString Condition="m_attrs.is_string()">{*(m_value.p_str)}</DisplayString>
+        <Expand>
+            <ExpandedItem Condition="m_attrs.is_sequence()">
+                *(m_value.p_seq),view(simple)
+            </ExpandedItem>
+            <ExpandedItem Condition="m_attrs.is_mapping()">
+                *(m_value.p_map),view(simple)
+            </ExpandedItem>
+        </Expand>
+    </Type>
+
+    <Type Name="std::pair&lt;*, fkyaml::v0_5_0_location::basic_node&lt;*&gt;&gt;" IncludeView="MapHelper">
+        <DisplayString>{second}</DisplayString>
+        <Expand>
+            <ExpandedItem>second</ExpandedItem>
+        </Expand>
+    </Type>
 </AutoVisualizer>

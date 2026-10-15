@@ -42,6 +42,18 @@
 
 FK_YAML_NAMESPACE_BEGIN
 
+#ifdef FK_YAML_ENABLE_NODE_LOCATION
+/// @brief The location in a deserialized input where a node begins.
+/// @note Both values are 0-based, which is consistent with fkyaml::parse_error.
+/// @sa https://fktn-k.github.io/fkYAML/api/basic_node/get_location/
+struct node_location {
+    /// The line where a node begins.
+    uint32_t line;
+    /// The column in the line where a node begins.
+    uint32_t column;
+};
+#endif
+
 /// @brief A class to store value of YAML nodes.
 /// @sa https://fktn-k.github.io/fkYAML/api/basic_node/
 template <
@@ -241,6 +253,9 @@ public:
     /// @sa https://fktn-k.github.io/fkYAML/api/basic_node/constructor/
     basic_node(const basic_node& rhs)
         : m_attrs(rhs.m_attrs),
+#ifdef FK_YAML_ENABLE_NODE_LOCATION
+          m_location(rhs.m_location),
+#endif
           mp_meta(rhs.mp_meta),
           mp_prop(rhs.mp_prop ? new detail::node_property(*rhs.mp_prop) : nullptr) {
         if FK_YAML_LIKELY (!has_anchor_name()) {
@@ -277,6 +292,9 @@ public:
     /// @sa https://fktn-k.github.io/fkYAML/api/basic_node/constructor/
     basic_node(basic_node&& rhs) noexcept
         : m_attrs(rhs.m_attrs),
+#ifdef FK_YAML_ENABLE_NODE_LOCATION
+          m_location(rhs.m_location),
+#endif
           mp_meta(std::move(rhs.mp_meta)),
           mp_prop(std::move(rhs.mp_prop)) {
         if FK_YAML_LIKELY (!has_anchor_name()) {
@@ -1331,6 +1349,16 @@ public:
         prop().tag = std::move(tag_name);
     }
 
+#ifdef FK_YAML_ENABLE_NODE_LOCATION
+    /// @brief Get the location in the deserialized input where this basic_node object begins.
+    /// @note A node which is not created by deserialization is located at line 0, column 0.
+    /// @return The location of this basic_node object.
+    /// @sa https://fktn-k.github.io/fkYAML/api/basic_node/get_location/
+    node_location get_location() const noexcept {
+        return m_location;
+    }
+#endif
+
     /// @brief Get the node value object converted into a given type.
     /// @note This function requires T objects to be default constructible. Also, T cannot be either a reference,
     /// pointer or C-style array type.
@@ -1611,6 +1639,9 @@ public:
     void swap(basic_node& rhs) noexcept {
         using std::swap;
         swap(m_attrs, rhs.m_attrs);
+#ifdef FK_YAML_ENABLE_NODE_LOCATION
+        swap(m_location, rhs.m_location);
+#endif
         swap(mp_meta, rhs.mp_meta);
 
         node_value tmp {};
@@ -1930,6 +1961,10 @@ private:
 
         basic_node node;
         node.swap(*this);
+#ifdef FK_YAML_ENABLE_NODE_LOCATION
+        // The anchor stays where the value was found.
+        m_location = node.m_location;
+#endif
         p_meta->anchor_table.emplace(anchor_name, std::move(node));
 
         m_attrs.unset(detail::node_attr_mask::anchoring);
@@ -1975,6 +2010,10 @@ private:
 
     /// The current node attributes.
     detail::node_attrs m_attrs;
+#ifdef FK_YAML_ENABLE_NODE_LOCATION
+    /// The location in the deserialized input where this node begins.
+    node_location m_location {};
+#endif
     /// The shared set of YAML directives applied to this node.
     /// It is created on first use, since most nodes never need it, and then shared by the nodes of a document.
     mutable std::shared_ptr<detail::document_metainfo<basic_node>> mp_meta {};

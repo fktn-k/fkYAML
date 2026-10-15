@@ -56,7 +56,13 @@
 #define FK_YAML_MINOR_VERSION 5
 #define FK_YAML_PATCH_VERSION 0
 
+// FK_YAML_ENABLE_NODE_LOCATION changes the layout of fkyaml::basic_node, so a distinct ABI namespace is used to detect
+// translation units configured differently at link time.
+#ifdef FK_YAML_ENABLE_NODE_LOCATION
+#define FK_YAML_NAMESPACE_VERSION_CONCAT_IMPL(major, minor, patch) v##major##_##minor##_##patch##_location
+#else
 #define FK_YAML_NAMESPACE_VERSION_CONCAT_IMPL(major, minor, patch) v##major##_##minor##_##patch
+#endif
 
 #define FK_YAML_NAMESPACE_VERSION_CONCAT(major, minor, patch) FK_YAML_NAMESPACE_VERSION_CONCAT_IMPL(major, minor, patch)
 
@@ -8556,6 +8562,7 @@ private:
             check_tab_in_indentation(lexer, lexer.get_lines_processed(), lexer.get_last_token_begin_pos());
             root = basic_node_type::sequence({basic_node_type()});
             apply_directive_set(root);
+            set_location(root, lexer);
             if (found_props) {
                 // If node properties are found before the block sequence entry prefix, the properties belong to the
                 // root sequence node.
@@ -8569,6 +8576,7 @@ private:
 
             mp_current_node = &(root.as_seq().back());
             apply_directive_set(*mp_current_node);
+            set_location(*mp_current_node, lexer);
             m_context_stack.emplace_back(seq_line, seq_indent, context_state_t::BLOCK_SEQUENCE_ENTRY, mp_current_node);
 
             token = lexer.get_next_token();
@@ -8581,6 +8589,7 @@ private:
             lexer.enter_flow_context();
             root = basic_node_type::sequence();
             apply_directive_set(root);
+            set_location(root, lexer);
             if (found_props && line < lexer.get_lines_processed()) {
                 defer_node_properties();
             }
@@ -8597,6 +8606,7 @@ private:
             lexer.enter_flow_context();
             root = basic_node_type::mapping();
             apply_directive_set(root);
+            set_location(root, lexer);
             if (found_props && line < lexer.get_lines_processed()) {
                 defer_node_properties();
             }
@@ -8614,6 +8624,7 @@ private:
             // No get_next_token() call here to handle the token event in the deserialize_node() function.
             root = basic_node_type::mapping();
             apply_directive_set(root);
+            set_location(root, lexer);
             apply_deferred_properties(root);
             apply_node_properties(root);
             parse_context context(
@@ -8626,6 +8637,7 @@ private:
         case lexical_token_t::KEY_SEPARATOR:
             root = basic_node_type::mapping();
             apply_directive_set(root);
+            set_location(root, lexer);
             apply_deferred_properties(root);
             // apply_node_properties(root);
             m_context_stack.emplace_back(line, indent, context_state_t::BLOCK_MAPPING, &root);
@@ -8892,6 +8904,7 @@ private:
                     // ```
                     *mp_current_node = basic_node_type::mapping();
                     apply_directive_set(*mp_current_node);
+                    set_location(*mp_current_node, lexer);
                     m_context_stack.emplace_back(line, indent, context_state_t::BLOCK_MAPPING, mp_current_node);
                     break;
                 default:
@@ -8909,6 +8922,7 @@ private:
                         line, indent, context_state_t::BLOCK_MAPPING_EXPLICIT_KEY, std::move(key_node));
 
                     apply_directive_set(*p_node);
+                    set_location(*p_node, lexer);
                     const uint32_t seq_line = lexer.get_lines_processed();
                     const uint32_t seq_indent = lexer.get_last_token_begin_pos();
                     m_context_stack.emplace_back(seq_line, seq_indent, context_state_t::BLOCK_SEQUENCE, p_node);
@@ -8916,6 +8930,7 @@ private:
                     p_node->as_seq().emplace_back(basic_node_type());
                     mp_current_node = &(p_node->as_seq().back());
                     apply_directive_set(*mp_current_node);
+                    set_location(*mp_current_node, lexer);
                     m_context_stack.emplace_back(
                         seq_line, seq_indent, context_state_t::BLOCK_SEQUENCE_ENTRY, mp_current_node);
 
@@ -8976,6 +8991,7 @@ private:
                         // ```
                         *mp_current_node = basic_node_type::mapping();
                         apply_directive_set(*mp_current_node);
+                        set_location(*mp_current_node, lexer);
                         apply_deferred_properties(*mp_current_node);
                         m_context_stack.emplace_back(line, indent, context_state_t::BLOCK_MAPPING, mp_current_node);
                         add_empty_key_entry(lexer, token, line, indent);
@@ -8991,6 +9007,7 @@ private:
                     // ```
                     *mp_current_node = basic_node_type::mapping();
                     apply_directive_set(*mp_current_node);
+                    set_location(*mp_current_node, lexer);
                     m_context_stack.emplace_back(line, indent, context_state_t::BLOCK_MAPPING, mp_current_node);
                     add_empty_key_entry(lexer, token, line, indent);
                     continue;
@@ -8999,6 +9016,7 @@ private:
                 if (m_context_stack.back().state == context_state_t::BLOCK_MAPPING_EXPLICIT_VALUE) {
                     *mp_current_node = basic_node_type::mapping();
                     apply_directive_set(*mp_current_node);
+                    set_location(*mp_current_node, lexer);
                     m_context_stack.emplace_back(line, indent, context_state_t::BLOCK_MAPPING, mp_current_node);
                     add_empty_key_entry(lexer, token, line, indent);
                     continue;
@@ -9018,6 +9036,7 @@ private:
                         // ```
                         *mp_current_node = basic_node_type::mapping();
                         apply_directive_set(*mp_current_node);
+                        set_location(*mp_current_node, lexer);
                         m_context_stack.emplace_back(line, indent, context_state_t::BLOCK_MAPPING, mp_current_node);
                         add_empty_key_entry(lexer, token, line, indent);
                         continue;
@@ -9171,6 +9190,7 @@ private:
                             m_context_stack.emplace_back(
                                 line_after_props, indent, context_state_t::BLOCK_MAPPING, mp_current_node);
                             apply_directive_set(*mp_current_node);
+                            set_location(*mp_current_node, lexer);
                             apply_deferred_properties(*mp_current_node);
                             apply_node_properties(*mp_current_node);
                         }
@@ -9224,6 +9244,7 @@ private:
                                 // ```
                                 *mp_current_node = basic_node_type::mapping();
                                 apply_directive_set(*mp_current_node);
+                                set_location(*mp_current_node, lexer);
                                 apply_deferred_properties(*mp_current_node);
                                 m_context_stack.emplace_back(
                                     line, indent, context_state_t::BLOCK_MAPPING, mp_current_node);
@@ -9389,6 +9410,7 @@ private:
                     *mp_current_node = basic_node_type::sequence();
                     m_context_stack.emplace_back(line, indent, context_state_t::BLOCK_SEQUENCE, mp_current_node);
                     apply_directive_set(*mp_current_node);
+                    set_location(*mp_current_node, lexer);
                     apply_deferred_properties(*mp_current_node);
                     apply_node_properties(*mp_current_node);
                 }
@@ -9397,6 +9419,7 @@ private:
                 seq.emplace_back(basic_node_type());
                 mp_current_node = &(seq.back());
                 apply_directive_set(*mp_current_node);
+                set_location(*mp_current_node, lexer);
                 m_context_stack.emplace_back(line, indent, context_state_t::BLOCK_SEQUENCE_ENTRY, mp_current_node);
                 break;
             }
@@ -9410,6 +9433,7 @@ private:
                         }
                         *mp_current_node = basic_node_type::mapping();
                         apply_directive_set(*mp_current_node);
+                        set_location(*mp_current_node, lexer);
                         apply_deferred_properties(*mp_current_node);
                         m_context_stack.emplace_back(line, indent, context_state_t::BLOCK_MAPPING, mp_current_node);
                         m_document_state.expects_root_flow_key_separator(true);
@@ -9463,6 +9487,7 @@ private:
                 }
 
                 apply_directive_set(*mp_current_node);
+                set_location(*mp_current_node, lexer);
                 apply_deferred_properties(*mp_current_node);
                 apply_node_properties(*mp_current_node);
 
@@ -9559,6 +9584,7 @@ private:
                     basic_node_type key_node = basic_node_type::mapping();
                     apply_directive_set(key_node);
                     mp_current_node->swap(key_node);
+                    copy_location(*mp_current_node, key_node);
                     // The properties which precede the collection are for the mapping which it begins as a key.
                     apply_held_properties(held_props, *mp_current_node);
 
@@ -9591,6 +9617,7 @@ private:
                         }
                         *mp_current_node = basic_node_type::mapping();
                         apply_directive_set(*mp_current_node);
+                        set_location(*mp_current_node, lexer);
                         apply_deferred_properties(*mp_current_node);
                         m_context_stack.emplace_back(line, indent, context_state_t::BLOCK_MAPPING, mp_current_node);
                         m_document_state.expects_root_flow_key_separator(true);
@@ -9644,6 +9671,7 @@ private:
                 }
 
                 apply_directive_set(*mp_current_node);
+                set_location(*mp_current_node, lexer);
                 apply_deferred_properties(*mp_current_node);
                 apply_node_properties(*mp_current_node);
 
@@ -9741,6 +9769,7 @@ private:
                     basic_node_type key_node = basic_node_type::mapping();
                     apply_directive_set(key_node);
                     mp_current_node->swap(key_node);
+                    copy_location(*mp_current_node, key_node);
                     // The properties which precede the collection are for the mapping which it begins as a key.
                     apply_held_properties(held_props, *mp_current_node);
 
@@ -10001,6 +10030,7 @@ private:
             if (mp_current_node->is_sequence()) {
                 mp_current_node->as_seq().emplace_back(basic_node_type::mapping());
                 mp_current_node = &(mp_current_node->operator[](mp_current_node->size() - 1));
+                copy_location(*mp_current_node, key);
                 m_context_stack.emplace_back(line, indent, context_state_t::BLOCK_MAPPING, mp_current_node);
             }
         }
@@ -10011,6 +10041,8 @@ private:
         }
 
         mp_current_node = &(itr.first->second);
+        // An omitted value is located at its key.
+        copy_location(*mp_current_node, itr.first->first);
         const parse_context& key_context = current_context(line, indent);
         m_context_stack.emplace_back(
             key_context.line, key_context.indent, context_state_t::MAPPING_VALUE, mp_current_node);
@@ -10060,6 +10092,7 @@ private:
         basic_node_type collection_key = std::move(*mp_current_node);
         *mp_current_node = basic_node_type::mapping();
         apply_directive_set(*mp_current_node);
+        copy_location(*mp_current_node, collection_key);
         apply_held_properties(held_props, *mp_current_node);
         auto itr = mp_current_node->as_map().emplace(std::move(collection_key), basic_node_type());
         mp_current_node = &(itr.first->second);
@@ -10120,6 +10153,7 @@ private:
     /// @return true if next token has already been got, false otherwise.
     void deserialize_scalar(
         lexer_type& lexer, basic_node_type&& node, uint32_t& indent, uint32_t& line, lexical_token& token) {
+        set_location(node, lexer);
         token = lexer.get_next_token();
         const bool is_mapping_key = mp_current_node->is_mapping() || token.type == lexical_token_t::KEY_SEPARATOR;
         if (is_mapping_key) {
@@ -10282,6 +10316,7 @@ private:
 
                     *mp_current_node = basic_node_type::mapping();
                     apply_directive_set(*mp_current_node);
+                    copy_location(*mp_current_node, node);
                     // The scalar turned out to be a key, so any deferred properties are for the mapping
                     // which it begins rather than for the key itself.
                     apply_deferred_properties(*mp_current_node);
@@ -10295,6 +10330,7 @@ private:
                     m_context_stack.emplace_back(line, indent, context_state_t::BLOCK_MAPPING, mp_current_node);
                     *mp_current_node = basic_node_type::mapping();
                     apply_directive_set(*mp_current_node);
+                    copy_location(*mp_current_node, node);
                     apply_deferred_properties(*mp_current_node);
                 }
             }
@@ -10356,6 +10392,7 @@ private:
         const uint32_t key_line = line;
         const uint32_t key_indent = indent;
         basic_node_type key_node;
+        set_location(key_node, lexer);
         if (m_pending_properties.has_tag()) {
             const tag_t tag_type = resolve_scalar_tag(line, indent);
             materialize_tagged_empty_node(key_node, tag_type, line, indent);
@@ -10393,6 +10430,7 @@ private:
     void initialize_block_sequence_value(const uint32_t line, const uint32_t indent, const bool apply_properties) {
         *mp_current_node = basic_node_type::sequence({basic_node_type()});
         apply_directive_set(*mp_current_node);
+        set_location(*mp_current_node, line, indent);
         if (apply_properties) {
             apply_deferred_properties(*mp_current_node);
             apply_node_properties(*mp_current_node);
@@ -10405,6 +10443,7 @@ private:
 
         mp_current_node = &(mp_current_node->as_seq().back());
         apply_directive_set(*mp_current_node);
+        set_location(*mp_current_node, line, indent);
         m_context_stack.emplace_back(line, indent, context_state_t::BLOCK_SEQUENCE_ENTRY, mp_current_node);
     }
 
@@ -10452,6 +10491,10 @@ private:
         basic_node_type* p_parent_node = current_context(line, indent).p_node;
         auto itr = p_parent_node->as_map().emplace(std::move(key_node), basic_node_type());
         mp_current_node = &(itr.first->second);
+        if (itr.second) {
+            // An omitted value is located at its key.
+            copy_location(*mp_current_node, itr.first->first);
+        }
         m_context_stack.emplace_back(line, indent, context_state_t::BLOCK_MAPPING_EXPLICIT_VALUE, mp_current_node);
     }
 
@@ -10490,7 +10533,11 @@ private:
 
         basic_node_type key_node = std::move(*m_context_stack.back().p_node);
         m_context_stack.pop_back();
-        m_context_stack.back().p_node->as_map().emplace(std::move(key_node), basic_node_type());
+        auto itr = m_context_stack.back().p_node->as_map().emplace(std::move(key_node), basic_node_type());
+        if (itr.second) {
+            // An omitted value is located at its key.
+            copy_location(itr.first->second, itr.first->first);
+        }
         mp_current_node = m_context_stack.back().p_node;
         return true;
     }
@@ -10557,6 +10604,39 @@ private:
     /// @param node A basic_node_type object to be set YAML directive properties.
     void apply_directive_set(basic_node_type& node) noexcept {
         node.mp_meta = m_document_state.get_meta();
+    }
+
+    /// @brief Set the given location to the given node if node locations are enabled.
+    /// @param node A basic_node_type object which begins at the given location.
+    /// @param line The line where the node begins.
+    /// @param column The column in the line where the node begins.
+    static void set_location(basic_node_type& node, const uint32_t line, const uint32_t column) noexcept {
+#ifdef FK_YAML_ENABLE_NODE_LOCATION
+        node.m_location = {line, column};
+#else
+        static_cast<void>(node);
+        static_cast<void>(line);
+        static_cast<void>(column);
+#endif
+    }
+
+    /// @brief Set the location of the last token to the given node if node locations are enabled.
+    /// @param node A basic_node_type object which begins at the last token.
+    /// @param lexer The lexical analyzer which has just scanned the token.
+    static void set_location(basic_node_type& node, const lexer_type& lexer) noexcept {
+        set_location(node, lexer.get_lines_processed(), lexer.get_last_token_begin_pos());
+    }
+
+    /// @brief Copy the location of a node to another one if node locations are enabled.
+    /// @param dst A basic_node_type object which begins where src begins.
+    /// @param src A basic_node_type object whose location is copied.
+    static void copy_location(basic_node_type& dst, const basic_node_type& src) noexcept {
+#ifdef FK_YAML_ENABLE_NODE_LOCATION
+        dst.m_location = src.m_location;
+#else
+        static_cast<void>(dst);
+        static_cast<void>(src);
+#endif
     }
 
     /// @brief Closes the implicit single pair mapping wrapping a flow sequence entry, if one is open.
@@ -10648,9 +10728,12 @@ private:
         switch (tag_type) {
         case tag_t::STRING:
         case tag_t::NON_SPECIFIC:
-        case tag_t::CUSTOM_TAG:
-            node = basic_node_type(typename basic_node_type::string_type());
+        case tag_t::CUSTOM_TAG: {
+            auto str_node = basic_node_type(typename basic_node_type::string_type());
+            copy_location(str_node, node);
+            node = std::move(str_node);
             break;
+        }
         case tag_t::NULL_VALUE:
             // A null value is already represented by a default-constructed node.
             break;
@@ -15477,6 +15560,18 @@ FK_YAML_NAMESPACE_END
 
 FK_YAML_NAMESPACE_BEGIN
 
+#ifdef FK_YAML_ENABLE_NODE_LOCATION
+/// @brief The location in a deserialized input where a node begins.
+/// @note Both values are 0-based, which is consistent with fkyaml::parse_error.
+/// @sa https://fktn-k.github.io/fkYAML/api/basic_node/get_location/
+struct node_location {
+    /// The line where a node begins.
+    uint32_t line;
+    /// The column in the line where a node begins.
+    uint32_t column;
+};
+#endif
+
 /// @brief A class to store value of YAML nodes.
 /// @sa https://fktn-k.github.io/fkYAML/api/basic_node/
 template <
@@ -15676,6 +15771,9 @@ public:
     /// @sa https://fktn-k.github.io/fkYAML/api/basic_node/constructor/
     basic_node(const basic_node& rhs)
         : m_attrs(rhs.m_attrs),
+#ifdef FK_YAML_ENABLE_NODE_LOCATION
+          m_location(rhs.m_location),
+#endif
           mp_meta(rhs.mp_meta),
           mp_prop(rhs.mp_prop ? new detail::node_property(*rhs.mp_prop) : nullptr) {
         if FK_YAML_LIKELY (!has_anchor_name()) {
@@ -15712,6 +15810,9 @@ public:
     /// @sa https://fktn-k.github.io/fkYAML/api/basic_node/constructor/
     basic_node(basic_node&& rhs) noexcept
         : m_attrs(rhs.m_attrs),
+#ifdef FK_YAML_ENABLE_NODE_LOCATION
+          m_location(rhs.m_location),
+#endif
           mp_meta(std::move(rhs.mp_meta)),
           mp_prop(std::move(rhs.mp_prop)) {
         if FK_YAML_LIKELY (!has_anchor_name()) {
@@ -16766,6 +16867,16 @@ public:
         prop().tag = std::move(tag_name);
     }
 
+#ifdef FK_YAML_ENABLE_NODE_LOCATION
+    /// @brief Get the location in the deserialized input where this basic_node object begins.
+    /// @note A node which is not created by deserialization is located at line 0, column 0.
+    /// @return The location of this basic_node object.
+    /// @sa https://fktn-k.github.io/fkYAML/api/basic_node/get_location/
+    node_location get_location() const noexcept {
+        return m_location;
+    }
+#endif
+
     /// @brief Get the node value object converted into a given type.
     /// @note This function requires T objects to be default constructible. Also, T cannot be either a reference,
     /// pointer or C-style array type.
@@ -17046,6 +17157,9 @@ public:
     void swap(basic_node& rhs) noexcept {
         using std::swap;
         swap(m_attrs, rhs.m_attrs);
+#ifdef FK_YAML_ENABLE_NODE_LOCATION
+        swap(m_location, rhs.m_location);
+#endif
         swap(mp_meta, rhs.mp_meta);
 
         node_value tmp {};
@@ -17365,6 +17479,10 @@ private:
 
         basic_node node;
         node.swap(*this);
+#ifdef FK_YAML_ENABLE_NODE_LOCATION
+        // The anchor stays where the value was found.
+        m_location = node.m_location;
+#endif
         p_meta->anchor_table.emplace(anchor_name, std::move(node));
 
         m_attrs.unset(detail::node_attr_mask::anchoring);
@@ -17410,6 +17528,10 @@ private:
 
     /// The current node attributes.
     detail::node_attrs m_attrs;
+#ifdef FK_YAML_ENABLE_NODE_LOCATION
+    /// The location in the deserialized input where this node begins.
+    node_location m_location {};
+#endif
     /// The shared set of YAML directives applied to this node.
     /// It is created on first use, since most nodes never need it, and then shared by the nodes of a document.
     mutable std::shared_ptr<detail::document_metainfo<basic_node>> mp_meta {};

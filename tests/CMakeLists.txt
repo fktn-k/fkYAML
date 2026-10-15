@@ -291,7 +291,7 @@ if(FK_YAML_CODE_COVERAGE)
     COMMAND ${LCOV_TOOL} -e ${PROJECT_NAME}.info ${SRC_FILES} --output-file ${PROJECT_NAME}.info.filtered --rc branch_coverage=1 --ignore-errors unused,unused
     COMMAND ${PROJECT_SOURCE_DIR}/thirdparty/imapdl/filterbr.py ${PROJECT_NAME}.info.filtered > ${PROJECT_NAME}.info.filtered.noexcept
     COMMAND ${CMAKE_COMMAND} -E copy ${PROJECT_NAME}.info.filtered.noexcept ${PROJECT_BINARY_DIR}/coverage/fkYAML_unit_test.info
-    DEPENDS unit_test
+    DEPENDS unit_test unit_test_node_location
     COMMENT "Execute unit test app with code coverage."
   )
 

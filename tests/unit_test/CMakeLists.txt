@@ -89,16 +89,31 @@ target_link_libraries(
     common_test_config_with_main
     unit_test_config
 )
+
+# FK_YAML_ENABLE_NODE_LOCATION changes the layout of fkyaml::node, so the test is built into its own app.
+add_executable(
+  unit_test_node_location
+  test_node_location.cpp
+)
+target_link_libraries(
+  unit_test_node_location
+  PRIVATE
+    common_test_config_with_main
+    unit_test_config
+)
+
 if(FK_YAML_RUN_MSVC_SANITIZERS)
   # ctest runs the test executable outside the Visual Studio environment, where the AddressSanitizer
   # runtime is not on PATH. It ships next to cl.exe, so place a copy beside the executable.
   get_filename_component(FK_YAML_MSVC_BIN_DIR "${CMAKE_CXX_COMPILER}" DIRECTORY)
   file(GLOB FK_YAML_ASAN_RUNTIME "${FK_YAML_MSVC_BIN_DIR}/clang_rt.asan*.dll")
   if(FK_YAML_ASAN_RUNTIME)
-    add_custom_command(
-      TARGET unit_test POST_BUILD
-      COMMAND ${CMAKE_COMMAND} -E copy_if_different ${FK_YAML_ASAN_RUNTIME} $<TARGET_FILE_DIR:unit_test>
-    )
+    foreach(FK_YAML_UNIT_TEST_APP unit_test unit_test_node_location)
+      add_custom_command(
+        TARGET ${FK_YAML_UNIT_TEST_APP} POST_BUILD
+        COMMAND ${CMAKE_COMMAND} -E copy_if_different ${FK_YAML_ASAN_RUNTIME} $<TARGET_FILE_DIR:${FK_YAML_UNIT_TEST_APP}>
+      )
+    endforeach()
   else()
     message(WARNING "The AddressSanitizer runtime was not found next to the compiler. The unit test app may fail to start.")
   endif()
@@ -106,4 +121,5 @@ endif()
 
 if(NOT CMAKE_CROSSCOMPILING)
   doctest_discover_tests(unit_test)
+  doctest_discover_tests(unit_test_node_location)
 endif()

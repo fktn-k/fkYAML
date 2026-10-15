@@ -160,6 +160,15 @@ This class provides features to handle YAML nodes.
 | [get_resolved_tag_name](get_resolved_tag_name.md) | gets a resolved tag name associated with a basic_node object. |
 | [has_tag_name](has_tag_name.md)                   | checks if a basic_node has any tag name.                      |
 
+
+
+### Source Locations
+| Name                            | Description                                                                 |
+| ------------------------------- | --------------------------------------------------------------------------- |
+| [get_location](get_location.md) | gets the location in a deserialized input where a basic_node object begins. |
+
+
+
 ### Manipulations for Document Properties
 | Name                                              | Description                                                               |
 | ------------------------------------------------- | ------------------------------------------------------------------------- |
