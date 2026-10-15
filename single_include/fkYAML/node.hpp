@@ -10447,10 +10447,15 @@ private:
         // Deferred properties precede the key, so they belong to the key rather than to its value.
         apply_deferred_properties(*m_context_stack.back().p_node);
 
+        const uint32_t key_line = m_context_stack.back().line;
+        const uint32_t key_indent = m_context_stack.back().indent;
         basic_node_type key_node = std::move(*m_context_stack.back().p_node);
         m_context_stack.pop_back();
         basic_node_type* p_parent_node = current_context(line, indent).p_node;
         auto itr = p_parent_node->as_map().emplace(std::move(key_node), basic_node_type());
+        if FK_YAML_UNLIKELY (!itr.second) {
+            throw parse_error("Detected duplication in mapping keys.", key_line, key_indent);
+        }
         mp_current_node = &(itr.first->second);
         m_context_stack.emplace_back(line, indent, context_state_t::BLOCK_MAPPING_EXPLICIT_VALUE, mp_current_node);
     }
@@ -10488,9 +10493,15 @@ private:
         // Deferred properties precede the key, so they belong to the key rather than to its value.
         apply_deferred_properties(*m_context_stack.back().p_node);
 
+        const uint32_t key_line = m_context_stack.back().line;
+        const uint32_t key_indent = m_context_stack.back().indent;
         basic_node_type key_node = std::move(*m_context_stack.back().p_node);
         m_context_stack.pop_back();
-        m_context_stack.back().p_node->as_map().emplace(std::move(key_node), basic_node_type());
+        const bool is_added =
+            m_context_stack.back().p_node->as_map().emplace(std::move(key_node), basic_node_type()).second;
+        if FK_YAML_UNLIKELY (!is_added) {
+            throw parse_error("Detected duplication in mapping keys.", key_line, key_indent);
+        }
         mp_current_node = m_context_stack.back().p_node;
         return true;
     }

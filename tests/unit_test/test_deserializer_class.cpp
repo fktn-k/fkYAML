@@ -808,6 +808,22 @@ TEST_CASE("Deserializer_DuplicateKeys") {
 
     REQUIRE_THROWS_AS(
         root = deserializer.deserialize(fkyaml::detail::input_adapter("foo: bar\nfoo: baz")), fkyaml::parse_error);
+
+    SUBCASE("explicit keys with values") {
+        REQUIRE_THROWS_AS(
+            root = deserializer.deserialize(fkyaml::detail::input_adapter("foo: bar\n? foo\n: baz")),
+            fkyaml::parse_error);
+        REQUIRE_THROWS_AS(
+            root = deserializer.deserialize(fkyaml::detail::input_adapter("? foo\n: bar\n? foo\n: baz")),
+            fkyaml::parse_error);
+    }
+
+    SUBCASE("explicit keys without values") {
+        REQUIRE_THROWS_AS(
+            root = deserializer.deserialize(fkyaml::detail::input_adapter("foo: bar\n? foo")), fkyaml::parse_error);
+        REQUIRE_THROWS_AS(
+            root = deserializer.deserialize(fkyaml::detail::input_adapter("? foo\n? foo\n")), fkyaml::parse_error);
+    }
 }
 
 TEST_CASE("Deserializer_BlockSequence") {
